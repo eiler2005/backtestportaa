@@ -1,22 +1,24 @@
 package ru.backtesting.main;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
-import org.patriques.*;
+import org.patriques.ForeignExchange;
+import org.patriques.SectorPerformances;
+import org.patriques.TechnicalIndicators;
+import org.patriques.TimeSeries;
 import org.patriques.input.technicalindicators.Interval;
 import org.patriques.input.technicalindicators.SeriesType;
 import org.patriques.input.technicalindicators.TimePeriod;
 import org.patriques.output.AlphaVantageException;
-import org.patriques.output.exchange.*;
+import org.patriques.output.exchange.CurrencyExchange;
 import org.patriques.output.exchange.data.CurrencyExchangeData;
 import org.patriques.output.sectorperformances.Sectors;
 import org.patriques.output.sectorperformances.data.SectorData;
-import org.patriques.output.technicalindicators.MACD;
 import org.patriques.output.technicalindicators.SMA;
 import org.patriques.output.technicalindicators.data.IndicatorData;
-import org.patriques.output.technicalindicators.data.MACDData;
-import org.patriques.output.timeseries.*;
-import org.patriques.output.timeseries.data.StockData;
+import org.patriques.output.timeseries.MonthlyAdjusted;
 
 import ru.backtesting.stockquotes.StockConnector;
 import ru.backtesting.techindicators.SMAType;
