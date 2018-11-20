@@ -25,19 +25,21 @@ public class TechIndicatorsTest {
 	}
 	
 	public static void rsiTest() {
-		// StockQuoteHistory.storage().fillQuotesData("SPY", 2016, 2018);
+		String ticker = "SPY";
+		
+		StockQuoteHistory.storage().fillQuotesData(ticker, 2016, 2018);
 		
 		TechnicalIndicators technicalIndicators = new TechnicalIndicators(StockConnector.conn());
-		 
-		RSI resp = technicalIndicators.rsi("SPY", Interval.DAILY, TimePeriod.of(14), SeriesType.CLOSE);
+		
+		RSI resp = technicalIndicators.rsi(ticker, Interval.DAILY, TimePeriod.of(100), SeriesType.CLOSE);
 		Map<String, String> metaData = resp.getMetaData();
 		System.out.println("indicator metadata:" + metaData);
 		List<IndicatorData> indicatorData = resp.getData();
 		 
 		for (IndicatorData data : indicatorData)
 			if (data.getDateTime().getYear() == 2018 && data.getDateTime().getMonth() == Month.NOVEMBER)
-				System.out.println("indicator data["+ data.getDateTime() + "]:" + data.getData());
-
+				System.out.println("indicator data["+ data.getDateTime() + "]:" + data.getData() + ", " + ticker + ":" + 
+			StockQuoteHistory.storage().getQuoteValueByDate(ticker,  data.getDateTime(), false));
 	}
 	
 	public static void smaTest( ) {
