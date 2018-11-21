@@ -25,20 +25,22 @@ public class TechIndicatorsTest {
 	}
 	
 	public static void rsiTest() {
-		String ticker = "SPY";
+		String ticker = "spy";
 		
 		StockQuoteHistory.storage().fillQuotesData(ticker, 2016, 2018);
 		
 		TechnicalIndicators technicalIndicators = new TechnicalIndicators(StockConnector.conn());
 		
-		RSI resp = technicalIndicators.rsi(ticker, Interval.DAILY, TimePeriod.of(100), SeriesType.CLOSE);
+		RSI resp = technicalIndicators.rsi(ticker, Interval.DAILY, TimePeriod.of(14), SeriesType.CLOSE);
 		Map<String, String> metaData = resp.getMetaData();
 		System.out.println("indicator metadata:" + metaData);
 		List<IndicatorData> indicatorData = resp.getData();
 		 
 		for (IndicatorData data : indicatorData)
-			if (data.getDateTime().getYear() == 2018 && data.getDateTime().getMonth() == Month.NOVEMBER)
-				System.out.println("indicator data["+ data.getDateTime() + "]:" + data.getData() + ", " + ticker + ":" + 
+			if (data.getDateTime().getYear() == 2018 && (data.getDateTime().getMonth() == Month.NOVEMBER || 
+					data.getDateTime().getMonth() == Month.OCTOBER || data.getDateTime().getMonth() == Month.SEPTEMBER && 
+					data.getDateTime().getMonth() == Month.AUGUST || data.getDateTime().getMonth() == Month.JULY) )
+				System.out.println("indicator data["+ data.getDateTime() + "]: " + data.getData() + ", " + ticker + ":" + 
 			StockQuoteHistory.storage().getQuoteValueByDate(ticker,  data.getDateTime(), false));
 	}
 	
