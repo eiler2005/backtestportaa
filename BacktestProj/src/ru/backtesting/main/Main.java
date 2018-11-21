@@ -156,16 +156,4 @@ public class Main {
 	      System.out.println("something went wrong");
 	    }
 	  }
-	
-	public static List rotate(List list) {
-		ArrayList copyList = new ArrayList<>();
-		
-		int size = list.size();
-		
-		for (int i = 1; i <= size; i++) {
-			copyList.add(list.get(size- i));
-		}
-		
-		return copyList;
-	}
 }

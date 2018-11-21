@@ -2,24 +2,16 @@ package ru.backtesting.types;
 
 import java.io.PrintStream;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.Month;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import org.patriques.AlphaVantageConnector;
-import org.patriques.TimeSeries;
-import org.patriques.output.timeseries.MonthlyAdjusted;
-import org.patriques.output.timeseries.data.StockData;
-
-import ru.backtesting.main.Main;
-import ru.backtesting.stockquotes.StockConnector;
 import ru.backtesting.stockquotes.StockQuote;
 import ru.backtesting.stockquotes.StockQuoteHistory;
 import ru.backtesting.types.rebalancing.RebalancingType;
+import ru.backtesting.utils.Logger;
+import ru.backtesting.utils.PortfolioUtils;
 
 public class Portfolio {
 	private String name;
@@ -28,9 +20,8 @@ public class Portfolio {
 	final int initialAmount;
 	final RebalancingType rebalancing;
 	final List<AssetAllocation> assetsAllocation;
-	LinkedHashMap<LocalDateTime, List<PositionInformation>> historyPositions;
+	LinkedHashMap<LocalDateTime, List<PositionInformation>> postionsOnDates;
 	private double currPortfolioPrice;
-    private final DecimalFormat df;
     private boolean reinvestDividends = false;
 	
 	public Portfolio(String name, List<AssetAllocation> assetsAllocation, int startYear, int endYear, int initialAmount,
@@ -42,9 +33,8 @@ public class Portfolio {
 		this.endYear = endYear;
 		this.initialAmount = initialAmount;
 		this.rebalancing = rebalancing;
-		historyPositions = new LinkedHashMap<LocalDateTime, List<PositionInformation>>();
+		postionsOnDates = new LinkedHashMap<LocalDateTime, List<PositionInformation>>();
 		currPortfolioPrice = initialAmount;
-		df = new DecimalFormat("0.00");
 		this.reinvestDividends = reinvestDividends;
 	}
 
@@ -56,14 +46,14 @@ public class Portfolio {
 			List<LocalDateTime> dates = StockQuoteHistory.storage().fillQuotesData(ticker, startYear, endYear);
 
 			for (LocalDateTime date : dates)
-				if ( historyPositions.get(date) == null ) {
+				if ( postionsOnDates.get(date) == null ) {
 					List<PositionInformation> otherPositions = new ArrayList <PositionInformation> ();
 					otherPositions.add(new PositionInformation(ticker, date));
 					
-					historyPositions.put(date, otherPositions);
+					postionsOnDates.put(date, otherPositions);
 				}
 				else {
-					List<PositionInformation> otherPositions = historyPositions.get(date);
+					List<PositionInformation> otherPositions = postionsOnDates.get(date);
 					otherPositions.add(new PositionInformation(ticker, date));
 				}
 			}
@@ -76,19 +66,19 @@ public class Portfolio {
 			    
 	    LocalDateTime prevDate = null;
 	    
-		for(LocalDateTime date: historyPositions.keySet() ) {
+		for(LocalDateTime date: postionsOnDates.keySet() ) {
 			stream.println("date: " + date);
 			
-			List<PositionInformation> positions = historyPositions.get(date);
+			List<PositionInformation> positions = postionsOnDates.get(date);
 			
 			if (count == 0) { // покупка активов в самом начале
 				
-				currPortfolioPrice = buyPortfolio(positions, assetsAllocation, initialAmount, reinvestDividends);
+				currPortfolioPrice = PortfolioUtils.buyPortfolio(positions, assetsAllocation, initialAmount, reinvestDividends);
 								
 				count++;				
 			}
 			else {
-				List<PositionInformation> prevPositions = historyPositions.get(prevDate);
+				List<PositionInformation> prevPositions = postionsOnDates.get(prevDate);
 				
 				// пересчитать портфель по новым ценам активов - продать активы
 				
@@ -96,39 +86,17 @@ public class Portfolio {
 				
 				// купить активы на измененную сумму портфеля в соответствии с долями
 				
-				stream.println("Изменение портфеля составило (с ребалансировкой): " + df.format(pricePortfolioOnDate - currPortfolioPrice) + " по сравнению с предыдущим периодом");
+				stream.println("Изменение портфеля составило (с ребалансировкой): " + Logger.log().doubleLog(pricePortfolioOnDate - currPortfolioPrice) + " по сравнению с предыдущим периодом");
 				
-				currPortfolioPrice = buyPortfolio(positions, assetsAllocation, pricePortfolioOnDate, reinvestDividends);
+				currPortfolioPrice = PortfolioUtils.buyPortfolio(positions, assetsAllocation, pricePortfolioOnDate, reinvestDividends);
 			}
 			
 			prevDate = date;
 			
-			stream.println("Стоимость портфеля на [" + date + "] : " + df.format(currPortfolioPrice));
+			stream.println("Стоимость портфеля на [" + date + "] : " + Logger.log().doubleLog(currPortfolioPrice));
 			
 			stream.println("-------------");
 		}
-	}
-	
-	private double buyPortfolio(List<PositionInformation> positions, List<AssetAllocation> assetsAllocation, double moneyAmount, boolean dividends) {
-		double price = 0;
-		
-		for (PositionInformation position : positions) {
-			String ticker = position.getTicker();
-			double currentQuote = StockQuoteHistory.storage().getQuoteValueByDate(ticker, position.getTime(), dividends);
-								
-			double quantity = calculateQuntityStocks(ticker, currentQuote, moneyAmount, assetsAllocation);
-			
-			position.setQuantity(quantity);
-			
-			System.out.println("Купили [ticker: " + position.getTicker() + "] " + df.format(quantity) + 
-					" лотов, на сумму " + df.format(currentQuote*quantity));
-
-			price += currentQuote*quantity;
-		}
-		
-		System.out.println("Купили активов на сумму: " + df.format(price));
-		
-		return price;
 	}
 	
 	private double calculatePortfolioOnDate(List<PositionInformation> newPricePositions, List<AssetAllocation> assetsAllocation, List<PositionInformation> quantityPosit) {
@@ -150,18 +118,9 @@ public class Portfolio {
 				}
 		}
 		
-		System.out.println("Посчитали стоимость портфеля на новую дату (изменение с прошлого периода): " + df.format(price));
+		System.out.println("Посчитали стоимость портфеля на новую дату (изменение с прошлого периода): " + Logger.log().doubleLog(price));
 		
 		return price;		
-	}
-	
-	private double calculateQuntityStocks(String ticker, double currentPrice, 
-			double portfolioPrice, List<AssetAllocation> assetsAllocation) {
-		for (AssetAllocation stock : assetsAllocation)
-			if (stock.getTicker().equalsIgnoreCase(ticker) )
-				return ((stock.getAllocation()/100)*portfolioPrice/currentPrice);
-		
-		throw new RuntimeException("В портфеле нет актива с тикером:" + ticker);
 	}
 	
 	public int getStartYear() {
@@ -194,21 +153,21 @@ public class Portfolio {
 			stream.println("Ticker: " + ticker + ", allocation - " + asset.getAllocation() + " %");
 		}
 		
-		for(LocalDateTime date: historyPositions.keySet() ) {
+		for(LocalDateTime date: postionsOnDates.keySet() ) {
 			stream.println("date: " + date);
 			
-			List<PositionInformation> positions = historyPositions.get(date);
+			List<PositionInformation> positions = postionsOnDates.get(date);
 			
 			for (PositionInformation position : positions) {
 				StockQuote quote = StockQuoteHistory.storage().getQuoteForDate(position.getTicker(), position.getTime());
 				
-				System.out.println("____quantity:   " + position.getQuantity());
-			    System.out.println("____price: " + position.getQuantity()*quote.getClose());
-			    System.out.println("____open:   " + quote.getOpen());
-			    System.out.println("____high:   " + quote.getHigh());
-			    System.out.println("____low:    " + quote.getLow());
-			    System.out.println("____close:  " + quote.getClose());
-			    System.out.println("____adjClose:  " + quote.getAdjustedClose());
+				stream.println("____quantity:   " + position.getQuantity());
+				stream.println("____price: " + position.getQuantity()*quote.getClose());
+				stream.println("____open:   " + quote.getOpen());
+				stream.println("____high:   " + quote.getHigh());
+				stream.println("____low:    " + quote.getLow());
+				stream.println("____close:  " + quote.getClose());
+				stream.println("____adjClose:  " + quote.getAdjustedClose());
 			}
 			
 			stream.println("-------------");
