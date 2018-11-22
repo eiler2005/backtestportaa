@@ -21,7 +21,7 @@ public class PortfolioTest {
 
 		// simplePort.print(System.out);
 
-		simplePort.backtestPortfolio(System.out);
+		simplePort.backtestPortfolio();
 		
 	}
 }

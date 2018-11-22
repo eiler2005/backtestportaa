@@ -17,4 +17,8 @@ public class Logger {
 	public String doubleLog(double number) {
 		return df.format(number);
 	}
+	
+	public void info(String info) {
+		System.out.println(info);
+	}
 }

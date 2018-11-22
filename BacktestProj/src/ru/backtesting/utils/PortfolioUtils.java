@@ -1,6 +1,5 @@
 package ru.backtesting.utils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import ru.backtesting.stockquotes.StockQuoteHistory;
@@ -15,22 +14,22 @@ public class PortfolioUtils {
 			String ticker = position.getTicker();
 			double currentQuote = StockQuoteHistory.storage().getQuoteValueByDate(ticker, position.getTime(), dividends);
 								
-			double quantity = calculateQuntityStocks(ticker, currentQuote, moneyAmount, assetsAllocation);
+			double quantity = calculateQuantityStocks(ticker, currentQuote, moneyAmount, assetsAllocation);
 			
-			position.update(quantity, currentQuote*quantity);
+			position.buy(quantity, currentQuote*quantity);
 			
-			System.out.println("Купили [ticker: " + position.getTicker() + "] " +Logger.log().doubleLog(quantity) + 
+			Logger.log().info("Купили [ticker: " + position.getTicker() + "] " +Logger.log().doubleLog(quantity) + 
 					" лотов, на сумму " + Logger.log().doubleLog(currentQuote*quantity));
 
 			price += currentQuote*quantity;
 		}
 		
-		System.out.println("Купили активов на сумму: " + Logger.log().doubleLog(price));
+		Logger.log().info("Купили активов на сумму: " + Logger.log().doubleLog(price));
 		
 		return price;
 	}
 	
-	public static double calculateQuntityStocks(String ticker, double currentPrice, 
+	public static double calculateQuantityStocks(String ticker, double currentPrice, 
 			double portfolioPrice, List<AssetAllocation> assetsAllocation) {
 		for (AssetAllocation stock : assetsAllocation)
 			if (stock.getTicker().equalsIgnoreCase(ticker) )

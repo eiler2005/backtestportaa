@@ -7,6 +7,7 @@ public class PositionInformation {
 	private LocalDateTime time;
 	private double quantity;
 	private double price;
+	private boolean hold;
 	
 	public PositionInformation(String ticker, LocalDateTime time) {
 		super();
@@ -14,17 +15,32 @@ public class PositionInformation {
 		this.quantity = 0;
 		this.time = time;
 		this.price = 0;
+		hold = false;
+	}
+	
+	public PositionInformation(String ticker) {
+		super();
+		this.ticker = ticker;
+		this.quantity = 0;
+		this.price = 0;
+		hold = true;
 	}
 
 	public double getQuantity() {
 		return quantity;
 	}
 
-	public void update(double quantity, double price) {
+	public void buy(double quantity, double price) {
 		this.quantity = quantity;
 		this.price = price;
+		hold = true;
 	}
 
+	public void sell () {
+		this.quantity = 0;
+		this.price = 0;
+		hold = false;
+	}
 
 	public String getTicker() {
 		return ticker;
@@ -36,5 +52,9 @@ public class PositionInformation {
 	
 	public double getPrice() {
 		return price;
+	}
+
+	public boolean isHoldInPortfolio() {
+		return hold;
 	}
 }
