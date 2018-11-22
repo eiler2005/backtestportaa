@@ -1,9 +1,8 @@
-package ru.backtesting.types.test;
+package ru.backtesting.test;
 
 import java.util.Arrays;
 import java.util.List;
 
-import ru.backtesting.stockquotes.StockQuoteHistory;
 import ru.backtesting.types.AssetAllocation;
 import ru.backtesting.types.Portfolio;
 import ru.backtesting.types.rebalancing.Frequency;
@@ -16,7 +15,7 @@ public class PortfolioTest {
 				new AssetAllocation("SPY", 60), new AssetAllocation("TLT", 40));
 		
 		Portfolio simplePort = new Portfolio("spy/tlt - 60 on 40", spyAndTlt, 2007, 2016, 10000, 
-				new RebalancingType(Frequency.Annually, RebalancingMethod.AssetProportion), null, false);
+				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), null, false);
 						
 		simplePort.fillQuotesData();
 

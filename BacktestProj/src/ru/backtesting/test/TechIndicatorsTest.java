@@ -1,4 +1,4 @@
-package ru.backtesting.techindicators.test;
+package ru.backtesting.test;
 
 import java.time.LocalDateTime;
 import java.time.Month;

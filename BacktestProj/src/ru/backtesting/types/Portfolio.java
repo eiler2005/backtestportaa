@@ -1,15 +1,22 @@
 package ru.backtesting.types;
 
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.patriques.TimeSeries;
+import org.patriques.output.timeseries.TimeSeriesResponse;
+import org.patriques.output.timeseries.data.StockData;
+
 import ru.backtesting.signal.SignalActionContext;
-import ru.backtesting.signal.SignalTestingAction;
+import ru.backtesting.stockquotes.StockConnector;
 import ru.backtesting.stockquotes.StockQuote;
 import ru.backtesting.stockquotes.StockQuoteHistory;
+import ru.backtesting.types.rebalancing.Frequency;
 import ru.backtesting.types.rebalancing.RebalancingMethod;
 import ru.backtesting.types.rebalancing.RebalancingType;
 import ru.backtesting.utils.Logger;
@@ -18,11 +25,11 @@ import ru.backtesting.utils.PortfolioUtils;
 public class Portfolio {
 	public final String CASH_TICKER = "CASH__TICKER";
 	private String name;
-	int startYear;
-	int endYear;
-	final int initialAmount;
-	final RebalancingType rebalType;
-	final List<AssetAllocation> assetsAllocation;
+	private int startYear;
+	private int endYear;
+	private final int initialAmount;
+	private final RebalancingType rebalType;
+	private final List<AssetAllocation> assetsAllocation;
 	private LinkedHashMap<LocalDateTime, List<PositionInformation>> postionsOnDates;
     private boolean reinvestDividends = false;
     private List<SignalActionContext> timingSignals;
@@ -64,7 +71,9 @@ public class Portfolio {
 		for (AssetAllocation asset : assetsAllocation) {
 			String ticker = asset.getTicker();
 			
-			List<LocalDateTime> dates = StockQuoteHistory.storage().fillQuotesData(ticker, startYear, endYear);
+			StockQuoteHistory.storage().fillQuotesData(ticker, startYear, endYear);
+
+			List<LocalDateTime> dates = getTradingDates(ticker, startYear, endYear, rebalType.getFrequency());
 
 			for (LocalDateTime date : dates)
 				if ( postionsOnDates.get(date) == null ) {
@@ -77,7 +86,61 @@ public class Portfolio {
 					List<PositionInformation> otherPositions = postionsOnDates.get(date);
 					otherPositions.add(new PositionInformation(ticker, date));
 				}
+		}
+	}
+	
+	public List<LocalDateTime> getTradingDates(String ticker, int startYear, int endYear, Frequency period) {
+		TimeSeriesResponse response = null;
+		
+		if (period.equals(Frequency.Weekly))
+			response = new TimeSeries(StockConnector.fullConn()).weekly(ticker);
+		else
+			response = new TimeSeries(StockConnector.conn()).monthly(ticker);
+
+	    List<StockData> stockData = response.getStockData();
+		
+	    Collections.reverse(stockData);
+	    	    	
+	    List<LocalDateTime> dates = new ArrayList<LocalDateTime>();
+	    	    
+	    dates.add(StockQuoteHistory.storage().getFirstTradedDay(ticker, startYear));
+	    
+	    for (int i = 0; i < stockData.size(); i++) {
+			LocalDateTime date = stockData.get(i).getDateTime();
+			
+			if (date.getYear() >= startYear && date.getYear() <= endYear ) {
+				Month month = date.getMonth();
+				
+				if ( i == 0 || (i == dates.size() - 1) )
+					dates.add(date);
+				else
+				switch(period) {
+					case Annually:				
+			        	if (month.equals(Month.DECEMBER ) )
+			        		dates.add(date);
+						break;
+					case SemiAnnually:
+						if ( month.equals(Month.JUNE) || month.equals(Month.DECEMBER) )
+		        			dates.add(date);
+						break;
+					case Quarterly:
+						if ( month.equals(Month.MARCH) || month.equals(Month.JUNE) || 
+			        				month.equals(Month.SEPTEMBER) || month.equals(Month.DECEMBER) )
+			        		dates.add(date);
+						break;
+					case Monthly:
+		        		dates.add(date);
+						break;
+					case Weekly:
+		        		dates.add(date);
+						break;
+					default:
+						break;
+				}
 			}
+	    }
+	    
+	    return dates;
 	}
 	
 	public void backtestPortfolio() {
@@ -98,9 +161,7 @@ public class Portfolio {
 	    }
 	    else {
 			Logger.log().info("Портфель типа TimingPortfolio с ребалансировкой активов");
-			
-		    // 1. отфильтровать портфель по частоте ребаланса
-
+			Logger.log().info("Частота ребалансировки активов: " + rebalType.getFrequency());
 			
 			// размечаем что и когда покупаем и продаем - без реальной покупки и продажи
 	    	for(LocalDateTime date: postionsOnDates.keySet() ) {
@@ -171,37 +232,6 @@ public class Portfolio {
 	    		prevPortfolioBalance = portfolioBalance;
 	    		iterator++;
 	    	}
-	    	
-	    	// ----
-	    	
-	    	/*
-	    	
-	    	if (count == 0) { // покупка активов в самом начале
-	    		currPortfolioPrice = PortfolioUtils.buyPortfolio(positions, assetsAllocation, initialAmount, reinvestDividends);
-									
-				count++;				
-			}
-			else {
-				List<PositionInformation> prevPositions = postionsOnDates.get(prevDate);
-					
-				// пересчитать портфель по новым ценам активов - продать активы
-					
-				double pricePortfolioOnDate = calculatePortfolioOnDate(positions, assetsAllocation, prevPositions);
-					
-				// купить активы на измененную сумму портфеля в соответствии с долями
-					
-				Logger.log().info("Изменение портфеля составило (с ребалансировкой): " + Logger.log().doubleLog(pricePortfolioOnDate - currPortfolioPrice) + " по сравнению с предыдущим периодом");
-					
-				currPortfolioPrice = PortfolioUtils.buyPortfolio(positions, assetsAllocation, pricePortfolioOnDate, reinvestDividends);
-			}
-				
-			prevDate = date;
-				
-			Logger.log().info("Стоимость портфеля на [" + date + "] : " + Logger.log().doubleLog(currPortfolioPrice));
-				
-			Logger.log().info("-------------");
-			
-			*/
 		}
 	}
 	

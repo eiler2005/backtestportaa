@@ -1,4 +1,4 @@
-package ru.backtesting.rebalancing.test;
+package ru.backtesting.test;
 
 import ru.backtesting.signal.RSITechnicalSignal;
 import ru.backtesting.signal.SignalActionContext;

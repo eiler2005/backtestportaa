@@ -9,18 +9,14 @@ import java.util.List;
 
 import org.patriques.TimeSeries;
 import org.patriques.output.timeseries.Daily;
-import org.patriques.output.timeseries.Monthly;
-import org.patriques.output.timeseries.MonthlyAdjusted;
-import org.patriques.output.timeseries.Weekly;
 import org.patriques.output.timeseries.data.StockData;
 
-import ru.backtesting.main.Main;
 import ru.backtesting.utils.DateUtils;
 
 public class StockQuoteHistory {
 	private static StockQuoteHistory instance;
-	private static HashMap<String, List<StockQuote>> quotes;
-	private static HashMap<String, List<LocalDateTime>> dates;
+	private HashMap<String, List<StockQuote>> quotes;
+	private HashMap<String, List<LocalDateTime>> dates;
 	
 	private StockQuoteHistory() {
 		dates = new HashMap<String, List<LocalDateTime>>();
@@ -90,6 +86,17 @@ public class StockQuoteHistory {
 			if ( DateUtils.compareDatesByDay(q.getTime(), date) ) 
 				return q;
 				
+		return null;
+	}
+	
+	public LocalDateTime getFirstTradedDay(String ticker, int startYear) {
+		List<LocalDateTime> datesQ = dates.get(ticker);
+		
+		for (LocalDateTime date : datesQ) {
+			if (date.getYear() == startYear && date.getMonth().equals(Month.JANUARY) )
+					return date;
+		}
+		
 		return null;
 	}
 }
