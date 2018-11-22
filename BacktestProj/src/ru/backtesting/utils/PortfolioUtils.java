@@ -1,5 +1,6 @@
 package ru.backtesting.utils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import ru.backtesting.stockquotes.StockQuoteHistory;
@@ -29,12 +30,33 @@ public class PortfolioUtils {
 		return price;
 	}
 	
-	public static double calculateQuantityStocks(String ticker, double currentPrice, 
-			double portfolioPrice, List<AssetAllocation> assetsAllocation) {
+	public static double calculateQuantityStocks(String ticker, double tickerQuote, 
+			double portfolioBalance, List<AssetAllocation> assetsAllocation) {
 		for (AssetAllocation stock : assetsAllocation)
 			if (stock.getTicker().equalsIgnoreCase(ticker) )
-				return ((stock.getAllocation()/100)*portfolioPrice/currentPrice);
+				return ((stock.getAllocationPercent()/100)*portfolioBalance/tickerQuote);
 		
 		throw new RuntimeException("В портфеле нет актива с тикером:" + ticker);
+	}
+	
+	public static double calculateAllPositionsBalance(List<PositionInformation> positions) {
+		double sum = 0;
+		
+		for(PositionInformation pos : positions)
+			sum += pos.getPrice();
+		
+		return sum;
+	}
+	
+	public static double calculateAllPositionsBalance(List<PositionInformation> positions, LocalDateTime date, boolean reinvestDividends) {
+		double sum = 0;
+		
+		for(PositionInformation pos : positions) {
+			double quoteValue = StockQuoteHistory.storage().getQuoteValueByDate(pos.getTicker(), date, reinvestDividends);
+			
+			sum += pos.getQuantity()*quoteValue;
+		}
+			
+		return sum;
 	}
 }

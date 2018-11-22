@@ -15,14 +15,6 @@ public class PositionInformation {
 		this.quantity = 0;
 		this.time = time;
 		this.price = 0;
-		hold = false;
-	}
-	
-	public PositionInformation(String ticker) {
-		super();
-		this.ticker = ticker;
-		this.quantity = 0;
-		this.price = 0;
 		hold = true;
 	}
 

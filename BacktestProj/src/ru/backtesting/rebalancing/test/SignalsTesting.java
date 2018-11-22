@@ -1,7 +1,7 @@
 package ru.backtesting.rebalancing.test;
 
-import ru.backtesting.rebalancing.RSITechnicalSignal;
-import ru.backtesting.rebalancing.SignalActionContext;
+import ru.backtesting.signal.RSITechnicalSignal;
+import ru.backtesting.signal.SignalActionContext;
 
 public class SignalsTesting {
 
@@ -10,6 +10,6 @@ public class SignalsTesting {
 		
 		portAction.setSignal(new RSITechnicalSignal());
 		
-		int result = portAction.testSignal();
+		int result = portAction.testSignal(null, null);
 	}
 }

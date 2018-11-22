@@ -1,4 +1,4 @@
-package ru.backtesting.rebalancing;
+package ru.backtesting.signal;
 
 import java.time.LocalDateTime;
 

@@ -78,12 +78,12 @@ public class StockQuoteHistory {
 	
 	public double getQuoteValueByDate(String ticker, LocalDateTime date, boolean dividends) {
 		if (dividends)
-			return getQuoteForDate(ticker, date).getAdjustedClose();
+			return getQuoteByDate(ticker, date).getAdjustedClose();
 		else
-			return getQuoteForDate(ticker, date).getClose();
+			return getQuoteByDate(ticker, date).getClose();
 	}
 	
-	public StockQuote getQuoteForDate(String ticker, LocalDateTime date) {
+	public StockQuote getQuoteByDate(String ticker, LocalDateTime date) {
 		List<StockQuote> list = quotes.get(ticker);
 				
 		for (StockQuote q : list)
