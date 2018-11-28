@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import org.patriques.TimeSeries;
+import org.patriques.output.AlphaVantageException;
 import org.patriques.output.timeseries.Daily;
 import org.patriques.output.timeseries.data.StockData;
 
@@ -32,7 +32,10 @@ public class StockQuoteHistory {
 	}
 	
 	public List<LocalDateTime> fillQuotesData(String ticker, int startYear, int endYear) {
-		Daily response = new TimeSeries(StockConnector.fullConn()).daily(ticker);
+		if ( containsDataInStorage(ticker) )
+			return dates.get(ticker);
+			
+		Daily response = StockConnector.daily(ticker);
 
 	    List<StockData> stockData = response.getStockData();
 		
@@ -85,8 +88,9 @@ public class StockQuoteHistory {
 		for (StockQuote q : list)
 			if ( DateUtils.compareDatesByDay(q.getTime(), date) ) 
 				return q;
-				
-		return null;
+		
+		throw new AlphaVantageException("По активу [" + ticker + " на дату " + date + " не загружены котировки. "
+				+ "Возможно, данных на указанную дату не существует в хранилище www.alphavantage.co");
 	}
 	
 	public LocalDateTime getFirstTradedDay(String ticker, int startYear) {
@@ -98,5 +102,9 @@ public class StockQuoteHistory {
 		}
 		
 		return null;
+	}
+	
+	public boolean containsDataInStorage(String ticker) {
+		return quotes.containsKey(ticker) && dates.containsKey(ticker);
 	}
 }

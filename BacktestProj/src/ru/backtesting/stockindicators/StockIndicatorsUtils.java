@@ -1,16 +1,17 @@
-package ru.backtesting.techindicators;
+package ru.backtesting.stockindicators;
 
 import java.time.LocalDateTime;
 
 import ru.backtesting.stockquotes.StockQuoteHistory;
 
-public class TechIndicatorsUtils {
+@Deprecated
+public class StockIndicatorsUtils {
 	
-	// 0 - sell, price belove the sma
+	// -1 - sell, price belove the sma
 	// 1 - buy 	price above the sma
-	// -1 other
-	public static int haveSMASignal(LocalDateTime date, String ticker, SMAType smaType) {
-		double smaValue = TechIndicatorsHistory.storage().findIndicatorData(ticker, smaType, date);
+	// 0 other
+	public static int haveSMASignal(LocalDateTime date, String ticker, int timePeriod) {
+		double smaValue = StockIndicatorsHistory.storage().findIndicatorValue(ticker, timePeriod, date, StockIndicatorsHistory.SMA_IND_ID);
 		
 		double quote = StockQuoteHistory.storage().getQuoteValueByDate(ticker, date, false);
 		
@@ -22,9 +23,9 @@ public class TechIndicatorsUtils {
 			if ( quote > smaValue )
 				return 1;
 			if (quote < smaValue)
-				return 0;
+				return -1;
 		}
 		
-		return -1;
+		return 0;
 	}
 }

@@ -122,7 +122,7 @@ public class TimeSeries {
    * @param symbol the stock symbol to lookup
    * @return {@link Monthly} time series data
    */
-  public Monthly monthly(String symbol)  {
+  public Monthly monthly(String symbol)  {	  
     String json = apiConnector.getRequest(new Symbol(symbol), Function.TIME_SERIES_MONTHLY);
     return Monthly.from(json);
   }

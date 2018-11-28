@@ -2,13 +2,15 @@ package ru.backtesting.signal;
 
 import java.time.LocalDateTime;
 
-public class SignalActionContext {
+@Deprecated
+public class SignalActionContext  {
 	private SignalTestingAction action;
 	
 	public SignalTestingAction getSignal() {
 		return action;
 	}
-	public void setSignal(SignalTestingAction action) {
+	
+	public void setSignalAction(SignalTestingAction action) {
 		this.action = action;
 	}
 	

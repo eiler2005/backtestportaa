@@ -29,7 +29,15 @@ public class Monthly extends TimeSeriesResponse {
    */
   public static Monthly from(String json)  {
     Parser parser = new Parser();
-    return parser.parseJson(json);
+        
+    try {
+        return parser.parseJson(json);
+    }
+    catch (Exception e) {
+    	System.out.println("error json " + json);
+    	
+		throw e;
+	}
   }
 
   /**

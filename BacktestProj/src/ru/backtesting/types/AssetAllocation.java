@@ -16,6 +16,9 @@ public class AssetAllocation {
 	public double getAllocationPercent() {
 		return allocPercent;
 	}
-	
-	
+
+	@Override
+	public String toString() {
+		return "AssetAllocation [ticker=" + ticker + ", allocPercent=" + allocPercent + "]";
+	}
 }

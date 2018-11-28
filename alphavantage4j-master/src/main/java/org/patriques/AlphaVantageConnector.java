@@ -19,6 +19,8 @@ public class AlphaVantageConnector implements ApiConnector {
   private static final String BASE_URL = "https://www.alphavantage.co/query?";
   private final String apiKey;
   private final int timeOut;
+  private int connCount;
+
 
   /**
    * Creates an AlphaVantageConnector.
@@ -29,6 +31,7 @@ public class AlphaVantageConnector implements ApiConnector {
   public AlphaVantageConnector(String apiKey, int timeOut) {
     this.apiKey = apiKey;
     this.timeOut = timeOut;
+    this.connCount = 0;
   }
 
   @Override
@@ -69,4 +72,17 @@ public class AlphaVantageConnector implements ApiConnector {
     urlBuilder.append("apikey", apiKey);
     return urlBuilder.getUrl();
   }
+  
+  public String getapiKey() {
+	  return apiKey;
+  }
+  
+  public void countPlus() {
+	  connCount++;
+  }
+  
+  public int getConnCount() {
+	  return connCount;
+  }
+  
 }

@@ -1,29 +1,29 @@
 package ru.backtesting.types;
 
+import java.security.cert.CollectionCertStoreParameters;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import org.patriques.TimeSeries;
 import org.patriques.output.timeseries.TimeSeriesResponse;
 import org.patriques.output.timeseries.data.StockData;
 
+import ru.backtesting.rebalancing.Frequency;
+import ru.backtesting.rebalancing.RebalancingMethod;
+import ru.backtesting.rebalancing.RebalancingType;
 import ru.backtesting.signal.SignalActionContext;
+import ru.backtesting.signal.SignalTestingAction;
 import ru.backtesting.stockquotes.StockConnector;
 import ru.backtesting.stockquotes.StockQuote;
 import ru.backtesting.stockquotes.StockQuoteHistory;
-import ru.backtesting.types.rebalancing.Frequency;
-import ru.backtesting.types.rebalancing.RebalancingMethod;
-import ru.backtesting.types.rebalancing.RebalancingType;
 import ru.backtesting.utils.Logger;
 import ru.backtesting.utils.PortfolioUtils;
 
 public class Portfolio {
-	public final String CASH_TICKER = "CASH__TICKER";
+	public static final String CASH_TICKER = "CASH";
 	private String name;
 	private int startYear;
 	private int endYear;
@@ -32,12 +32,11 @@ public class Portfolio {
 	private final List<AssetAllocation> assetsAllocation;
 	private LinkedHashMap<LocalDateTime, List<PositionInformation>> postionsOnDates;
     private boolean reinvestDividends = false;
-    private List<SignalActionContext> timingSignals;
-	private HashMap<LocalDateTime, PositionInformation> outOfMarketPositions;
+    private List<SignalTestingAction> timingSignals;
 	private String outOfMarketPosTicker;
     
 	public Portfolio(String name, List<AssetAllocation> assetsAllocation, int startYear, int endYear, int initialAmount,
-			RebalancingType rebalancing, List<SignalActionContext> timingSignals, boolean reinvestDividends) {
+			RebalancingType rebalancing, List<SignalTestingAction> timingSignals, boolean reinvestDividends) {
 		super();
 		this.name = name;
 		this.assetsAllocation = assetsAllocation;
@@ -51,7 +50,7 @@ public class Portfolio {
 	}
 	
 	public Portfolio(String name, List<AssetAllocation> assetsAllocation, int startYear, int endYear, int initialAmount,
-			RebalancingType rebalancing, List<SignalActionContext> timingSignals, String outOfMarketTicker, boolean reinvestDividends) {
+			RebalancingType rebalancing, List<SignalTestingAction> timingSignals, String outOfMarketTicker, boolean reinvestDividends) {
 		super();
 		this.name = name;
 		this.assetsAllocation = assetsAllocation;
@@ -62,7 +61,7 @@ public class Portfolio {
 		this.postionsOnDates = new LinkedHashMap<LocalDateTime, List<PositionInformation>>();
 		this.reinvestDividends = reinvestDividends;
 		
-		this.outOfMarketPositions = new LinkedHashMap<LocalDateTime, PositionInformation>();
+		this.timingSignals = timingSignals;
 		this.outOfMarketPosTicker = outOfMarketTicker;
 	}
 
@@ -71,40 +70,56 @@ public class Portfolio {
 		for (AssetAllocation asset : assetsAllocation) {
 			String ticker = asset.getTicker();
 			
-			StockQuoteHistory.storage().fillQuotesData(ticker, startYear, endYear);
-
-			List<LocalDateTime> dates = getTradingDates(ticker, startYear, endYear, rebalType.getFrequency());
-
-			for (LocalDateTime date : dates)
-				if ( postionsOnDates.get(date) == null ) {
-					List<PositionInformation> otherPositions = new ArrayList <PositionInformation> ();
-					otherPositions.add(new PositionInformation(ticker, date));
-					
-					postionsOnDates.put(date, otherPositions);
-				}
-				else {
-					List<PositionInformation> otherPositions = postionsOnDates.get(date);
-					otherPositions.add(new PositionInformation(ticker, date));
-				}
+			fillQuotesData(ticker, postionsOnDates);
+		}
+		
+		if (outOfMarketPosTicker != null && !outOfMarketPosTicker.equals(CASH_TICKER)) {
+			if ( StockQuoteHistory.storage().containsDataInStorage(outOfMarketPosTicker) )
+				return;
+			
+			StockQuoteHistory.storage().fillQuotesData(outOfMarketPosTicker, startYear, endYear);
 		}
 	}
 	
+	private void fillQuotesData(String ticker, LinkedHashMap<LocalDateTime, List<PositionInformation>> positions) {
+		if ( StockQuoteHistory.storage().containsDataInStorage(ticker) )
+			return;
+		
+		StockQuoteHistory.storage().fillQuotesData(ticker, startYear, endYear);
+
+		List<LocalDateTime> dates = getTradingDates(ticker, startYear, endYear, rebalType.getFrequency());
+		
+		for (LocalDateTime date : dates)
+			if ( positions.get(date) == null ) {
+				List<PositionInformation> otherPositions = new ArrayList <PositionInformation> ();
+				otherPositions.add(new PositionInformation(ticker, date));
+					
+				positions.put(date, otherPositions);
+			}
+			else {
+				List<PositionInformation> otherPositions = positions.get(date);
+				otherPositions.add(new PositionInformation(ticker, date));
+			}
+	}
+	
+	@Deprecated
 	public List<LocalDateTime> getTradingDates(String ticker, int startYear, int endYear, Frequency period) {
 		TimeSeriesResponse response = null;
 		
 		if (period.equals(Frequency.Weekly))
-			response = new TimeSeries(StockConnector.fullConn()).weekly(ticker);
+			response = StockConnector.weekly(ticker);
 		else
-			response = new TimeSeries(StockConnector.conn()).monthly(ticker);
+			response = StockConnector.monthly(ticker);
 
 	    List<StockData> stockData = response.getStockData();
 		
 	    Collections.reverse(stockData);
 	    	    	
 	    List<LocalDateTime> dates = new ArrayList<LocalDateTime>();
-	    	    
+	    
 	    dates.add(StockQuoteHistory.storage().getFirstTradedDay(ticker, startYear));
 	    
+	    // ДОДЕЛАТЬ - например, для Annually считает позицию в июле 2018ого только на декабрь 2017 - а нужно на июнь 2018
 	    for (int i = 0; i < stockData.size(); i++) {
 			LocalDateTime date = stockData.get(i).getDateTime();
 			
@@ -116,7 +131,7 @@ public class Portfolio {
 				else
 				switch(period) {
 					case Annually:				
-			        	if (month.equals(Month.DECEMBER ) )
+			        	if (month.equals(Month.DECEMBER) )
 			        		dates.add(date);
 						break;
 					case SemiAnnually:
@@ -140,15 +155,16 @@ public class Portfolio {
 			}
 	    }
 	    
+	    // dates.add(stockData.get(stockData.size()-1).getDateTime());
+	    
 	    return dates;
 	}
 	
 	public void backtestPortfolio() {
-	    // BuyAndHold: купил в начале срока - продал в конце
-	    if (rebalType.getRebalMethod().equals(RebalancingMethod.BuyAndHold)) {
-	    	// посчитать -----
-			Logger.log().info("Портфель типа Buy&Hold: дата покупки - ");
-			
+	    Logger.log().info(prinfPortfolioInformation());
+		
+		// BuyAndHold: купил в начале срока - продал в конце
+	    if (rebalType.getRebalMethod().equals(RebalancingMethod.BuyAndHold)) {			
 			// купить по первой дате
 			
 			// currPortfolioPrice = PortfolioUtils.buyPortfolio(postionsOnDates.get(key), assetsAllocation, initialAmount, reinvestDividends);
@@ -159,80 +175,136 @@ public class Portfolio {
 			
 			// ------------- ДОДЕЛАТЬ
 	    }
-	    else {
-			Logger.log().info("Портфель типа TimingPortfolio с ребалансировкой активов");
-			Logger.log().info("Частота ребалансировки активов: " + rebalType.getFrequency());
-			
-			// размечаем что и когда покупаем и продаем - без реальной покупки и продажи
-	    	for(LocalDateTime date: postionsOnDates.keySet() ) {
-				Logger.log().info("Рассматриваем сигналы по портфелю на дату: " + date);
-				
-				List<PositionInformation> positions = postionsOnDates.get(date);
-				
-				// можно ли находиться в позиции, которая вне рынка по сигналам или только outOfMarketPos
-				if (outOfMarketPositions != null && haveTimingSignals()) {
-					PositionInformation outOfMarketPos = new PositionInformation(outOfMarketPosTicker, date);
-					if (!isBuyForSignals(date, outOfMarketPosTicker, timingSignals))
-						outOfMarketPos.sell();
-					outOfMarketPositions.put(date, outOfMarketPos);
-				}
-				
-				// проверяем можно ли держать позицию в портфеле по сигналам
-				for (PositionInformation position : positions)
-					if ( haveTimingSignals() && !isBuyForSignals(date, position.getTicker(), timingSignals) )
-						// продаем позицию и передаем деньги под другие позиции или вне рынка
-						position.sell();
-	    	}
+	    else if (rebalType.getRebalMethod().equals(RebalancingMethod.AssetProportion)) {			
+	    	LocalDateTime prevDate = null;	    	
 	    	
-	    	// теперь уже проводим покупку и продажу
-	    	// тут не забываем про - вне рынка
-	    	
-	    	LocalDateTime prevDate = null;
-	    	double prevPortfolioBalance = initialAmount;
-	    	int iterator = 0;
-	    	
+	    	// обход по датам
 	    	for (LocalDateTime date: postionsOnDates.keySet() ) {
-				Logger.log().info("Формирование портфеля на дату: " + date);
+				Logger.log().info("|| || Формирование портфеля на дату: " + date + " || ||");
 
 				List<PositionInformation> positions = postionsOnDates.get(date);
 					
-				if (iterator != 0)
-					prevPortfolioBalance = PortfolioUtils.calculateAllPositionsBalance(postionsOnDates.get(prevDate), date, reinvestDividends);
+    			Logger.log().info("Начинаем пересчитывать стоимость позиций в портфеле");
+
+				double portfolioBalance = prevDate == null ? initialAmount : PortfolioUtils.calculateAllPositionsBalance(postionsOnDates.get(prevDate), date, reinvestDividends);
+				
+    			Logger.log().info("Пересчитали стоимость портфеля на дату [" + date + "](сколько денег у нас есть для покупки): " + Logger.log().doubleLog(portfolioBalance));
 				
 	    		for (int i = 0; i < assetsAllocation.size(); i++) {
 		    		String ticker = assetsAllocation.get(i).getTicker();
 		    		
 		    		PositionInformation position = positions.get(i);
 		    				    		
-		    		if ( position.isHoldInPortfolio() ) {
+		    		// надо принять решение покупаем текущую акцию или уходим в outOfMarketTicker
+		    		
+		    		boolean isHoldInPortfolio = PortfolioUtils.isHoldInPortfolio(timingSignals, ticker, position.getTime());
+		    				    		
+	    			Logger.log().info("Приняли решение держать в портфеле(true)/продавать(false) [" + ticker + "] : " + isHoldInPortfolio);
+		    		
+		    		
+		    		// для кэша все остается без изменений
+		    		double quote = 0, quantity = 1;
+		    				    		
+		    		// если предыдущая позиция не кеш или первый прогон
+		    		if ( prevDate == null || !postionsOnDates.get(prevDate).get(i).getTicker().equals(CASH_TICKER) || isHoldInPortfolio) {
 		    			// купить в соответствии с assetAllocation
+		    			// считаем сколько стоит акция на данный момент времени
+		    			quote = StockQuoteHistory.storage().getQuoteValueByDate(ticker, position.getTime(), reinvestDividends);
+	    			
+		    			// считаем сколько мы можем купить акций по цене на данный момент времени с учетом текущей стоимости портфеля
+		    			quantity = PortfolioUtils.calculateQuantityStocks(ticker, quote, portfolioBalance, assetsAllocation);
+		    		
+		    			// у нас есть на новые покупки quantity*quote
+		    		}
+		    		// если кэш
+		    		else {		    			
+		    			quote = assetsAllocation.get(i).getAllocationPercent()*portfolioBalance/100;
 		    			
-		    			double quote = StockQuoteHistory.storage().getQuoteValueByDate(ticker, position.getTime(), reinvestDividends);
-		    			
-		    			double quantity = PortfolioUtils.calculateQuantityStocks(ticker, quote, prevPortfolioBalance, assetsAllocation);
-		    					
+		    			quantity = 1;
+		    		}
+		    		
+		    		if ( isHoldInPortfolio ) {
 						Logger.log().info("Купили в портфель [" + ticker + "] " + Logger.log().doubleLog(quantity) + " лотов на сумму " + Logger.log().doubleLog(quantity*quote) + 
 								", цена лота: " + Logger.log().doubleLog(quote) );
 		    			
 		    			position.buy(quantity, quantity*quote);
 		    		}
-		    		else { // купить в соответствии с outOfMarketPos и других аллокаций
-		    			// перекладываем текущую позицию в outOfMarketPos
-		    			// positions.set(i, outOfMarketPos)
+		    		else { // купить в соответствии с outOfMarketTicket и других аллокаций
+		    			// перекладываем текущую позицию в outOfMarketPos		    			
+		    			Logger.log().info("Перекладываемся в hedge-актив " + outOfMarketPosTicker + " вместо " + ticker + " на дату " + date);
+		    			
+		    			PositionInformation hegdePos = new PositionInformation(outOfMarketPosTicker, date);
+		    			
+		    			if ( outOfMarketPosTicker.equals(CASH_TICKER)) {
+			    			hegdePos.buy(1, quote*quantity);
+			    			
+			    			Logger.log().info("Закрыли позицию и вышли в hedge-актив [" + outOfMarketPosTicker + "] на сумму " + Logger.log().doubleLog(quote*quantity));
+		    			}
+		    			else {
+		    				double hedgeQuote = StockQuoteHistory.storage().getQuoteValueByDate(outOfMarketPosTicker, position.getTime(), reinvestDividends);
+		    				
+		    				double hedgeQuantity = assetsAllocation.get(i).getAllocationPercent()*portfolioBalance/hedgeQuote/100;
+		    				
+			    			hegdePos.buy(hedgeQuantity, hedgeQuantity*hedgeQuote);
+			    			
+			    			Logger.log().info("Зашли в hedge-актив [" + outOfMarketPosTicker + "]");
+			    			
+			    			Logger.log().info("Купили в портфель [" + outOfMarketPosTicker + "] " + Logger.log().doubleLog(hedgeQuantity) + " лотов на сумму " + 
+			    					Logger.log().doubleLog(hedgeQuantity*hedgeQuote) + ", цена лота: " + Logger.log().doubleLog(hedgeQuote) );
+		    			}
+		    			
+		    			positions.set(i, hegdePos);	    			
 		    		}
 		    	}
 	    		
-				double portfolioBalance = PortfolioUtils.calculateAllPositionsBalance(positions); 
+				double newPortfolioBalance = PortfolioUtils.calculateAllPositionsBalance(positions); 
 	    		
-				Logger.log().info("Стоимость портфеля на [" + date + "] : " + Logger.log().doubleLog(portfolioBalance));
+				Logger.log().info("Стоимость портфеля на [" + date + "] : " + Logger.log().doubleLog(newPortfolioBalance));
+				
+    			Logger.log().info("Информация по позициям нового портфеля ниже:");
+    			
+    			PortfolioUtils.printPositions(postionsOnDates.get(date));
 				
 				Logger.log().info("-------------");
 	    		
 	    		prevDate = date;
-	    		prevPortfolioBalance = portfolioBalance;
-	    		iterator++;
 	    	}
+	    }
+	    else if (rebalType.getRebalMethod().equals(RebalancingMethod.ForSignals)) {
+	    	// вместо распределения ограничиваем риски макс позицией в том или ином инструменте - скорее риск-менеджмент, а не распределение
+	    	
+	    	// по frequency перекладываемся в сигналы в соответствии с риском asset alloc
+	    	
+	    	// если нет сигнала, то в защитный актив
+	    	
+	    	// мощно перекладыываться c частотой раз в день - не чаще
+		}	    
+	}
+	
+	private String prinfPortfolioInformation() {
+		String inf = "";
+		
+		if (rebalType.getRebalMethod().equals(RebalancingMethod.BuyAndHold)) {
+			inf += "Портфель типа Buy&Hold, название : " + name + "\n";
+		} else if (rebalType.getRebalMethod().equals(RebalancingMethod.AssetProportion)) {
+			inf += "Портфель типа TimingPortfolio с ребалансировкой активов по пропорциям, название " + name+  "\n";
+			inf += "Частота ребалансировки активов: " + rebalType.getFrequency() + "\n";
+			inf += "Распределение активов: " + assetsAllocation + "\n";
+			inf += "Инвестирование дивидендов: " + reinvestDividends + "\n";
+			
+			if (outOfMarketPosTicker != null)
+				inf += "Название hedge-актива при медвежьих рынках или срабатывании сигналов: " + outOfMarketPosTicker + "\n";
+		} else if (rebalType.getRebalMethod().equals(RebalancingMethod.ForSignals)) {
+			inf += "Портфель типа ForSignals с ребалансировкой активов по сигналам, название " + name + "\n";
+			inf += "Частота ребалансировки активов: " + rebalType.getFrequency() + "\n";
+			inf +="Распределение активов: " + assetsAllocation + "\n";
+			inf += "Инвестирование дивидендов: " + reinvestDividends + "\n";
+			
+			if (outOfMarketPosTicker != null)
+				inf += "Название hedge-актива при медвежьих рынках или срабатывании сигналов: " + outOfMarketPosTicker + "\n";
 		}
+		
+		return inf;
 	}
 	
 	private boolean haveTimingSignals() {
@@ -275,7 +347,7 @@ public class Portfolio {
 		return assetsAllocation;
 	}
 
-	public void print() {
+	public void printAllPosiotions() {
 		Logger.log().info("Portfolio: " + name);
 		Logger.log().info("=============");
 		

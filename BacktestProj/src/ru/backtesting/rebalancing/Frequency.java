@@ -1,4 +1,4 @@
-package ru.backtesting.types.rebalancing;
+package ru.backtesting.rebalancing;
 
 public enum Frequency {
 	Annually, SemiAnnually, Quarterly, Monthly, Weekly

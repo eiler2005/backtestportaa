@@ -630,6 +630,14 @@ public class TechnicalIndicators {
    */
   public RSI rsi(String symbol, Interval interval, TimePeriod timePeriod, SeriesType seriesType) {
     String json = apiConnector.getRequest(new Symbol(symbol), Function.RSI, timePeriod, interval, seriesType);
+    
+    /*
+    if (json.length() < 500)
+    	System.out.println("json error:" + json.substring(0, json.length() - 1));
+    else
+    	System.out.println("json error:" + json.substring(0, 500));
+	*/
+    
     return RSI.from(interval, json);
   }
 

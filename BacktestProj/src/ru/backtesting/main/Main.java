@@ -17,12 +17,17 @@ import org.patriques.output.exchange.data.CurrencyExchangeData;
 import org.patriques.output.sectorperformances.Sectors;
 import org.patriques.output.sectorperformances.data.SectorData;
 import org.patriques.output.technicalindicators.SMA;
+import org.patriques.output.technicalindicators.TechnicalIndicatorResponse;
 import org.patriques.output.technicalindicators.data.IndicatorData;
+import org.patriques.output.timeseries.Daily;
+import org.patriques.output.timeseries.Monthly;
 import org.patriques.output.timeseries.MonthlyAdjusted;
+import org.patriques.output.timeseries.TimeSeriesResponse;
+import org.patriques.output.timeseries.data.StockData;
 
+import ru.backtesting.stockindicators.SMAType;
+import ru.backtesting.stockindicators.StockIndicatorsHistory;
 import ru.backtesting.stockquotes.StockConnector;
-import ru.backtesting.techindicators.SMAType;
-import ru.backtesting.techindicators.TechIndicatorsHistory;
 
 // https://github.com/patriques82/alphavantage4j
 
@@ -35,14 +40,16 @@ https://github.com/zavtech/morpheus-core/blob/master/README.md графики
 https://iextrading.com/developer/docs/#getting-started
 
 https://news.ycombinator.com/item?id=14546565 - про фин библиотеки
+
+отображение данных https://github.com/dcpatrick15/stock-visualizer/blob/master/src/main/java/com/david/feeds/Main.java
+
 */
 
 public class Main {
 	
 	public static void main(String[] args) {
-		MonthlyAdjusted response = new TimeSeries(StockConnector.conn()).monthlyAdjusted("SPY");
+		Daily response = StockConnector.daily("SPY");
 		
-		/*
 	    Map<String, String> metaData = response.getMetaData();
 	    System.out.println("Information: " + metaData.get("1. Information"));
 	    System.out.println("Stock: " + metaData.get("2. Symbol"));
@@ -51,7 +58,7 @@ public class Main {
 	      
 	    List<StockData> stockData = response.getStockData();
 	    
-	    stockData = rotate(stockData);
+	    Collections.reverse(stockData);
 	    
 	    for (int i = 0; i < stockData.size(); i++) {
 	      StockData stock = stockData.get(i);
@@ -60,14 +67,15 @@ public class Main {
 	      System.out.println("high:   " + stock.getHigh());
 	      System.out.println("low:    " + stock.getLow());
 	      System.out.println("close:  " + stock.getClose());
+	      System.out.println("adj close:  " + stock.getAdjustedClose());
 	      System.out.println("volume: " + stock.getVolume());
-	     }*/
+	     }
 	    
 	    // foreignExchangeSample();
 	    
 	   //  techIndicator();
 	    
-		TechIndicatorsHistory.storage().fillSMAData("SPY", SMAType.TwoHundredDays);
+		StockIndicatorsHistory.storage().fillSMAData("SPY", 200);
 		
 	    // sectorPerfomances();
 	}
@@ -91,11 +99,8 @@ public class Main {
 	  }
 	
 	public static void techIndicator() {
-
-	    TechnicalIndicators technicalIndicators = new TechnicalIndicators(StockConnector.conn());
-
 	    try {
-		  SMA sma = technicalIndicators.sma("SPY", Interval.DAILY, TimePeriod.of(50), SeriesType.CLOSE);
+	      TechnicalIndicatorResponse sma = StockConnector.sma("SPY", Interval.DAILY, TimePeriod.of(50), SeriesType.CLOSE);
 		  
 		  System.out.println("Meta data:" + sma.getMetaData());
 		  
