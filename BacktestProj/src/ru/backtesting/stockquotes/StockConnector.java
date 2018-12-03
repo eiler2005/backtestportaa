@@ -6,6 +6,8 @@ import org.patriques.AlphaVantageConnector;
 import org.patriques.TechnicalIndicators;
 import org.patriques.TimeSeries;
 import org.patriques.input.technicalindicators.Interval;
+import org.patriques.input.technicalindicators.NBDevDn;
+import org.patriques.input.technicalindicators.NBDevUp;
 import org.patriques.input.technicalindicators.SeriesType;
 import org.patriques.input.technicalindicators.TimePeriod;
 import org.patriques.output.AlphaVantageException;
@@ -60,6 +62,10 @@ public class StockConnector {
 	
 	public static TechnicalIndicatorResponse cmo(String symbol, Interval interval, TimePeriod timePeriod, SeriesType seriesType) {	
 		return new TechnicalIndicators(connFromPool()).cmo(symbol, interval, timePeriod, seriesType);
+	}
+	
+	public static TechnicalIndicatorResponse bbands(String symbol, Interval interval, TimePeriod timePeriod, SeriesType seriesType) {	
+		return new TechnicalIndicators(connFromPool()).bbands(symbol, interval, timePeriod, seriesType, NBDevUp.of(2), NBDevDn.of(2), null);
 	}
 	
 	private static AlphaVantageConnector fullConn() {

@@ -48,7 +48,7 @@ https://news.ycombinator.com/item?id=14546565 - про фин библиотек
 public class Main {
 	
 	public static void main(String[] args) {
-		Daily response = StockConnector.daily("SPY");
+		TimeSeriesResponse response = StockConnector.weekly("SPY");
 		
 	    Map<String, String> metaData = response.getMetaData();
 	    System.out.println("Information: " + metaData.get("1. Information"));
@@ -75,9 +75,9 @@ public class Main {
 	    
 	   //  techIndicator();
 	    
-		StockIndicatorsHistory.storage().fillSMAData("SPY", 200);
+		// StockIndicatorsHistory.storage().fillSMAData("SPY", 200);
 		
-	    // sectorPerfomances();
+	    sectorPerfomances();
 	}
 	
 	public static void foreignExchangeSample() {

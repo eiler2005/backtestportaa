@@ -1,4 +1,4 @@
-package ru.backtesting.types;
+package ru.backtesting.port;
 
 public class AssetAllocation {
 	private String ticker;

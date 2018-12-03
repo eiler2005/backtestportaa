@@ -22,6 +22,24 @@ public class RSIOscillatorSignal implements SignalTestingAction {
 		Logger.log().info("RSI[" + timePeriod + "] on date [" + date + "]: ticker [" + ticker + "] rsi = " 
 				+ Logger.log().doubleLog(rsiValue));
 		
+		if (timePeriod >= 80) {
+			// buy signal
+			if ( rsiValue >= 50 )
+				return 1;
+			
+			// sell signal
+			if (rsiValue >= 80)
+				return -1;
+		}
+		else if (timePeriod <= 30) {
+			// buy signal
+			if ( rsiValue <= 32 )
+				return 1;
+			// sell signal
+			if (rsiValue >= 70)
+				return -1;
+		}
+			
 		// buy signal
 		if ( rsiValue >= 50 )
 			return 1;

@@ -11,9 +11,11 @@ import org.patriques.input.technicalindicators.Interval;
 import org.patriques.input.technicalindicators.SeriesType;
 import org.patriques.input.technicalindicators.TimePeriod;
 import org.patriques.output.AlphaVantageException;
+import org.patriques.output.technicalindicators.BBANDS;
 import org.patriques.output.technicalindicators.RSI;
 import org.patriques.output.technicalindicators.SMA;
 import org.patriques.output.technicalindicators.TechnicalIndicatorResponse;
+import org.patriques.output.technicalindicators.data.BBANDSData;
 import org.patriques.output.technicalindicators.data.IndicatorData;
 
 import ru.backtesting.stockquotes.StockConnector;
@@ -25,14 +27,14 @@ public class StockIndicatorsHistory {
 	public final static String SMA_IND_ID = "SMA";
 	public final static String RSI_OSC_ID = "RSI";
 	public final static String CHANDE_MOMENTUM_OSC_ID = "CMO";
-
+	public final static String BOLLINGER_BANDS_ID = "bbands";
 	
 	private static StockIndicatorsHistory instance;
-	private static HashMap<String, HashMap<Integer, List<IndicatorData>>> indicatorsStorage;
+	private static HashMap<String, HashMap<Integer, List<Object>>> indicatorsStorage;
 
 	
 	private StockIndicatorsHistory() {
-		indicatorsStorage = new HashMap<String, HashMap<Integer, List<IndicatorData>>>();
+		indicatorsStorage = new HashMap<String, HashMap<Integer, List<Object>>>();
 	}
 	
 	public static synchronized StockIndicatorsHistory storage() {
@@ -53,7 +55,7 @@ public class StockIndicatorsHistory {
 		if ( !indicatorsStorage.containsKey(smaStorageKey) || !indicatorsStorage.get(smaStorageKey).containsKey(new Integer(timePeriod)) )
 			try {			 
 				 
-				List<IndicatorData> indList = null;
+				List<Object> indList = null;
 				TechnicalIndicatorResponse resp = null;
 				 
 				if (indicator.equals(SMA_IND_ID)) {
@@ -62,13 +64,15 @@ public class StockIndicatorsHistory {
 					resp = StockConnector.rsi(ticker, Interval.DAILY, TimePeriod.of(timePeriod), SeriesType.CLOSE);
 				} else if (indicator.equals(CHANDE_MOMENTUM_OSC_ID)) {
 					resp = StockConnector.cmo(ticker, Interval.DAILY, TimePeriod.of(timePeriod), SeriesType.CLOSE);
+				} else if (indicator.equals(BOLLINGER_BANDS_ID)) {
+					resp = StockConnector.bbands(ticker, Interval.DAILY, TimePeriod.of(timePeriod), SeriesType.CLOSE);
 				}
 				else
 					throw new RuntimeException("Индикатор " + indicator + " не найден для тикера " + ticker + "и периода " + timePeriod);
 				
-				indList = (List<IndicatorData>) resp.getData();
+				indList = resp.getData();
 
-				HashMap<Integer, List<IndicatorData>> indicatorDates = new HashMap<Integer, List<IndicatorData>>();
+				HashMap<Integer, List<Object>> indicatorDates = new HashMap<Integer, List<Object>>();
 				  
 				Collections.reverse(indList);
 				 
@@ -83,9 +87,17 @@ public class StockIndicatorsHistory {
 		
 		List<LocalDateTime> dates = new ArrayList<LocalDateTime>();
 		
-		for (IndicatorData smaData : indicatorsStorage.get(smaStorageKey).get(new Integer(timePeriod))) 				  
-			if ( !dates.contains(smaData.getDateTime()))
-				dates.add(smaData.getDateTime());
+		for (Object indData : indicatorsStorage.get(smaStorageKey).get(new Integer(timePeriod))) {
+			LocalDateTime date = null;
+			
+			if ( indData instanceof IndicatorData)
+				date = ((IndicatorData) indData).getDateTime();
+			else if (indData instanceof BBANDSData  ) 
+				date = ((BBANDSData) indData).getDateTime();
+				
+			if ( !dates.contains(date) )
+				dates.add(date);
+		}
 		 
 		 return dates;
 	}
@@ -102,15 +114,19 @@ public class StockIndicatorsHistory {
 		 return fillIndicatosData(ticker, timePeriod, CHANDE_MOMENTUM_OSC_ID) ;
 	}
 	
-	public List<IndicatorData> findIndicatorData(String ticker, int timePeriod, String indID) {
+	public List<LocalDateTime> fillBBandsData(String ticker, int timePeriod) {
+		 return fillIndicatosData(ticker, timePeriod, BOLLINGER_BANDS_ID) ;
+	}
+	
+	private List<Object> findIndicatorData(String ticker, int timePeriod, String indID) {
 		String smaStorageKey = generateKeyForIndTicker(ticker, timePeriod, indID);
 
-		HashMap<Integer, List<IndicatorData>> indicatorData = indicatorsStorage.get(smaStorageKey);
+		HashMap<Integer, List<Object>> indicatorData = indicatorsStorage.get(smaStorageKey);
 		
 		if ( indicatorData == null || !indicatorData.containsKey(new Integer(timePeriod)) )
 			throw new RuntimeException("Не рассчитаны индикаторы " + indID + "[" + timePeriod + "] для тикера: " + ticker);
 		else {
-			List<IndicatorData> data = indicatorData.get(timePeriod);
+			List<Object> data = indicatorData.get(timePeriod);
 			
 			if (data == null)
 				throw new RuntimeException("Не рассчитаны индикаторы " + indID + "[" + timePeriod + "] для тикера: " + ticker);
@@ -123,19 +139,30 @@ public class StockIndicatorsHistory {
 		String indStorageKey = generateKeyForIndTicker(ticker, timePeriod, indID);
 
 		
-		HashMap<Integer, List<IndicatorData>> indicatorData = indicatorsStorage.get(indStorageKey);
+		HashMap<Integer, List<Object>> indicatorData = indicatorsStorage.get(indStorageKey);
 		
 		if ( indicatorData == null )
 			throw new RuntimeException("Не рассчитаны индикаторы " + indID + "[" + timePeriod + "] для тикера: " + ticker + " на дату: " + date);
 		else {
-			List<IndicatorData> data = indicatorData.get(new Integer(timePeriod));
+			List<Object> data = indicatorData.get(new Integer(timePeriod));
 			
 			if (data == null)
 				throw new RuntimeException("Не рассчитаны индикаторы " + indID + "[" + timePeriod + "] для тикера: " + ticker + " на дату: " + date);
 			else
-				for (IndicatorData ind : data)
-					if ( DateUtils.compareDatesByDay(ind.getDateTime(), date) )
-						return ind.getData();
+				for (Object indData : data) {
+					LocalDateTime dateObj = null;
+					
+					if ( indData instanceof IndicatorData)
+						dateObj = ((IndicatorData) indData).getDateTime();
+					else if (indData instanceof BBANDSData  ) 
+						dateObj = ((BBANDSData) indData).getDateTime();
+					
+					if ( DateUtils.compareDatesByDay(dateObj, date) )
+						if ( indData instanceof BBANDSData )
+							return ((BBANDSData) indData).getLowerBand();
+						else return ((IndicatorData)indData).getData();
+					
+				}
 					
 			throw new RuntimeException("Не рассчитаны индикаторы " + indID + "[" + timePeriod + "] для тикера: " + ticker + " на дату: " + date);
 		}

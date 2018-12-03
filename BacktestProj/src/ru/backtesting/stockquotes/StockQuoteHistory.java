@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import org.patriques.output.AlphaVantageException;
 import org.patriques.output.timeseries.Daily;
@@ -106,5 +107,23 @@ public class StockQuoteHistory {
 	
 	public boolean containsDataInStorage(String ticker) {
 		return quotes.containsKey(ticker) && dates.containsKey(ticker);
+	}
+	
+	public boolean containsDataInStorageOnDate(Set<String> tickers, LocalDateTime date) {
+		for (String ticker : tickers)
+			if ( !containsDataInStorageOnDate(ticker, date) )
+				return false;
+		
+		return true;
+	}
+	
+	public boolean containsDataInStorageOnDate(String ticker, LocalDateTime date) {
+		List<StockQuote> list = quotes.get(ticker);
+
+		for (StockQuote q : list)
+			if ( DateUtils.compareDatesByDay(q.getTime(), date) ) 
+				return true;
+		
+		return false;		
 	}
 }

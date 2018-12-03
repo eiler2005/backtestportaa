@@ -1,12 +1,14 @@
-package ru.backtesting.types;
+package ru.backtesting.port;
 
-import java.security.cert.CollectionCertStoreParameters;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 
 import org.patriques.output.timeseries.TimeSeriesResponse;
 import org.patriques.output.timeseries.data.StockData;
@@ -22,6 +24,7 @@ import ru.backtesting.stockquotes.StockQuoteHistory;
 import ru.backtesting.utils.Logger;
 import ru.backtesting.utils.PortfolioUtils;
 
+@SuppressWarnings("deprecation")
 public class Portfolio {
 	public static final String CASH_TICKER = "CASH";
 	private String name;
@@ -174,6 +177,9 @@ public class Portfolio {
 			// разница - профит
 			
 			// ------------- ДОДЕЛАТЬ
+	    	
+	    	throw new RuntimeException("Для портфелей с типом " + rebalType.getRebalMethod() + " пока нет реализации");
+
 	    }
 	    else if (rebalType.getRebalMethod().equals(RebalancingMethod.AssetProportion)) {			
 	    	LocalDateTime prevDate = null;	    	
@@ -186,7 +192,7 @@ public class Portfolio {
 					
     			Logger.log().info("Начинаем пересчитывать стоимость позиций в портфеле");
 
-				double portfolioBalance = prevDate == null ? initialAmount : PortfolioUtils.calculateAllPositionsBalance(postionsOnDates.get(prevDate), date, reinvestDividends);
+				double portfolioBalance = prevDate == null ? initialAmount : PortfolioUtils.calculateAllPositionsBalance(postionsOnDates.get(prevDate), date, reinvestDividends, true);
 				
     			Logger.log().info("Пересчитали стоимость портфеля на дату [" + date + "](сколько денег у нас есть для покупки): " + Logger.log().doubleLog(portfolioBalance));
 				
@@ -278,6 +284,10 @@ public class Portfolio {
 	    	// если нет сигнала, то в защитный актив
 	    	
 	    	// мощно перекладыываться c частотой раз в день - не чаще
+	    	
+			// ------------- ДОДЕЛАТЬ - нужно ли
+	    	
+	    	throw new RuntimeException("Для портфелей с типом " + rebalType.getRebalMethod() + " пока нет реализации");
 		}	    
 	}
 	
@@ -309,21 +319,6 @@ public class Portfolio {
 	
 	private boolean haveTimingSignals() {
 		return timingSignals != null && timingSignals.size() != 0;
-	}
-	
-	private boolean isBuyForSignals(LocalDateTime date, String ticker, List<SignalActionContext> timingSignals) {		
-		if (ticker.equals(CASH_TICKER))
-			return true;
-			
-		if (timingSignals != null && timingSignals.size() != 0)
-			for (SignalActionContext signal : timingSignals) {
-				if (signal.testSignal(date, ticker) == -1 )
-					return false;
-			}
-		else
-			throw new RuntimeException("Для тикера \"" +  ticker + "\" не найдены технические индикаторы"); 
-		
-		return true;
 	}
 	
 	public int getStartYear() {
@@ -375,5 +370,31 @@ public class Portfolio {
 			
 			Logger.log().info("-------------");
 		}
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public LinkedHashMap<LocalDateTime, List<PositionInformation>> getPostionsOnDates() {
+		return postionsOnDates;
+	}
+
+	public String getOutOfMarketPosTicker() {
+		return outOfMarketPosTicker;
+	}
+	
+	public Set<String> getAllTickersInPort() {
+		Set<String> tickers = new HashSet<String>();
+		for (int i = 0; i < assetsAllocation.size(); i++) {
+    		String ticker = assetsAllocation.get(i).getTicker();
+    		
+    		tickers.add(ticker);
+		}
+		
+		if ( outOfMarketPosTicker != null && !outOfMarketPosTicker.equals(CASH_TICKER) )
+			tickers.add(outOfMarketPosTicker);
+		
+		return tickers;
 	}
 }

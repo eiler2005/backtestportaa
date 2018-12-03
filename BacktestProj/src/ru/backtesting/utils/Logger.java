@@ -3,10 +3,14 @@ package ru.backtesting.utils;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.text.DecimalFormat;
+import java.time.format.DateTimeFormatter;
 
 public class Logger {
-    private final DecimalFormat df = new DecimalFormat("0.00");;
+    public static final DecimalFormat DOUBLE_FORMAT = new DecimalFormat("0.00");;
+    public static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    public static final DateTimeFormatter DATE_FORMAT_SIMPLE = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    
 	private static Logger instance;
 
 	private PrintStream out;
@@ -27,7 +31,7 @@ public class Logger {
 	}
 	
 	public String doubleLog(double number) {
-		return df.format(number);
+		return DOUBLE_FORMAT.format(number);
 	}
 	
 	public void info(String info) {

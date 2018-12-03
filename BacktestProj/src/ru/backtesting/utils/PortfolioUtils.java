@@ -3,11 +3,11 @@ package ru.backtesting.utils;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import ru.backtesting.port.AssetAllocation;
+import ru.backtesting.port.Portfolio;
+import ru.backtesting.port.PositionInformation;
 import ru.backtesting.signal.SignalTestingAction;
 import ru.backtesting.stockquotes.StockQuoteHistory;
-import ru.backtesting.types.AssetAllocation;
-import ru.backtesting.types.Portfolio;
-import ru.backtesting.types.PositionInformation;
 
 public class PortfolioUtils {
 	public static double buyPortfolio(List<PositionInformation> positions, List<AssetAllocation> assetsAllocation, double moneyAmount, boolean dividends) {
@@ -50,21 +50,23 @@ public class PortfolioUtils {
 		return sum;
 	}
 	
-	public static double calculateAllPositionsBalance(List<PositionInformation> positions, LocalDateTime date, boolean reinvestDividends) {
+	public static double calculateAllPositionsBalance(List<PositionInformation> positions, LocalDateTime date, boolean reinvestDividends, boolean logging) {
 		double sum = 0;
 		
 		for(PositionInformation pos : positions) {
 			if ( pos.getTicker().equals(Portfolio.CASH_TICKER) ) {
 				sum += pos.getPrice();
-				Logger.log().info("Позиция [" + pos.getTicker() + "] лотов [" + Logger.log().doubleLog(pos.getQuantity()) + "], цена: " + Logger.log().doubleLog(pos.getPrice()));
+				
+				if ( logging)
+					Logger.log().info("Позиция [" + pos.getTicker() + "] лотов [" + Logger.log().doubleLog(pos.getQuantity()) + "], цена: " + Logger.log().doubleLog(pos.getPrice()));
 			}
 			else {
 				double quoteValue = StockQuoteHistory.storage().getQuoteValueByDate(pos.getTicker(), date, reinvestDividends);
 				sum += pos.getQuantity()*quoteValue;
 				
-				Logger.log().info("Позиция [" + pos.getTicker() + "] лотов [" + Logger.log().doubleLog(pos.getQuantity()) + "], котировка [" + quoteValue + "], " + 
+				if (logging)
+					Logger.log().info("Позиция [" + pos.getTicker() + "] лотов [" + Logger.log().doubleLog(pos.getQuantity()) + "], котировка [" + quoteValue + "], " + 
 						"цена: " + Logger.log().doubleLog(pos.getQuantity()*quoteValue));
-
 			}
 		}
 			
