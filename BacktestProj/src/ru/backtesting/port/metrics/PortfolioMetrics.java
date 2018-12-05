@@ -161,9 +161,9 @@ public class PortfolioMetrics {
 		
 		System.out.println("max dd - " + Collections.max(balancedTable.doubleColumn(CN_NAME_PORT_PERCENT_DRAWDOWN).asList()));
 		
-		System.out.println("||drawdown period sort table||");
+		System.out.println("||underwater period sort table||");
 		System.out.println(balancedTable.sortAscendingOn(CN_NAME_PORT_BETTER_PERIOD_DRAWDOWN).print(30));
-		System.out.println("dd lenght - " + Collections.max(balancedTable.longColumn(CN_NAME_PORT_BETTER_PERIOD_DRAWDOWN).asList()));
+		System.out.println("underwater lenght - " + Collections.max(balancedTable.longColumn(CN_NAME_PORT_BETTER_PERIOD_DRAWDOWN).asList()));
 
 	}
 	

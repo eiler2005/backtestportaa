@@ -66,7 +66,7 @@ public class PortfolioTest {
 		simplePort.backtestPortfolio();
 		
 		PortfolioMetrics metrics = new PortfolioMetrics(simplePort);
-		metrics.calcDrawdown();
+		// metrics.calcDrawdown();
 		
 	}
 }

@@ -51,8 +51,15 @@ public class StockConnector {
 	}
 	
 	public static TechnicalIndicatorResponse sma(String symbol, Interval interval, TimePeriod timePeriod, SeriesType seriesType) {
-		
-		return new TechnicalIndicators(connFromPool()).sma(symbol, interval, timePeriod, seriesType);
+		// --- интересное место
+		// tema - отстой
+		// wma - отл 1
+		// ema  - норм ближе к wma 1
+		// sma - классика 1
+		// kama - отстой
+		// trima - средне
+		// t3 - отстой
+		return new TechnicalIndicators(connFromPool()).wma(symbol, interval, timePeriod, seriesType);
 	}
 	
 	public static TechnicalIndicatorResponse rsi(String symbol, Interval interval, TimePeriod timePeriod, SeriesType seriesType) {
