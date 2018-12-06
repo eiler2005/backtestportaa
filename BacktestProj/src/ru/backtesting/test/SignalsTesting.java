@@ -1,7 +1,8 @@
 package ru.backtesting.test;
 
 import ru.backtesting.signal.RSIOscillatorSignal;
-import ru.backtesting.signal.SMATechIndicatorSignal;
+import ru.backtesting.signal.ma.MovingAverageIndicatorSignal;
+import ru.backtesting.signal.ma.MovingAverageType;
 import ru.backtesting.utils.DateUtils;
 
 public class SignalsTesting {
@@ -9,7 +10,7 @@ public class SignalsTesting {
 	public static void main(String[] args) {
 		// SignalActionContext smaContext = new SignalActionContext();
 		
-		SMATechIndicatorSignal smaSignalAction = new SMATechIndicatorSignal(50, 200);
+		MovingAverageIndicatorSignal smaSignalAction = new MovingAverageIndicatorSignal(50, 200, MovingAverageType.Simple);
 				
 		// smaContext.setSignalAction(smaSignalAction);
 						

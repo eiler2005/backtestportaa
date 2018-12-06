@@ -22,8 +22,8 @@ import ru.backtesting.stockquotes.StockQuoteHistory;
 
 public class TechIndicatorsTest {
 	public static void main(String[] args) {		
-		// smaTest();
-		rsiTest();
+		smaTest();
+		// rsiTest();
 	}
 	
 	public static void rsiTest() {
@@ -48,7 +48,7 @@ public class TechIndicatorsTest {
 	
 	public static void smaTest( ) {		
 		StockQuoteHistory.storage().fillQuotesData("VOO", 2000, 2018);
-		StockIndicatorsHistory.storage().fillSMAData("VOO", 200);
+		StockIndicatorsHistory.storage().fillIndicatosData("VOO", 200, StockIndicatorsHistory.SMA_IND_ID);
 		
 		// Data:276.3265, 2018-10-26T00:00
 		LocalDateTime date1 = LocalDateTime.parse("2018-10-25T00:00:00");
@@ -59,7 +59,7 @@ public class TechIndicatorsTest {
 		System.out.println("sma 2: " + StockIndicatorsHistory.storage().findIndicatorValue("VOO", 200, date2, StockIndicatorsHistory.SMA_IND_ID));
 		
 		StockQuoteHistory.storage().fillQuotesData("MTUM", 2000, 2018);
-		StockIndicatorsHistory.storage().fillSMAData("MTUM", 200);
+		StockIndicatorsHistory.storage().fillIndicatosData("MTUM", 200, StockIndicatorsHistory.SMA_IND_ID);
 
 		
 		System.out.println(StockIndicatorsUtils.haveSMASignal(date2, "VOO", 200));

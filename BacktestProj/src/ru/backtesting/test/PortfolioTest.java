@@ -13,8 +13,9 @@ import ru.backtesting.rebalancing.RebalancingType;
 import ru.backtesting.signal.BollingerBandsIndicatorSignal;
 import ru.backtesting.signal.ChandeMomentumOscillator;
 import ru.backtesting.signal.RSIOscillatorSignal;
-import ru.backtesting.signal.SMATechIndicatorSignal;
 import ru.backtesting.signal.SignalTestingAction;
+import ru.backtesting.signal.ma.MovingAverageIndicatorSignal;
+import ru.backtesting.signal.ma.MovingAverageType;
 
 public class PortfolioTest {
 	public static void main(String[] args) {
@@ -38,7 +39,8 @@ public class PortfolioTest {
 				new AssetAllocation("SPY", 100)), 
 				2004, 2018, 10000, 
 				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
-				Arrays.asList(new SMATechIndicatorSignal(50, 200), new RSIOscillatorSignal(100), 
+				Arrays.asList(new MovingAverageIndicatorSignal(50, 200, MovingAverageType.Weighted), 
+						new RSIOscillatorSignal(100), 
 						new BollingerBandsIndicatorSignal(200)), "TLT", false);
 		
 		/*
@@ -66,7 +68,7 @@ public class PortfolioTest {
 		simplePort.backtestPortfolio();
 		
 		PortfolioMetrics metrics = new PortfolioMetrics(simplePort);
-		// metrics.calcDrawdown();
+		//metrics.calcDrawdown();
 		
 	}
 }

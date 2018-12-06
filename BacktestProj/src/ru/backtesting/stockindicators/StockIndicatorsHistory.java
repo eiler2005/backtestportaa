@@ -25,6 +25,9 @@ import ru.backtesting.utils.Logger;
 
 public class StockIndicatorsHistory {
 	public final static String SMA_IND_ID = "SMA";
+	public final static String EMA_IND_ID = "EMA";
+	public final static String WMA_IND_ID = "WMA";
+
 	public final static String RSI_OSC_ID = "RSI";
 	public final static String CHANDE_MOMENTUM_OSC_ID = "CMO";
 	public final static String BOLLINGER_BANDS_ID = "bbands";
@@ -49,7 +52,7 @@ public class StockIndicatorsHistory {
 		return ticker + String.valueOf(timePeriod) + indicator; 
 	}
 	
-	private List<LocalDateTime> fillIndicatosData(String ticker, int timePeriod, String indicator) {
+	public List<LocalDateTime> fillIndicatosData(String ticker, int timePeriod, String indicator) {
 		String smaStorageKey = generateKeyForIndTicker(ticker, timePeriod, indicator);
 		
 		if ( !indicatorsStorage.containsKey(smaStorageKey) || !indicatorsStorage.get(smaStorageKey).containsKey(new Integer(timePeriod)) )
@@ -59,7 +62,11 @@ public class StockIndicatorsHistory {
 				TechnicalIndicatorResponse resp = null;
 				 
 				if (indicator.equals(SMA_IND_ID)) {
-					resp = StockConnector.sma(ticker, Interval.DAILY, TimePeriod.of(timePeriod), SeriesType.CLOSE);;
+					resp = StockConnector.sma(ticker, Interval.DAILY, TimePeriod.of(timePeriod), SeriesType.CLOSE);
+				} else if (indicator.equals(EMA_IND_ID)) {
+					resp = StockConnector.ema(ticker, Interval.DAILY, TimePeriod.of(timePeriod), SeriesType.CLOSE);
+				} else if (indicator.equals(WMA_IND_ID)) {
+					resp = StockConnector.wma(ticker, Interval.DAILY, TimePeriod.of(timePeriod), SeriesType.CLOSE);
 				} else if (indicator.equals(RSI_OSC_ID)) {
 					resp = StockConnector.rsi(ticker, Interval.DAILY, TimePeriod.of(timePeriod), SeriesType.CLOSE);
 				} else if (indicator.equals(CHANDE_MOMENTUM_OSC_ID)) {
@@ -100,10 +107,6 @@ public class StockIndicatorsHistory {
 		}
 		 
 		 return dates;
-	}
-	
-	public List<LocalDateTime> fillSMAData(String ticker, int timePeriod) {
-		 return fillIndicatosData(ticker, timePeriod, SMA_IND_ID) ;
 	}
 	
 	public List<LocalDateTime> fillRSIData(String ticker, int timePeriod) {
