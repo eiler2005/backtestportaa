@@ -58,18 +58,18 @@ public class PortfolioTest {
 		*/
 		
 		
-		List<AssetAllocation> sectors = Arrays.asList(new AssetAllocation("XLV", 10),
-				new AssetAllocation("XLP", 10), new AssetAllocation("XLU", 10), 
-				new AssetAllocation("XLK", 10), 
-				new AssetAllocation("XLF", 10), 
-				new AssetAllocation("XLY", 10), new AssetAllocation("XLI", 10), 
-				new AssetAllocation("XLE", 10), new AssetAllocation("XLB", 20));
+		List<AssetAllocation> sectors = Arrays.asList(new AssetAllocation("XLV", 100),
+				new AssetAllocation("XLP", 100), new AssetAllocation("XLU", 100), 
+				new AssetAllocation("XLK", 100), 
+				new AssetAllocation("XLF", 100), 
+				new AssetAllocation("XLY", 100), new AssetAllocation("XLI", 100), 
+				new AssetAllocation("XLE", 100), new AssetAllocation("XLB", 100));
 
 		
 		Portfolio simplePort = new Portfolio("sectors with cmo20", 
 				sectors, 2004, 2018, 10000, 
 		new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
-			Arrays.asList(new ChandeMomentumOscillator(20)), "TLT", false);
+			Arrays.asList(new ChandeMomentumOscillator(50)), "TLT", false);
 
 		simplePort.fillQuotesData();
 
@@ -78,7 +78,7 @@ public class PortfolioTest {
 		simplePort.backtestPortfolio();
 		
 		PortfolioMetrics metrics = new PortfolioMetrics(simplePort);
-		//metrics.calcDrawdown();
+		metrics.calcDrawdown();
 		
 	}
 }

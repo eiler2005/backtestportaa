@@ -29,6 +29,7 @@ public class Daily extends TimeSeriesResponse {
    */
   public static Daily from(String json)  {
     Parser parser = new Parser();
+    
     return parser.parseJson(json);
   }
 

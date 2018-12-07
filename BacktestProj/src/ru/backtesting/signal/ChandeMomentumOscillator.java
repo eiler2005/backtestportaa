@@ -7,7 +7,6 @@ import ru.backtesting.stockindicators.StockIndicatorsHistory;
 import ru.backtesting.utils.Logger;
 import ru.backtesting.utils.SimpleMovingAverage;
 
-@Deprecated
 public class ChandeMomentumOscillator implements SignalTestingAction {
 	private int timePeriod;
 	
@@ -41,7 +40,7 @@ public class ChandeMomentumOscillator implements SignalTestingAction {
 		
 		Logger.log().info("sma[50] Chande Momentum Oscillator on date [" + date + "]: ticker [" + ticker + "] = " + Logger.log().doubleLog(sma50Val));
 		Logger.log().info("sma[200] Chande Momentum Oscillator on date [" + date + "]: ticker [" + ticker + "] = " + Logger.log().doubleLog(sma200Val));
-		
+				
 		// нужно считать sma по осциллятору и входить если выше sma и выше 50
 		// for example, sma50 > sma200 - buy signal
 		if (sma50Val >= sma200Val) {

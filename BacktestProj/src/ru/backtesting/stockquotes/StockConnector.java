@@ -144,7 +144,7 @@ public class StockConnector {
 	private static void waitForFreeAccess() {
         try {
         	
-        	int i = 13;
+        	int i = 61;
         	
         	Logger.log().info("Ждем " + i + " секунд из-за ограничений на 5 подключений в минуту к сайту www.alphavantage.co");
 			

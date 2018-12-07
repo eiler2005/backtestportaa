@@ -198,6 +198,7 @@ public class Portfolio {
 				
 	    		for (int i = 0; i < assetsAllocation.size(); i++) {
 		    		String ticker = assetsAllocation.get(i).getTicker();
+		    		double allocationPercent = assetsAllocation.get(i).getAllocationPercent();
 		    		
 		    		PositionInformation position = positions.get(i);
 		    				    		
@@ -224,7 +225,7 @@ public class Portfolio {
 		    		}
 		    		// если кэш
 		    		else {		    			
-		    			quote = assetsAllocation.get(i).getAllocationPercent()*portfolioBalance/100;
+		    			quote = allocationPercent*portfolioBalance/100;
 		    			
 		    			quantity = 1;
 		    		}
@@ -248,7 +249,7 @@ public class Portfolio {
 		    			else {
 		    				double hedgeQuote = StockQuoteHistory.storage().getQuoteValueByDate(outOfMarketPosTicker, position.getTime(), reinvestDividends);
 		    				
-		    				double hedgeQuantity = assetsAllocation.get(i).getAllocationPercent()*portfolioBalance/hedgeQuote/100;
+		    				double hedgeQuantity = allocationPercent*portfolioBalance/hedgeQuote/100;
 		    				
 			    			hegdePos.buy(hedgeQuantity, hedgeQuantity*hedgeQuote);
 			    			
@@ -261,6 +262,8 @@ public class Portfolio {
 		    			positions.set(i, hegdePos);	    			
 		    		}
 		    	}
+	    		    		
+	    		sellAllPositionWhenPortIsFull(positions);
 	    		
 				double newPortfolioBalance = PortfolioUtils.calculateAllPositionsBalance(positions); 
 	    		
@@ -288,6 +291,26 @@ public class Portfolio {
 	    	
 	    	throw new RuntimeException("Для портфелей с типом " + rebalType.getRebalMethod() + " пока нет реализации");
 		}	    
+	}
+	
+	private void sellAllPositionWhenPortIsFull(List<PositionInformation> positions) {		
+		int firstFullIndex = 0;
+		
+		for (int i = 0; i < assetsAllocation.size(); i++) {
+    		double allocationPercent = assetsAllocation.get(i).getAllocationPercent();
+    		
+    		if ( allocationPercent == 100) {
+    			firstFullIndex = i;
+    			break;
+    		}
+		}
+		
+		for (int i = 0; i < assetsAllocation.size(); i++) {    		
+			PositionInformation position = positions.get(i);
+    		
+    		if ( i != firstFullIndex)
+    			position.sell();
+		}
 	}
 	
 	private String prinfPortfolioInformation() {
