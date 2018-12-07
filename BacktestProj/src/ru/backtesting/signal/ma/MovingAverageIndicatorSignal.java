@@ -38,7 +38,7 @@ public class MovingAverageIndicatorSignal implements SignalTestingAction {
 			double value2 = StockIndicatorsHistory.storage().findIndicatorValue(ticker, timePeriod2, date, maId);
 			
 			Logger.log().info(maId + "[" + timePeriod1 + "] on date [" + date + "]: ticker [" + ticker + "], " + maId + " = " + Logger.log().doubleLog(value1));
-			Logger.log().info(maId + "[" + timePeriod2 + "] on date [" + date + "]: ticker [" + ticker + "], " + maId +"= " + Logger.log().doubleLog(value2));
+			Logger.log().info(maId + "[" + timePeriod2 + "] on date [" + date + "]: ticker [" + ticker + "], " + maId +" = " + Logger.log().doubleLog(value2));
 
 			
 			// for example, sma50 > sma200 - buy signal
@@ -63,7 +63,7 @@ public class MovingAverageIndicatorSignal implements SignalTestingAction {
 			double quote = StockQuoteHistory.storage().getQuoteValueByDate(ticker, date, false);
 			
 			Logger.log().info(maId + "[" + timePeriod1 + "] on date [" + date + "]: ticker [" + ticker + "] quote = " + Logger.log().doubleLog(quote) 
-					+ ", " + maId + "= " + Logger.log().doubleLog(maValue));
+					+ ", " + maId + " = " + Logger.log().doubleLog(maValue));
 			
 			// buy signal
 			if ( quote > maValue )

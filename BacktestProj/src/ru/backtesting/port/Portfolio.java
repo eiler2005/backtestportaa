@@ -234,8 +234,7 @@ public class Portfolio {
 								", цена лота: " + Logger.log().doubleLog(quote) );
 		    			
 		    			position.buy(quantity, quantity*quote);
-		    		}
-		    		else { // купить в соответствии с outOfMarketTicket и других аллокаций
+		    		} else { // купить в соответствии с outOfMarketTicket и других аллокаций
 		    			// перекладываем текущую позицию в outOfMarketPos		    			
 		    			Logger.log().info("Перекладываемся в hedge-актив " + outOfMarketPosTicker + " вместо " + ticker + " на дату " + date);
 		    			

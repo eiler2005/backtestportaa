@@ -6,15 +6,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.patriques.TechnicalIndicators;
 import org.patriques.input.technicalindicators.Interval;
 import org.patriques.input.technicalindicators.SeriesType;
 import org.patriques.input.technicalindicators.TimePeriod;
-import org.patriques.output.technicalindicators.RSI;
 import org.patriques.output.technicalindicators.TechnicalIndicatorResponse;
 import org.patriques.output.technicalindicators.data.IndicatorData;
 
-import ru.backtesting.stockindicators.SMAType;
 import ru.backtesting.stockindicators.StockIndicatorsHistory;
 import ru.backtesting.stockindicators.StockIndicatorsUtils;
 import ru.backtesting.stockquotes.StockConnector;

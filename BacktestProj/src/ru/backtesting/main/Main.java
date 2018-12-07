@@ -1,13 +1,10 @@
 package ru.backtesting.main;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.patriques.ForeignExchange;
 import org.patriques.SectorPerformances;
-import org.patriques.TechnicalIndicators;
-import org.patriques.TimeSeries;
 import org.patriques.input.technicalindicators.Interval;
 import org.patriques.input.technicalindicators.SeriesType;
 import org.patriques.input.technicalindicators.TimePeriod;
@@ -16,17 +13,11 @@ import org.patriques.output.exchange.CurrencyExchange;
 import org.patriques.output.exchange.data.CurrencyExchangeData;
 import org.patriques.output.sectorperformances.Sectors;
 import org.patriques.output.sectorperformances.data.SectorData;
-import org.patriques.output.technicalindicators.SMA;
 import org.patriques.output.technicalindicators.TechnicalIndicatorResponse;
 import org.patriques.output.technicalindicators.data.IndicatorData;
-import org.patriques.output.timeseries.Daily;
-import org.patriques.output.timeseries.Monthly;
-import org.patriques.output.timeseries.MonthlyAdjusted;
 import org.patriques.output.timeseries.TimeSeriesResponse;
 import org.patriques.output.timeseries.data.StockData;
 
-import ru.backtesting.stockindicators.SMAType;
-import ru.backtesting.stockindicators.StockIndicatorsHistory;
 import ru.backtesting.stockquotes.StockConnector;
 
 // https://github.com/patriques82/alphavantage4j

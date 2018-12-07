@@ -170,4 +170,55 @@ public class StockIndicatorsHistory {
 			throw new RuntimeException("Не рассчитаны индикаторы " + indID + "[" + timePeriod + "] для тикера: " + ticker + " на дату: " + date);
 		}
 	}
+	
+	public List<Double> getIndicatorsDataForLastPeriod(String ticker, int indTimePeriod, LocalDateTime date, String indID, int lastPeriod) {
+		String indStorageKey = generateKeyForIndTicker(ticker, indTimePeriod, indID);
+
+		HashMap<Integer, List<Object>> indicatorData = indicatorsStorage.get(indStorageKey);
+		
+		if ( indicatorData == null )
+			throw new RuntimeException("Не рассчитаны индикаторы " + indID + "[" + indTimePeriod + "] для тикера: " + ticker + " на дату: " + date);
+		else {
+			List<Object> data = indicatorData.get(new Integer(indTimePeriod));
+			
+			if (data == null)
+				throw new RuntimeException("Не рассчитаны индикаторы " + indID + "[" + indTimePeriod + "] для тикера: " + ticker + " на дату: " + date);
+		
+			int i = 0;
+			for (Object indData : data) {				
+				LocalDateTime dateObj = null;
+				
+				if ( indData instanceof IndicatorData)
+					dateObj = ((IndicatorData) indData).getDateTime();
+				else if (indData instanceof BBANDSData  ) 
+					dateObj = ((BBANDSData) indData).getDateTime();
+				
+				if ( DateUtils.compareDatesByDay(dateObj, date) )
+					break;
+				
+				i++;
+			}
+						
+			if ( i == 0 )
+				throw new RuntimeException("Не рассчитаны индикаторы " + indID + "[" + indTimePeriod + "] для тикера: " + ticker + " на дату: " + date);
+			
+			List<Double> dataForSma = new ArrayList<Double>();
+			
+			int iterator = 0;
+			
+			if ( i >= lastPeriod)
+				iterator = i - lastPeriod;
+			
+			for(;iterator <= i; iterator++) {
+				Object indData = data.get(iterator);
+				
+				if ( indData instanceof BBANDSData )
+					dataForSma.add(Double.valueOf(((BBANDSData) indData).getLowerBand()));
+				else
+					dataForSma.add(Double.valueOf(((IndicatorData)indData).getData()));
+			}
+			
+			return dataForSma;
+		}
+	}
 }

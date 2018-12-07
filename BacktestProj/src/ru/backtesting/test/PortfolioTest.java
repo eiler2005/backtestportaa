@@ -34,6 +34,7 @@ public class PortfolioTest {
 		*/
 		
 		
+		/*
 		// !!!best
 		Portfolio simplePort = new Portfolio("spy - 200", Arrays.asList(
 				new AssetAllocation("SPY", 100)), 
@@ -42,7 +43,7 @@ public class PortfolioTest {
 				Arrays.asList(new MovingAverageIndicatorSignal(50, 200, MovingAverageType.Weighted), 
 						new RSIOscillatorSignal(100), 
 						new BollingerBandsIndicatorSignal(200)), "TLT", false);
-		
+		*/
 		/*
 		Portfolio simplePort = new Portfolio("spy/tlt - 60 on 40 with sma200", spyAndTlt, 2047, 2018, 10000, 
 				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
@@ -50,16 +51,25 @@ public class PortfolioTest {
 				"BND", false); */
 		
 		/*
-		Portfolio simplePort = new Portfolio("spy with sma200", 
+		Portfolio simplePort = new Portfolio("spy with cmo20", 
 				Arrays.asList(new AssetAllocation("SPY", 100)), 2004, 2018, 10000, 
 		new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
-		Arrays.asList(new SMATechIndicatorSignal(200)), "BND", false);*/
-		/*
-		Portfolio simplePort = new Portfolio("spy with cmo14", 
-				Arrays.asList(new AssetAllocation("SPY", 100)), 2004, 2018, 10000, 
+		Arrays.asList(new ChandeMomentumOscillator(20)), "TLT", false);
+		*/
+		
+		
+		List<AssetAllocation> sectors = Arrays.asList(new AssetAllocation("XLV", 10),
+				new AssetAllocation("XLP", 10), new AssetAllocation("XLU", 10), 
+				new AssetAllocation("XLK", 10), 
+				new AssetAllocation("XLF", 10), 
+				new AssetAllocation("XLY", 10), new AssetAllocation("XLI", 10), 
+				new AssetAllocation("XLE", 10), new AssetAllocation("XLB", 20));
+
+		
+		Portfolio simplePort = new Portfolio("sectors with cmo20", 
+				sectors, 2004, 2018, 10000, 
 		new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
-			Arrays.asList(new ChandeMomentumOscillator(14)), "TLT", false);
-		 */
+			Arrays.asList(new ChandeMomentumOscillator(20)), "TLT", false);
 
 		simplePort.fillQuotesData();
 
