@@ -1,11 +1,10 @@
 package ru.backtesting.utils;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
@@ -48,5 +47,9 @@ public class DateUtils {
 	public static List<LocalDate> getDatesBetweenUsingJava8(LocalDate startDate, LocalDate endDate) { 
 		long numOfDaysBetween = ChronoUnit.DAYS.between(startDate, endDate); 
 		return IntStream.iterate(0, i -> i + 1).limit(numOfDaysBetween).mapToObj(i -> startDate.plusDays(i)).collect(Collectors.toList()); 
+	}
+	
+	public static Duration duration(LocalDate startDate, LocalDate endDate) {
+		return Duration.between(startDate.atStartOfDay(ZoneId.of(TIME_ZONE)), endDate.atStartOfDay(ZoneId.of(TIME_ZONE)));
 	}
 }

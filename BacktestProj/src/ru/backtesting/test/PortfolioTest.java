@@ -18,7 +18,38 @@ import ru.backtesting.signal.ma.MovingAverageIndicatorSignal;
 import ru.backtesting.signal.ma.MovingAverageType;
 
 public class PortfolioTest {
+	public void testBestPort() {
+		Portfolio simplePort = new Portfolio("spy - 200", Arrays.asList(
+				new AssetAllocation("SPY", 100)), 
+				2004, 2018, 10000, 
+				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
+				Arrays.asList(new MovingAverageIndicatorSignal(50, 200, MovingAverageType.Weighted, 1), 
+						new RSIOscillatorSignal(100)), "TLT", false);
+		
+		simplePort = new Portfolio("spy - 200", Arrays.asList(
+				new AssetAllocation("SPY", 100)), 
+				2004, 2018, 10000, 
+				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
+				Arrays.asList(new MovingAverageIndicatorSignal(200, MovingAverageType.Weighted, 1), 
+						new RSIOscillatorSignal(100)), "TLT", false);
+	}
+	
 	public static void main(String[] args) {
+		// !!!best
+		/*Portfolio simplePort = new Portfolio("spy - 200", Arrays.asList(
+				new AssetAllocation("SPY", 100)), 
+				2004, 2018, 10000, 
+				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
+				Arrays.asList(new MovingAverageIndicatorSignal(50, 200, MovingAverageType.Weighted, 1), 
+						new RSIOscillatorSignal(100)), "TLT", false);*/
+		
+		Portfolio simplePort = new Portfolio("spy - 200", Arrays.asList(
+				new AssetAllocation("SPY", 100)), 
+				2004, 2018, 10000, 
+				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
+				Arrays.asList(new MovingAverageIndicatorSignal(50, 200, MovingAverageType.Weighted, 1), 
+						new RSIOscillatorSignal(100)), "TLT", false);
+		
 		List<AssetAllocation> spyAndTlt =  Arrays.asList(
 				new AssetAllocation("SPY", 60), new AssetAllocation("TLT", 40));
 		/*
@@ -32,18 +63,7 @@ public class PortfolioTest {
 				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
 				Arrays.asList(new RSIOscillatorSignal(100)), Portfolio.CASH_TICKER, false);
 		*/
-		
-		
-		/*
-		// !!!best
-		Portfolio simplePort = new Portfolio("spy - 200", Arrays.asList(
-				new AssetAllocation("SPY", 100)), 
-				2004, 2018, 10000, 
-				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
-				Arrays.asList(new MovingAverageIndicatorSignal(50, 200, MovingAverageType.Weighted), 
-						new RSIOscillatorSignal(100), 
-						new BollingerBandsIndicatorSignal(200)), "TLT", false);
-		*/
+
 		/*
 		Portfolio simplePort = new Portfolio("spy/tlt - 60 on 40 with sma200", spyAndTlt, 2047, 2018, 10000, 
 				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
@@ -57,7 +77,7 @@ public class PortfolioTest {
 		Arrays.asList(new ChandeMomentumOscillator(20)), "TLT", false);
 		*/
 		
-		
+		/*
 		List<AssetAllocation> sectors = Arrays.asList(new AssetAllocation("XLV", 100),
 				new AssetAllocation("XLP", 100), new AssetAllocation("XLU", 100), 
 				new AssetAllocation("XLK", 100), 
@@ -70,7 +90,8 @@ public class PortfolioTest {
 				sectors, 2004, 2018, 10000, 
 		new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
 			Arrays.asList(new ChandeMomentumOscillator(50)), "TLT", false);
-
+		 */
+		
 		simplePort.fillQuotesData();
 
 		// simplePort.print(System.out);
@@ -78,7 +99,9 @@ public class PortfolioTest {
 		simplePort.backtestPortfolio();
 		
 		PortfolioMetrics metrics = new PortfolioMetrics(simplePort);
-		metrics.calcDrawdown();
+		//metrics.calcDrawdown();
 		
+		System.out.println(metrics.CAGRInPercent());
+
 	}
 }

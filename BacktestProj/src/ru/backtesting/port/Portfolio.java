@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -13,10 +12,11 @@ import java.util.Set;
 import org.patriques.output.timeseries.TimeSeriesResponse;
 import org.patriques.output.timeseries.data.StockData;
 
+import com.google.common.collect.Lists;
+
 import ru.backtesting.rebalancing.Frequency;
 import ru.backtesting.rebalancing.RebalancingMethod;
 import ru.backtesting.rebalancing.RebalancingType;
-import ru.backtesting.signal.SignalActionContext;
 import ru.backtesting.signal.SignalTestingAction;
 import ru.backtesting.stockquotes.StockConnector;
 import ru.backtesting.stockquotes.StockQuote;
@@ -24,7 +24,6 @@ import ru.backtesting.stockquotes.StockQuoteHistory;
 import ru.backtesting.utils.Logger;
 import ru.backtesting.utils.PortfolioUtils;
 
-@SuppressWarnings("deprecation")
 public class Portfolio {
 	public static final String CASH_TICKER = "CASH";
 	private String name;
@@ -249,7 +248,7 @@ public class Portfolio {
 		    			else {
 		    				double hedgeQuote = StockQuoteHistory.storage().getQuoteValueByDate(outOfMarketPosTicker, position.getTime(), reinvestDividends);
 		    				
-		    				double hedgeQuantity = allocationPercent*portfolioBalance/hedgeQuote/100;
+		    				double hedgeQuantity = (double) allocationPercent*portfolioBalance/hedgeQuote/100;
 		    				
 			    			hegdePos.buy(hedgeQuantity, hedgeQuantity*hedgeQuote);
 			    			
@@ -339,6 +338,7 @@ public class Portfolio {
 		return inf;
 	}
 	
+	@Deprecated
 	private boolean haveTimingSignals() {
 		return timingSignals != null && timingSignals.size() != 0;
 	}
@@ -363,7 +363,7 @@ public class Portfolio {
 	public List<AssetAllocation> getAssetsAllocation() {
 		return assetsAllocation;
 	}
-
+	
 	public void printAllPosiotions() {
 		Logger.log().info("Portfolio: " + name);
 		Logger.log().info("=============");
@@ -406,6 +406,16 @@ public class Portfolio {
 		return outOfMarketPosTicker;
 	}
 	
+	public double getFinalBalance() {
+		List<LocalDateTime> portDates = Lists.newArrayList(postionsOnDates.keySet());
+
+		int lastIndex = portDates.size() - 1;
+		
+		List<PositionInformation> positions = postionsOnDates.get(portDates.get(lastIndex));
+		
+		return PortfolioUtils.calculateAllPositionsBalance(positions);
+	}
+		
 	public Set<String> getAllTickersInPort() {
 		Set<String> tickers = new HashSet<String>();
 		for (int i = 0; i < assetsAllocation.size(); i++) {

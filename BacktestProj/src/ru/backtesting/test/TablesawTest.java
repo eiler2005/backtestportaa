@@ -1,5 +1,10 @@
 package ru.backtesting.test;
 
+import java.time.LocalDate;
+
+import org.apache.commons.math3.random.GaussianRandomGenerator;
+
+import ru.backtesting.utils.PortfolioUtils;
 import tech.tablesaw.api.DoubleColumn;
 import tech.tablesaw.api.StringColumn;
 import tech.tablesaw.api.Table;
@@ -24,5 +29,22 @@ public class TablesawTest {
 		
 		System.out.println(cuteAnimals.structure());
 		
+		gagrTest();
+	}
+	
+	public static void gagrTest() {
+		LocalDate begDay = LocalDate.parse("2007-09-30");
+		LocalDate lastDay = LocalDate.parse("2018-12-31");
+
+		double gagr = PortfolioUtils.CAGRInPercent(10000, 24549, begDay, lastDay);
+		
+		System.out.println(gagr);
+		
+		begDay = LocalDate.parse("2013-06-01");
+		lastDay = LocalDate.parse("2018-09-09");
+		
+		gagr = PortfolioUtils.CAGRInPercent(10000, 16897.14, begDay, lastDay);
+			
+		System.out.println(gagr);
 	}
 }

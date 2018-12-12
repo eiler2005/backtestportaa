@@ -1,5 +1,7 @@
 package ru.backtesting.utils;
 
+import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -36,7 +38,7 @@ public class PortfolioUtils {
 			double portfolioBalance, List<AssetAllocation> assetsAllocation) {
 		for (AssetAllocation stock : assetsAllocation)
 			if (stock.getTicker().equalsIgnoreCase(ticker) )
-				return ((stock.getAllocationPercent()/100)*portfolioBalance/tickerQuote);
+				return (((double)stock.getAllocationPercent()/100)*portfolioBalance/tickerQuote);
 		
 		throw new RuntimeException("В портфеле нет актива с тикером:" + ticker);
 	}
@@ -85,8 +87,8 @@ public class PortfolioUtils {
 						" сигнал на покупку/продажу равен: " + result + ", цена акции: " + 
 						StockQuoteHistory.storage().getQuoteValueByDate(ticker, date, false));
 				
-				if (result == -1)
-					holdInPort = false;
+				if (result == -1 )
+				    holdInPort = false;
 			}
 		}
 		
@@ -96,5 +98,16 @@ public class PortfolioUtils {
 	public static void printPositions(List<PositionInformation> positions) {
 		for(PositionInformation pos : positions)
 			Logger.log().info(pos.toString());
+	}
+	
+
+	public static double CAGRInPercent(double beginningBalance, double endingBalance, LocalDate beginningDate, LocalDate endingDate) {		
+		long days = DateUtils.duration(beginningDate, endingDate).toDays();
+
+		return CAGRInPercent(beginningBalance, endingBalance, (double) days / 365);
+	}
+	
+	public static double CAGRInPercent(double beginningBalance, double endingBalance, double years) {
+		return (Math.pow(endingBalance/beginningBalance, 1 / years) - 1)*100;
 	}
 }

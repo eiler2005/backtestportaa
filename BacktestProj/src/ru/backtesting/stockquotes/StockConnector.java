@@ -19,7 +19,7 @@ import ru.backtesting.utils.Logger;
 
 public class StockConnector {
 	final static String apiKey1_full = "2ARLX4ESX0694J0T"; 
-	
+
 	final static String apiKey2 = "BUUEKHHHWG6ITPI1";
 	final static String apiKey3 = "H1QJ7U0335G7SURS";
 	final static String apiKey4 = "9DQHRPQNKEW4V3LV";
@@ -82,6 +82,8 @@ public class StockConnector {
 				fullConn = new AlphaVantageConnector(apiKey1_full + "&outputsize=full", timeout);
 			}
 			
+			waitForFreeAccess(fullConnCount);
+			
 			return fullConn;
 		} catch (AlphaVantageException e) {
 			
@@ -119,19 +121,18 @@ public class StockConnector {
 			connPool.put(apiKey3, new AlphaVantageConnector(apiKey3, timeout));
 			connPool.put(apiKey4, new AlphaVantageConnector(apiKey4, timeout));
 			connPool.put(apiKey5, new AlphaVantageConnector(apiKey5, timeout));
-
 		}
 		
 		for (String apiKey : connPool.keySet()) {
 			AlphaVantageConnector connection = connPool.get(apiKey);
 			
-			if (connection.getConnCount() <= 4) {
+			if (connection.getConnCount() <= 14) {
 				connection.countPlus();
 				
 				Logger.log().info("Использую подключение к www.alphavantage.co из пула[apiKey - " + connection.getapiKey() + 
 						"], счетчик вызовов: " + connection.getConnCount());	
 				
-				waitForFreeAccess();
+				waitForFreeAccess(connection.getConnCount());
 				
 				return connection;
 			}
@@ -141,10 +142,13 @@ public class StockConnector {
 	}
 	
 	// 5 resuest per 1 minute - free
-	private static void waitForFreeAccess() {
+	private static void waitForFreeAccess(int count) {
         try {
+        	int i = 13;
         	
-        	int i = 61;
+           	if (count % 5 == 0) {
+            	i = 60;
+        	}
         	
         	Logger.log().info("Ждем " + i + " секунд из-за ограничений на 5 подключений в минуту к сайту www.alphavantage.co");
 			

@@ -78,7 +78,7 @@ public class AlphaVantageConnector implements ApiConnector {
   }
   
   public void countPlus() {
-	  connCount++;
+	  connCount = connCount + 1;
   }
   
   public int getConnCount() {

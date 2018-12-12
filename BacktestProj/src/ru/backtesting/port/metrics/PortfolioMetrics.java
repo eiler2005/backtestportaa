@@ -3,15 +3,13 @@ package ru.backtesting.port.metrics;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
 
 import ru.backtesting.port.Portfolio;
@@ -20,7 +18,6 @@ import ru.backtesting.stockquotes.StockQuoteHistory;
 import ru.backtesting.utils.DateUtils;
 import ru.backtesting.utils.Logger;
 import ru.backtesting.utils.PortfolioUtils;
-import tech.tablesaw.api.DateColumn;
 import tech.tablesaw.api.DateTimeColumn;
 import tech.tablesaw.api.DoubleColumn;
 import tech.tablesaw.api.LongColumn;
@@ -129,7 +126,7 @@ public class PortfolioMetrics {
 
 				LocalDateTime drawdownDate = filteredDates.get(filteredValue.indexOf(minValue));
 				
-				Duration duration = Duration.between(date, drawdownDate);
+				Duration duration = DateUtils.duration(date.toLocalDate(), drawdownDate.toLocalDate());
 				
 				System.out.println(datesAndBalanceWithDrawndownT.print(50));
 				System.out.println("period with loss, in days = " + duration.toDays() + ", max drawdown[balance - "+ balance + 
@@ -174,6 +171,17 @@ public class PortfolioMetrics {
 				return date;
 		
 		return null;
+	}
+	
+	public double CAGRInPercent() {		
+		LocalDate startYear = LocalDate.parse(portfolio.getStartYear() + "-01-01");
 		
+		List<LocalDateTime> portDates = Lists.newArrayList(portfolio.getPostionsOnDates().keySet());
+
+		LocalDate endDate = portDates.get(portDates.size() - 1).toLocalDate();
+		
+		double finalBalance = portfolio.getFinalBalance();
+				
+		return PortfolioUtils.CAGRInPercent(portfolio.getInitialAmount(), finalBalance, startYear, endDate);
 	}
 }

@@ -10,18 +10,29 @@ import ru.backtesting.utils.Logger;
 public class MovingAverageIndicatorSignal implements SignalTestingAction {
 	private int timePeriod1, timePeriod2 = 0;
 	private MovingAverageType type;
+	private double deviationPercent;
 	
-	public MovingAverageIndicatorSignal(int timePeriod1, int timePeriod2, MovingAverageType type ) {
+	public MovingAverageIndicatorSignal(int timePeriod1, int timePeriod2, MovingAverageType type) {
 		super();
 		this.timePeriod1 = timePeriod1;
 		this.timePeriod2 = timePeriod2;
 		this.type = type;
+		this.deviationPercent = 0;
+	}
+	
+	public MovingAverageIndicatorSignal(int timePeriod1, int timePeriod2, MovingAverageType type, double deviationPercent) {
+		super();
+		this.timePeriod1 = timePeriod1;
+		this.timePeriod2 = timePeriod2;
+		this.type = type;
+		this.deviationPercent = deviationPercent / 100;
 	}
 
-	public MovingAverageIndicatorSignal(int timePeriod, MovingAverageType type) {
+	public MovingAverageIndicatorSignal(int timePeriod, MovingAverageType type, double deviationPercent) {
 		super();
 		this.timePeriod1 = timePeriod;
 		this.type = type;
+		this.deviationPercent = deviationPercent / 100;
 	}
 
 	
@@ -30,6 +41,10 @@ public class MovingAverageIndicatorSignal implements SignalTestingAction {
 		String maId = getMovingAverigeID(type);
 		
 		StockIndicatorsHistory.storage().fillIndicatosData(ticker, timePeriod1, maId);
+		
+		if (deviationPercent != 0)
+			Logger.log().info("Процент погрешности для скользящих средних (чтобы исключить ложные срабатывания): "+ 
+					Logger.log().doubleLog(deviationPercent*100) + " %");
 		
 		if (timePeriod2 != 0) {
 			StockIndicatorsHistory.storage().fillIndicatosData(ticker, timePeriod2, maId);
@@ -40,16 +55,15 @@ public class MovingAverageIndicatorSignal implements SignalTestingAction {
 			Logger.log().info(maId + "[" + timePeriod1 + "] on date [" + date + "]: ticker [" + ticker + "], " + maId + " = " + Logger.log().doubleLog(value1));
 			Logger.log().info(maId + "[" + timePeriod2 + "] on date [" + date + "]: ticker [" + ticker + "], " + maId +" = " + Logger.log().doubleLog(value2));
 
-			
 			// for example, sma50 > sma200 - buy signal
-			if (value1 > value2) {
+			if ( value1  > (value2 + value1*deviationPercent) ) {
 				if (timePeriod1 == 50 && timePeriod2 == 200 )
 					Logger.log().info("Бычий рынок, т.к. " + maId + "[50] > " + maId + "[200]");
 				
 				return 1;
 			}
 			// for example, sma200 > sma50 - sell signal
-			if (value2 > value1) {
+			if ( value2 > (value1 + value1*deviationPercent) ) {
 				if (timePeriod1 == 50 && timePeriod2 == 200 )
 					Logger.log().info("Медвежий рынок, т.к. " + maId + "[50] < " + maId + "[200]");
 				return -1;
@@ -66,10 +80,10 @@ public class MovingAverageIndicatorSignal implements SignalTestingAction {
 					+ ", " + maId + " = " + Logger.log().doubleLog(maValue));
 			
 			// buy signal
-			if ( quote > maValue )
+			if ( quote > (maValue + maValue*deviationPercent) )
 				return 1;
 			// sell signal
-			if (quote < maValue)
+			if (quote < (maValue - maValue*deviationPercent) )
 				return -1;
 			else
 				return 0;
