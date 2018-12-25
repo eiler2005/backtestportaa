@@ -15,6 +15,7 @@ import com.google.common.primitives.Longs;
 import ru.backtesting.port.Portfolio;
 import ru.backtesting.port.PositionInformation;
 import ru.backtesting.stockquotes.StockQuoteHistory;
+import ru.backtesting.test.JFrameHTMLTest;
 import ru.backtesting.utils.DateUtils;
 import ru.backtesting.utils.Logger;
 import ru.backtesting.utils.PortfolioUtils;
@@ -88,11 +89,8 @@ public class PortfolioMetrics {
 			}
 		}
 		
-		DoubleColumn balanceColumn = DoubleColumn.create(CN_NAME_PORT_BALANCE, balanceOnDateColumnData);
-		balanceColumn.setPrintFormatter(Logger.DOUBLE_FORMAT, "_missing value_");
-		
+		DoubleColumn balanceColumn = DoubleColumn.create(CN_NAME_PORT_BALANCE, balanceOnDateColumnData);		
 		DateTimeColumn dateColumn = DateTimeColumn.create(CN_NAME_PORT_DATE, datesColumnData);
-		dateColumn.setPrintFormatter(Logger.DATE_FORMAT_SIMPLE);
 		
 		Table balancedTable = Table.create(TABLE_NAME_PORT_BALANCE_ON_DATE)
 				.addColumns(dateColumn, balanceColumn);
@@ -106,31 +104,42 @@ public class PortfolioMetrics {
 			LocalDateTime date = datesColumnData.get(i);
 			double balance = balanceOnDateColumnData.get(i).doubleValue();
 			
-			System.out.println("|| filter - " + date + ", balance - " + balance);
+			Logger.log().info("|| filter - " + date + ", balance - " + balance);
 
 			// ищем все даты, на время которых баланс портфеля был меньше текущего - просадки и время в течение которого портфель мог уйти в минус
 			Table datesAndBalanceWithDrawndownT = balancedTable.select(CN_NAME_PORT_DATE, CN_NAME_PORT_BALANCE).
 				where(balancedTable.dateTimeColumn(CN_NAME_PORT_DATE).isBetweenIncluding(date, LocalDateTime.now()).
 					and(balancedTable.doubleColumn(CN_NAME_PORT_BALANCE).isLessThanOrEqualTo(balance))).
 				dropRowsWithMissingValues();
+			Logger.setTableFormatter(datesAndBalanceWithDrawndownT);			
+			
 			
 			if ( !datesAndBalanceWithDrawndownT.isEmpty() ) {
 				List<LocalDateTime> filteredDates = datesAndBalanceWithDrawndownT.dateTimeColumn(CN_NAME_PORT_DATE).asList();
 				List<Double> filteredValue = datesAndBalanceWithDrawndownT.doubleColumn(CN_NAME_PORT_BALANCE).asList();
 			
 				double minValue = Collections.min(filteredValue);
-				double maxValue = Collections.max(filteredValue);
-				
 				double percentDD = (balance-minValue)/balance*100;
-				double percentMaxProfit = (maxValue-balance)/balance*100;
 
 				LocalDateTime drawdownDate = filteredDates.get(filteredValue.indexOf(minValue));
 				
 				Duration duration = DateUtils.duration(date.toLocalDate(), drawdownDate.toLocalDate());
 				
-				System.out.println(datesAndBalanceWithDrawndownT.print(50));
-				System.out.println("period with loss, in days = " + duration.toDays() + ", max drawdown[balance - "+ balance + 
-						", minvalue - " + minValue + ", date - " + drawdownDate + "] = " + percentDD + " %, maxProfit - " + percentMaxProfit + " %");				
+				Logger.log().info(datesAndBalanceWithDrawndownT.print(50));
+				
+				// ищем все даты, на время которых баланс портфеля был больше текущего - для max profit
+				Table datesAndBalanceWithoutDrawndownT = balancedTable.select(CN_NAME_PORT_DATE, CN_NAME_PORT_BALANCE).
+						where(balancedTable.dateTimeColumn(CN_NAME_PORT_DATE).isBetweenIncluding(date, LocalDateTime.now()).
+							and(balancedTable.doubleColumn(CN_NAME_PORT_BALANCE).isGreaterThanOrEqualTo(balance))).
+						dropRowsWithMissingValues();
+				Logger.setTableFormatter(datesAndBalanceWithoutDrawndownT);			
+
+				double maxValue = Collections.max(datesAndBalanceWithoutDrawndownT.doubleColumn(CN_NAME_PORT_BALANCE).asList());
+				double percentMaxProfit = (maxValue-balance)/balance*100;
+				// max profit
+				
+				Logger.log().info("period with loss, in days = " + duration.toDays() + ", max drawdown[balance - " + Logger.log().doubleLog(balance) + 
+						", minvalue - " + Logger.log().doubleLog(minValue) + ", date - " + drawdownDate + "] = " + Logger.log().doubleLog(percentDD) + " %, maxProfit - " + Logger.log().doubleLog(percentMaxProfit) + " %");				
 				
 				drawdownColumnData.add(Double.valueOf(percentDD));
 				betterPeriodLenghtData.add(Long.valueOf(duration.toDays()));
@@ -149,19 +158,31 @@ public class PortfolioMetrics {
 		balancedTable.addColumns(DateTimeColumn.create(CN_NAME_MAX_DRAWDOWN_DATE, maxDrawdownDateData));
 		balancedTable.addColumns(DoubleColumn.create(CN_NAME_PORT_PERCENT_MAXPROFT, betterPeriodMaxProfitData));
 
+		Logger.setTableFormatter(balancedTable);
 		
 		// таблицу с максимальной просадкой после даты входа в портфель	
 		
-		System.out.println("||drawdown sort table||");
+		Logger.log().info("||drawdown sort table||");
 		
-		System.out.println(balancedTable.sortAscendingOn(CN_NAME_PORT_PERCENT_DRAWDOWN).print(30));
+		Logger.log().info(balancedTable.sortAscendingOn(CN_NAME_PORT_PERCENT_DRAWDOWN).print(30));
 		
-		System.out.println("max dd - " + Collections.max(balancedTable.doubleColumn(CN_NAME_PORT_PERCENT_DRAWDOWN).asList()));
+		Logger.log().info("max dd - " + Logger.log().doubleLog(Collections.max(balancedTable.doubleColumn(CN_NAME_PORT_PERCENT_DRAWDOWN).asList())));
 		
-		System.out.println("||underwater period sort table||");
-		System.out.println(balancedTable.sortAscendingOn(CN_NAME_PORT_BETTER_PERIOD_DRAWDOWN).print(30));
-		System.out.println("underwater lenght - " + Collections.max(balancedTable.longColumn(CN_NAME_PORT_BETTER_PERIOD_DRAWDOWN).asList()));
+		Logger.log().info("||underwater period sort table||");
+		Logger.log().info(balancedTable.sortAscendingOn(CN_NAME_PORT_BETTER_PERIOD_DRAWDOWN).print(30));
+		Logger.log().info("underwater lenght - " + Logger.log().doubleLog(Collections.max(balancedTable.longColumn(CN_NAME_PORT_BETTER_PERIOD_DRAWDOWN).asList())));
 
+		
+		Logger.log().info("||max profit in period sort table||");
+		Logger.log().info(balancedTable.sortAscendingOn(CN_NAME_PORT_PERCENT_MAXPROFT).print(30));
+		Logger.log().info("max profit in period (%) - " + Logger.log().doubleLog(Collections.max(balancedTable.doubleColumn(CN_NAME_PORT_PERCENT_MAXPROFT).asList())));
+
+    	JFrameHTMLTest test = new JFrameHTMLTest();
+        test.setVisible(true);
+
+        test.log(balancedTable.sortAscendingOn(CN_NAME_PORT_PERCENT_MAXPROFT).last(30).printHtml()); //Test 1
+
+        test.printHTML();
 	}
 	
 	private LocalDateTime getPostionOnDateDay(LinkedHashMap<LocalDateTime, 

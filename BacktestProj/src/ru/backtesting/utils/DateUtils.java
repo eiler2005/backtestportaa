@@ -19,8 +19,12 @@ public class DateUtils {
 				date1.getDayOfMonth() == date2.getDayOfMonth();
 	}
 	
-	public static LocalDateTime dateFromString(String str) {
+	public static LocalDateTime dateTimeFromString(String str) {
 		return LocalDateTime.parse(str, Logger.DATE_FORMAT);
+	}
+	
+	public static LocalDate dateFromString(String str) {
+		return LocalDate.parse(str, Logger.DATE_FORMAT);
 	}
 	
 	@Deprecated

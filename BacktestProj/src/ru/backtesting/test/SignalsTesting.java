@@ -14,13 +14,13 @@ public class SignalsTesting {
 				
 		// smaContext.setSignalAction(smaSignalAction);
 						
-		System.out.println(smaSignalAction.testSignal(DateUtils.dateFromString("2015-07-31 00:00"), "SPY"));
-		System.out.println(smaSignalAction.testSignal(DateUtils.dateFromString("2018-11-23 00:00"), "SPY"));
+		System.out.println(smaSignalAction.testSignal(DateUtils.dateTimeFromString("2015-07-31 00:00"), "SPY"));
+		System.out.println(smaSignalAction.testSignal(DateUtils.dateTimeFromString("2018-11-23 00:00"), "SPY"));
 		
 		RSIOscillatorSignal rsiOsc = new RSIOscillatorSignal(14);
 		
-		rsiOsc.testSignal(DateUtils.dateFromString("2018-11-23 00:00"), "SPY");
-		rsiOsc.testSignal(DateUtils.dateFromString("2018-11-23 00:00"), "MTUM");
+		rsiOsc.testSignal(DateUtils.dateTimeFromString("2018-11-23 00:00"), "SPY");
+		rsiOsc.testSignal(DateUtils.dateTimeFromString("2018-11-23 00:00"), "MTUM");
 
 	}
 }

@@ -26,13 +26,26 @@ import ru.backtesting.stockquotes.StockConnector;
 
 https://github.com/ishanthilina/TA-Lib-Java-Examples  тех индикаторы
 https://stooq.com/q/d/?s=usdrub - курсы валют в cvs файл за много лет
-https://github.com/zavtech/morpheus-core/blob/master/README.md графики
 
-https://iextrading.com/developer/docs/#getting-started
+https://iextrading.com/developer/docs/#getting-started фундаментальная информация по акциям, api
+https://github.com/WojciechZankowski/iextrading4j
 
 https://news.ycombinator.com/item?id=14546565 - про фин библиотеки
 
 отображение данных https://github.com/dcpatrick15/stock-visualizer/blob/master/src/main/java/com/david/feeds/Main.java
+
+https://www.pschatzmann.ch/home/2018/05/30/investor-a-java-quant-library/ - много всего
+
+http://quandl4j.org/ - известная либа, котировки
+https://github.com/jimmoores/quandl4j
+
+https://github.com/zavtech/morpheus-core/blob/master/README.md графики
+https://github.com/jtablesaw/tablesaw - визуализация
+https://jtablesaw.github.io/tablesaw/userguide/toc
+
+всякое разное
+
+https://github.com/wilsonfreitas/awesome-quant#java
 
 */
 
