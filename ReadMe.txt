@@ -49,5 +49,5 @@ Tablesaw is an open-source data science library for Java that combines tools for
 ================================================================================
 
 Denis Ermilov - java developer and personal investor
-E-mail  : denis.ermilov@gmail.com, or
+E-mail  : denis.ermilov@gmail.com
 	
