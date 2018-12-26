@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------------
-					    Backtesting Investing Portfolio Tool Project
+		Backtesting Investing Portfolio Tool Project
 
                               README
 
