@@ -1,4 +1,4 @@
-                                 Apache License
+                                 Apache License with Common with “Commons Clause” License Condition v1.0
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
 
@@ -172,12 +172,28 @@
       defend, and hold each Contributor harmless for any liability
       incurred by, or claims asserted against, such Contributor by reason
       of your accepting any such warranty or additional liability.
+      
+   10. “Commons Clause” License Condition v1.0
+
+      The Software is provided to you by the Licensor under the License, as defined below, subject to the following condition.
+
+      Without limiting other conditions in the License, the grant of rights under the License will not include, and the License does not       grant to you,  right to Sell the Software.
+
+      For purposes of the foregoing, “Sell” means practicing any or all of the rights granted to you under the License to provide to  
+      third parties, for a fee or other consideration (including without limitation fees for hosting or consulting/ support services     
+      related to the Software), a product or service whose value derives, entirely or substantially, from the functionality of the      
+      Software.  Any license notice or attribution required by the License must also include this Commons Cause License Condition  
+      notice.
+      
+      Software: [		Backtesting Investing Portfolio Tool Project]
+      License: [i.e. Apache 2.0 with “Commons Clause” License Condition v1.0]
+      Licensor: [Denis Ermilov]
 
    END OF TERMS AND CONDITIONS
 
-   APPENDIX: How to apply the Apache License to your work.
+   APPENDIX: How to apply the Apache License with “Commons Clause” License Condition v1.0 to your work.
 
-      To apply the Apache License to your work, attach the following
+      To apply the Apache License with “Commons Clause” License Condition v1.0 to your work, attach the following
       boilerplate notice, with the fields enclosed by brackets "[]"
       replaced with your own identifying information. (Don't include
       the brackets!)  The text should be enclosed in the appropriate
@@ -193,6 +209,10 @@
    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
+       
+   and show “Commons Clause” License Condition v1.0 there
+   
+   https://github.com/fossas/commons-clause and https://commonsclause.com/
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
