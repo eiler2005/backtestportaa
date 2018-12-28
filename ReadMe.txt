@@ -10,7 +10,8 @@ CONTENTS
 
 1. Release Notes
 2. Using libraries and services
-3. Contact
+3. Disclaimers
+4. Contact
 
 1. RELEASE NOTES
 ================================================================================
@@ -44,8 +45,14 @@ browser engine — Chromium into your Java application.
  - jtablesaw library (https://jtablesaw.github.io/tablesaw/) - use for to create graphs in web format
 
 Tablesaw is an open-source data science library for Java that combines tools for loading and transforming data with the ability to create statistical models and visualizations
+
+3. DISCLAIMERS
+================================================================================	
 	
-3. CONTACT
+Backtesting Investing Portfolio Tool Project uses JxBrowser http://www.teamdev.com/jxbrowser, which is a proprietary software, owned by TeamDev Ltd. The use of JxBrowser is governed by JxBrowser Product License Agreement http://www.teamdev.com/jxbrowser-licence-agreement.
+You may not use JxBrowser separately from Backtesting Investing Portfolio Tool Project without a separate license from TeamDev Ltd. Use of JxBrowser as part of Backtesting Investing Portfolio Tool Project in any commercial software requires a commercial license from TeamDev Ltd.
+	
+4. CONTACT
 ================================================================================
 
 Denis Ermilov - java developer and personal investor
