@@ -3,19 +3,16 @@ package ru.backtesting.test;
 import java.util.Arrays;
 import java.util.List;
 
+import ru.backtesting.mktindicators.RSIOscillatorSignal;
+import ru.backtesting.mktindicators.base.MarketIndicatorInterval;
+import ru.backtesting.mktindicators.base.MarketIndicatorType;
+import ru.backtesting.mktindicators.ma.MovingAverageIndicatorSignal;
 import ru.backtesting.port.AssetAllocation;
 import ru.backtesting.port.Portfolio;
-import ru.backtesting.port.PositionInformation;
 import ru.backtesting.port.metrics.PortfolioMetrics;
 import ru.backtesting.rebalancing.Frequency;
 import ru.backtesting.rebalancing.RebalancingMethod;
 import ru.backtesting.rebalancing.RebalancingType;
-import ru.backtesting.signal.BollingerBandsIndicatorSignal;
-import ru.backtesting.signal.ChandeMomentumOscillator;
-import ru.backtesting.signal.RSIOscillatorSignal;
-import ru.backtesting.signal.SignalTestingAction;
-import ru.backtesting.signal.ma.MovingAverageIndicatorSignal;
-import ru.backtesting.signal.ma.MovingAverageType;
 
 public class PortfolioTest {
 	public void testBestPort() {
@@ -23,15 +20,15 @@ public class PortfolioTest {
 				new AssetAllocation("SPY", 100)), 
 				2004, 2018, 10000, 
 				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
-				Arrays.asList(new MovingAverageIndicatorSignal(50, 200, MovingAverageType.Weighted, 1), 
-						new RSIOscillatorSignal(100)), "TLT", false);
+				Arrays.asList(new MovingAverageIndicatorSignal(50, 200, MarketIndicatorType.WMA_IND, MarketIndicatorInterval.Daily), 
+						new RSIOscillatorSignal(100, MarketIndicatorInterval.Daily)), "TLT", false);
 		
 		simplePort = new Portfolio("spy - 200", Arrays.asList(
 				new AssetAllocation("SPY", 100)), 
 				2004, 2018, 10000, 
 				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
-				Arrays.asList(new MovingAverageIndicatorSignal(200, MovingAverageType.Weighted, 1), 
-						new RSIOscillatorSignal(100)), "TLT", false);
+				Arrays.asList(new MovingAverageIndicatorSignal(200, MarketIndicatorType.WMA_IND, MarketIndicatorInterval.Daily, 1), 
+						new RSIOscillatorSignal(100, MarketIndicatorInterval.Daily)), "TLT", false);
 	}
 	
 	public static void main(String[] args) {
@@ -47,8 +44,8 @@ public class PortfolioTest {
 				new AssetAllocation("SPY", 100)), 
 				2004, 2018, 10000, 
 				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
-				Arrays.asList(new MovingAverageIndicatorSignal(50, 200, MovingAverageType.Weighted, 1), 
-						new RSIOscillatorSignal(100)), "TLT", false);
+				Arrays.asList(new MovingAverageIndicatorSignal(200, MarketIndicatorType.WMA_IND, MarketIndicatorInterval.Daily, 1),
+						new RSIOscillatorSignal(100, MarketIndicatorInterval.Daily)), "TLT", false);
 		
 		List<AssetAllocation> spyAndTlt =  Arrays.asList(
 				new AssetAllocation("SPY", 60), new AssetAllocation("TLT", 40));
@@ -65,7 +62,7 @@ public class PortfolioTest {
 		*/
 
 		/*
-		Portfolio simplePort = new Portfolio("spy/tlt - 60 on 40 with sma200", spyAndTlt, 2047, 2018, 10000, 
+		Portfolio simplePort = new Portfolio("spy/tlt - 60 on 40 with sma200", spyAndTlt, 2017, 2018, 10000, 
 				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
 				Arrays.asList(new SMATechIndicatorSignal(50, 200)), 
 				"BND", false); */

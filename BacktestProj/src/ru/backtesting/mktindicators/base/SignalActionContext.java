@@ -1,16 +1,16 @@
-package ru.backtesting.signal;
+package ru.backtesting.mktindicators.base;
 
 import java.time.LocalDateTime;
 
 @Deprecated
 public class SignalActionContext  {
-	private SignalTestingAction action;
+	private MarketIndicatorInterface action;
 	
-	public SignalTestingAction getSignal() {
+	public MarketIndicatorInterface getSignal() {
 		return action;
 	}
 	
-	public void setSignalAction(SignalTestingAction action) {
+	public void setSignalAction(MarketIndicatorInterface action) {
 		this.action = action;
 	}
 	

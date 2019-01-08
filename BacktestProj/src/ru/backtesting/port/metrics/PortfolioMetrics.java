@@ -15,7 +15,6 @@ import com.google.common.primitives.Longs;
 import ru.backtesting.port.Portfolio;
 import ru.backtesting.port.PositionInformation;
 import ru.backtesting.stockquotes.StockQuoteHistory;
-import ru.backtesting.test.JFrameHTMLTest;
 import ru.backtesting.utils.DateUtils;
 import ru.backtesting.utils.Logger;
 import ru.backtesting.utils.PortfolioUtils;
@@ -176,13 +175,6 @@ public class PortfolioMetrics {
 		Logger.log().info("||max profit in period sort table||");
 		Logger.log().info(balancedTable.sortAscendingOn(CN_NAME_PORT_PERCENT_MAXPROFT).print(30));
 		Logger.log().info("max profit in period (%) - " + Logger.log().doubleLog(Collections.max(balancedTable.doubleColumn(CN_NAME_PORT_PERCENT_MAXPROFT).asList())));
-
-    	JFrameHTMLTest test = new JFrameHTMLTest();
-        test.setVisible(true);
-
-        test.log(balancedTable.sortAscendingOn(CN_NAME_PORT_PERCENT_MAXPROFT).last(30).printHtml()); //Test 1
-
-        test.printHTML();
 	}
 	
 	private LocalDateTime getPostionOnDateDay(LinkedHashMap<LocalDateTime, 

@@ -1,0 +1,97 @@
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  
+ <div id="##div##" style="width: 1000px; height: 800px;text-align: left"> 		</div>
+ <!-- Plotly chart will be drawn inside this DIV -->
+ 
+<script>
+var trace1 = {
+x: ##trace1_X##,
+y: ##trace1_Y##,
+	marker: {
+		size: 3.0,
+	},
+	text: ##trace1_text##,
+	mode: 'lines+markers',
+  	name: ##y1_name##, 
+  	type: 'scatter'
+};
+
+var trace2 = {
+x: ##trace2_X##,
+y: ##trace2_Y##,
+showlegend: true,
+marker: {
+    size: 3.0,
+},
+text: ##trace2_text##,
+mode: 'lines+markers',
+  name: ##y2_name##, 
+  yaxis: 'y2', 
+  type: 'scatter'
+};
+
+var data = [trace1, trace2];
+
+var layout = {
+  title: ##layot_title##, 
+  yaxis: {title: ##y1_title##,
+	  autorange: true,
+	  <!-- range: [86.8700008333, 138.870004167], -->
+	  type: 'linear'
+	}, 
+  xaxis: {
+	    title: ##x_title##,
+	    showspike: true,
+	    spikemode: 'toaxis',
+	    spikethickness: 3,
+	    spikesnap: 'data',
+	    spikecolor: 'green',
+	    spikedash: 'dot',
+	    autorange: true,
+	    <!-- range: [##date_range_begin##, ##date_range_end##], -->
+		rangeselector: {buttons: [
+	        {
+	          count: 2,
+	          label: '1m',
+	          step: 'month',
+	          stepmode: 'backward'
+	        },
+	        {
+		      count: 4,
+		      label: '3m',
+		      step: 'month',
+		      stepmode: 'backward'
+		    },
+	        {
+	          count: 7,
+	          label: '6m',
+	          step: 'month',
+	          stepmode: 'backward'
+	        },
+	        {
+	          count: 13,
+	          label: 'YTD',
+	          step: 'month',
+	          stepmode: 'backward'
+	        },
+	        {step: 'all'}
+	      ]},
+	      
+	     rangeslider: {range: [##date_range_begin##, ##date_range_end##]},
+	    
+	    type: 'date',
+	},
+  yaxis2: {
+    title: ##y2_title##, 
+    titlefont: {color: 'rgb(148, 103, 189)'}, 
+    tickfont: {color: 'rgb(148, 103, 189)'}, 
+    overlaying: 'y', 
+    side: 'right',
+	  autorange: true,
+	  <!-- range: [86.8700008333, 138.870004167], -->
+	  type: 'linear'
+  }
+};
+
+Plotly.newPlot('##div##', data, layout, {showSendToCloud: true});  
+</script>

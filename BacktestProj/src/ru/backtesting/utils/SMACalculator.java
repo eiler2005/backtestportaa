@@ -4,7 +4,7 @@ package ru.backtesting.utils;
 //Simple Moving Average 
 import java.util.*; 
 
-public class SimpleMovingAverage { 
+public class SMACalculator { 
    
 	// queue used to store list so that we get the average 
 	private final Queue<Double> dataset = new LinkedList<Double>(); 
@@ -12,7 +12,7 @@ public class SimpleMovingAverage {
 	private double sum; 
 
 	// constructor to initialize period 
-	public SimpleMovingAverage(int period) 
+	public SMACalculator(int period) 
 	{	 
 		this.period = period; 
 	} 
@@ -50,7 +50,7 @@ public class SimpleMovingAverage {
      double[] input_data = { 1, 3, 5, 6, 8, 
                              12, 18, 21, 22, 25 }; 
      int per = 3; 
-     SimpleMovingAverage obj = new SimpleMovingAverage(per); 
+     SMACalculator obj = new SMACalculator(per); 
      for (double x : input_data) { 
          obj.addData(x); 
          System.out.println("New number added is " + 

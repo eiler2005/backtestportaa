@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,6 +39,15 @@ public class DateUtils {
 
 	public static Date asDate(LocalDateTime localDateTime) {
 	    return Date.from(localDateTime.atZone(ZoneId.of(TIME_ZONE)).toInstant());
+	}
+	
+	public static List<LocalDate> asLocalDate(List<LocalDateTime> localDateTime) {
+		List<LocalDate> localDate = new ArrayList<LocalDate>();
+		
+		for (LocalDateTime date : localDateTime)
+			localDate.add(date.toLocalDate());
+		
+		return localDate;
 	}
 
 	public static LocalDate asLocalDate(Date date) {

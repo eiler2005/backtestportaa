@@ -5,10 +5,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
 import ru.backtesting.port.AssetAllocation;
 import ru.backtesting.port.Portfolio;
 import ru.backtesting.port.PositionInformation;
-import ru.backtesting.signal.SignalTestingAction;
 import ru.backtesting.stockquotes.StockQuoteHistory;
 
 public class PortfolioUtils {
@@ -75,12 +75,12 @@ public class PortfolioUtils {
 		return sum;
 	}
 	
-	public static boolean isHoldInPortfolio(List<SignalTestingAction> timingSignals, String ticker, LocalDateTime date) {
+	public static boolean isHoldInPortfolio(List<MarketIndicatorInterface> timingSignals, String ticker, LocalDateTime date) {
 		boolean holdInPort = true;
 		
 		if ( timingSignals != null && timingSignals.size() != 0 ) {
 			
-			for (SignalTestingAction signal : timingSignals) {
+			for (MarketIndicatorInterface signal : timingSignals) {
 				int result = signal.testSignal(date, ticker);
 				
 				Logger.log().info("Для позиции портфеля с тикером " + ticker + " и датой " + date + 

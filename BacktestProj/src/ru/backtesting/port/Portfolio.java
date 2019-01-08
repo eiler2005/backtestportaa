@@ -1,24 +1,17 @@
 package ru.backtesting.port;
 
 import java.time.LocalDateTime;
-import java.time.Month;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
-import org.patriques.output.timeseries.TimeSeriesResponse;
-import org.patriques.output.timeseries.data.StockData;
-
 import com.google.common.collect.Lists;
 
-import ru.backtesting.rebalancing.Frequency;
+import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
 import ru.backtesting.rebalancing.RebalancingMethod;
 import ru.backtesting.rebalancing.RebalancingType;
-import ru.backtesting.signal.SignalTestingAction;
-import ru.backtesting.stockquotes.StockConnector;
 import ru.backtesting.stockquotes.StockQuote;
 import ru.backtesting.stockquotes.StockQuoteHistory;
 import ru.backtesting.utils.Logger;
@@ -34,11 +27,11 @@ public class Portfolio {
 	private final List<AssetAllocation> assetsAllocation;
 	private LinkedHashMap<LocalDateTime, List<PositionInformation>> postionsOnDates;
     private boolean reinvestDividends = false;
-    private List<SignalTestingAction> timingSignals;
+    private List<MarketIndicatorInterface> timingSignals;
 	private String outOfMarketPosTicker;
     
 	public Portfolio(String name, List<AssetAllocation> assetsAllocation, int startYear, int endYear, int initialAmount,
-			RebalancingType rebalancing, List<SignalTestingAction> timingSignals, boolean reinvestDividends) {
+			RebalancingType rebalancing, List<MarketIndicatorInterface> timingSignals, boolean reinvestDividends) {
 		super();
 		this.name = name;
 		this.assetsAllocation = assetsAllocation;
@@ -52,7 +45,7 @@ public class Portfolio {
 	}
 	
 	public Portfolio(String name, List<AssetAllocation> assetsAllocation, int startYear, int endYear, int initialAmount,
-			RebalancingType rebalancing, List<SignalTestingAction> timingSignals, String outOfMarketTicker, boolean reinvestDividends) {
+			RebalancingType rebalancing, List<MarketIndicatorInterface> timingSignals, String outOfMarketTicker, boolean reinvestDividends) {
 		super();
 		this.name = name;
 		this.assetsAllocation = assetsAllocation;
@@ -89,7 +82,7 @@ public class Portfolio {
 		
 		StockQuoteHistory.storage().fillQuotesData(ticker, startYear, endYear);
 
-		List<LocalDateTime> dates = getTradingDates(ticker, startYear, endYear, rebalType.getFrequency());
+		List<LocalDateTime> dates = StockQuoteHistory.storage().getTradingDates(ticker, startYear, endYear, rebalType.getFrequency());
 		
 		for (LocalDateTime date : dates)
 			if ( positions.get(date) == null ) {
@@ -102,64 +95,6 @@ public class Portfolio {
 				List<PositionInformation> otherPositions = positions.get(date);
 				otherPositions.add(new PositionInformation(ticker, date));
 			}
-	}
-	
-	@Deprecated
-	public List<LocalDateTime> getTradingDates(String ticker, int startYear, int endYear, Frequency period) {
-		TimeSeriesResponse response = null;
-		
-		if (period.equals(Frequency.Weekly))
-			response = StockConnector.weekly(ticker);
-		else
-			response = StockConnector.monthly(ticker);
-
-	    List<StockData> stockData = response.getStockData();
-		
-	    Collections.reverse(stockData);
-	    	    	
-	    List<LocalDateTime> dates = new ArrayList<LocalDateTime>();
-	    
-	    dates.add(StockQuoteHistory.storage().getFirstTradedDay(ticker, startYear));
-	    
-	    // ДОДЕЛАТЬ - например, для Annually считает позицию в июле 2018ого только на декабрь 2017 - а нужно на июнь 2018
-	    for (int i = 0; i < stockData.size(); i++) {
-			LocalDateTime date = stockData.get(i).getDateTime();
-			
-			if (date.getYear() >= startYear && date.getYear() <= endYear ) {
-				Month month = date.getMonth();
-				
-				if ( i == 0 || (i == dates.size() - 1) )
-					dates.add(date);
-				else
-				switch(period) {
-					case Annually:				
-			        	if (month.equals(Month.DECEMBER) )
-			        		dates.add(date);
-						break;
-					case SemiAnnually:
-						if ( month.equals(Month.JUNE) || month.equals(Month.DECEMBER) )
-		        			dates.add(date);
-						break;
-					case Quarterly:
-						if ( month.equals(Month.MARCH) || month.equals(Month.JUNE) || 
-			        				month.equals(Month.SEPTEMBER) || month.equals(Month.DECEMBER) )
-			        		dates.add(date);
-						break;
-					case Monthly:
-		        		dates.add(date);
-						break;
-					case Weekly:
-		        		dates.add(date);
-						break;
-					default:
-						break;
-				}
-			}
-	    }
-	    
-	    // dates.add(stockData.get(stockData.size()-1).getDateTime());
-	    
-	    return dates;
 	}
 	
 	public void backtestPortfolio() {

@@ -76,6 +76,14 @@ public class StockConnector {
 		return new TechnicalIndicators(connFromPool()).bbands(symbol, interval, timePeriod, seriesType, NBDevUp.of(2), NBDevDn.of(2), null);
 	}
 	
+	public static TechnicalIndicatorResponse ht_trendline(String symbol, Interval interval, SeriesType seriesType) {	
+		return new TechnicalIndicators(connFromPool()).ht_trendline(symbol, interval, seriesType);
+	}
+	
+	public static TechnicalIndicatorResponse obv(String symbol, Interval interval) {	
+		return new TechnicalIndicators(connFromPool()).obv(symbol, interval);
+	}
+	
 	private static AlphaVantageConnector fullConn() {
 		try {			
 			if (fullConn == null) {

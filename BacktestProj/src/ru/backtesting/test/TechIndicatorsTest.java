@@ -12,8 +12,10 @@ import org.patriques.input.technicalindicators.TimePeriod;
 import org.patriques.output.technicalindicators.TechnicalIndicatorResponse;
 import org.patriques.output.technicalindicators.data.IndicatorData;
 
-import ru.backtesting.stockindicators.StockIndicatorsHistory;
-import ru.backtesting.stockindicators.StockIndicatorsUtils;
+import ru.backtesting.mktindicators.base.MarketIndicatorInterval;
+import ru.backtesting.mktindicators.base.MarketIndicatorType;
+import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
+import ru.backtesting.mktindicators.utils.StockIndicatorsUtils;
 import ru.backtesting.stockquotes.StockConnector;
 import ru.backtesting.stockquotes.StockQuoteHistory;
 
@@ -45,22 +47,22 @@ public class TechIndicatorsTest {
 	
 	public static void smaTest( ) {		
 		StockQuoteHistory.storage().fillQuotesData("VOO", 2000, 2018);
-		StockIndicatorsHistory.storage().fillIndicatosData("VOO", 200, StockIndicatorsHistory.SMA_IND_ID);
+		MarketIndicatorsHistory.storage().fillIndicatosData("VOO", 200, MarketIndicatorType.SMA_IND, MarketIndicatorInterval.Daily);
 		
 		// Data:276.3265, 2018-10-26T00:00
 		LocalDateTime date1 = LocalDateTime.parse("2018-10-25T00:00:00");
 		// Data:275.7896, 2018-11-16T00:00
 		LocalDateTime date2 = LocalDateTime.parse("2018-11-16T00:00:00");
 
-		System.out.println("sma 1: " + StockIndicatorsHistory.storage().findIndicatorValue("VOO", 200, date1, StockIndicatorsHistory.SMA_IND_ID));
-		System.out.println("sma 2: " + StockIndicatorsHistory.storage().findIndicatorValue("VOO", 200, date2, StockIndicatorsHistory.SMA_IND_ID));
+		System.out.println("sma 1: " + MarketIndicatorsHistory.storage().findIndicatorValue("VOO", 200, date1, MarketIndicatorType.SMA_IND, MarketIndicatorInterval.Daily));
+		System.out.println("sma 2: " + MarketIndicatorsHistory.storage().findIndicatorValue("VOO", 200, date2, MarketIndicatorType.SMA_IND, MarketIndicatorInterval.Daily));
 		
 		StockQuoteHistory.storage().fillQuotesData("MTUM", 2000, 2018);
-		StockIndicatorsHistory.storage().fillIndicatosData("MTUM", 200, StockIndicatorsHistory.SMA_IND_ID);
+		MarketIndicatorsHistory.storage().fillIndicatosData("MTUM", 200, MarketIndicatorType.SMA_IND, MarketIndicatorInterval.Daily);
 
 		
-		System.out.println(StockIndicatorsUtils.haveSMASignal(date2, "VOO", 200));
+		System.out.println(StockIndicatorsUtils.haveSMASignal(date2, "VOO", 200, MarketIndicatorInterval.Daily));
 		
-		System.out.println(StockIndicatorsUtils.haveSMASignal(date2, "MTUM", 200));
+		System.out.println(StockIndicatorsUtils.haveSMASignal(date2, "MTUM", 200, MarketIndicatorInterval.Daily));
 	}
 }
