@@ -865,6 +865,7 @@ public class TechnicalIndicators {
    */
   public WMA wma(String symbol, Interval interval, TimePeriod timePeriod, SeriesType seriesType) {
     String json = apiConnector.getRequest(new Symbol(symbol), Function.WMA, timePeriod, interval, seriesType);
+    
     return WMA.from(interval, json);
   }
 

@@ -29,6 +29,7 @@ public class SMA extends TechnicalIndicatorResponse<IndicatorData> {
    */
   public static SMA from(Interval interval, String json) {
     Parser parser = new Parser(interval);
+    
     return parser.parseJson(json);
   }
 
