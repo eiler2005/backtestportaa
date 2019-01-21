@@ -2,30 +2,43 @@ package ru.backtesting.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.EventQueue;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 
 import com.teamdev.jxbrowser.chromium.Browser;
 import com.teamdev.jxbrowser.chromium.BrowserPreferences;
+import com.teamdev.jxbrowser.chromium.BrowserType;
+import com.teamdev.jxbrowser.chromium.ContextMenuHandler;
+import com.teamdev.jxbrowser.chromium.ContextMenuParams;
 import com.teamdev.jxbrowser.chromium.JSValue;
 import com.teamdev.jxbrowser.chromium.NetworkService;
+import com.teamdev.jxbrowser.chromium.PluginInfo;
+import com.teamdev.jxbrowser.chromium.PluginManager;
 import com.teamdev.jxbrowser.chromium.ResourceHandler;
 import com.teamdev.jxbrowser.chromium.ResourceParams;
 import com.teamdev.jxbrowser.chromium.ResourceType;
@@ -158,7 +171,7 @@ public class BacktestingAppGUIMain {
 	public void addBrowser() throws IOException {
     	File tempDir = new File(Paths.get(".").toFile().getCanonicalPath() + File.separator + WEB_CATALOGUE);
     	
-		Browser browser = new Browser();
+		Browser browser = new Browser(BrowserType.LIGHTWEIGHT);
     			
 		// Gets the current Browser's preferences
 		BrowserPreferences preferences = browser.getPreferences();
@@ -178,6 +191,12 @@ public class BacktestingAppGUIMain {
                 }
             }
         });
+		
+		PluginManager pluginManager = browser.getPluginManager();
+		List<PluginInfo> pluginsList = pluginManager.getPluginsInfo();
+		for (PluginInfo plugin : pluginsList) {
+		    System.out.println("Plugin Name: " + plugin.getName());
+		}
 		
 		browser.addScriptContextListener(new ScriptContextAdapter() {
 		    @Override
@@ -225,6 +244,9 @@ public class BacktestingAppGUIMain {
 		
         BrowserView view = new BrowserView(browser);
         		        
+        browser.setContextMenuHandler(new MyContextMenuHandler(view));
+
+        
         String recomedFile = new File(tempDir + File.separator + RECOMENDATION_PAGE_HTML).toURI().toString();
         
         // browser.loadHTML(readFile(recomedFile));
@@ -245,6 +267,62 @@ public class BacktestingAppGUIMain {
 		byte[] encoded = Files.readAllBytes(Paths.get(URI.create(path)));
 		return new String(encoded, Charset.forName("UTF-8"));
 	}
+	
+	private static class MyContextMenuHandler implements ContextMenuHandler {
+
+        private final JComponent component;
+
+        private MyContextMenuHandler(JComponent parentComponent) {
+            this.component = parentComponent;
+        }
+
+        public void showContextMenu(final ContextMenuParams params) {
+            final JPopupMenu popupMenu = new JPopupMenu();
+            if (!params.getLinkText().isEmpty()) {
+                popupMenu.add(createMenuItem("Open link in new window", new Runnable() {
+                    public void run() {
+                        String linkURL = params.getLinkURL();
+                        System.out.println("linkURL = " + linkURL);
+                        
+                        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                            try {
+								Desktop.getDesktop().browse(new URI(linkURL));
+							} catch (IOException e) {
+								e.printStackTrace();
+							} catch (URISyntaxException e) {
+								e.printStackTrace();
+							}
+                        }
+                    }
+                }));
+            }
+
+            final Browser browser = params.getBrowser();
+            popupMenu.add(createMenuItem("Reload", new Runnable() {
+                public void run() {
+                    browser.reload();
+                }
+            }));
+            
+
+            final Point location = params.getLocation();
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    popupMenu.show(component, location.x, location.y);
+                }
+            });
+        }
+
+        private static JMenuItem createMenuItem(String title, final Runnable action) {
+            JMenuItem reloadMenuItem = new JMenuItem(title);
+            reloadMenuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    action.run();
+                }
+            });
+            return reloadMenuItem;
+        }
+    }
 	
 	String str = "";
 	String html = "<!DOCTYPE html>\n" + 

@@ -20,13 +20,13 @@ public class GraphicsUtilsTest {
 	public static void main(String[] args) {
 		//String pageHtml = testSPY_and_SMA_WMA_And_Trend_Chart();
 		
-		// String pageHtml = testRSIandSPY_OverlayChart();
+		String pageHtml = testRSIandSPY_OverlayChart();
 
 		// String pageHtml = testBigChart();
 
 		// String pageHtml = testVXXandSPY_OverlayChart();
 		
-		String pageHtml =  testSPY_andOBVInd_OverlayChart();
+		// String pageHtml =  testSPY_andOBVInd_OverlayChart();
 		
 		
 		System.out.println("chart html = " + pageHtml);

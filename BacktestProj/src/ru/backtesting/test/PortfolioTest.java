@@ -42,7 +42,7 @@ public class PortfolioTest {
 		
 		Portfolio simplePort = new Portfolio("spy - 200", Arrays.asList(
 				new AssetAllocation("SPY", 100)), 
-				2004, 2018, 10000, 
+				2004, 2019, 10000, 
 				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), 
 				Arrays.asList(new MovingAverageIndicatorSignal(200, MarketIndicatorType.WMA_IND, MarketIndicatorInterval.Daily, 1),
 						new RSIOscillatorSignal(100, MarketIndicatorInterval.Daily)), "TLT", false);
