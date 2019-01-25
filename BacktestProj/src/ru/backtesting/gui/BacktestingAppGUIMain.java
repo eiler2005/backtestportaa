@@ -52,9 +52,9 @@ import ru.backtesting.gui.jshelper.RecomendationPageData;
 
 public class BacktestingAppGUIMain {
 
-	private static final String JS_VAR_NAME_RECOMENDATION_PAGE_DATA = "RecomendationPageData";
+	private static final String JS_VAR_NAME_RECOMENDATION_PAGE_DATA = "marketInformationPageData";
 	private static final String WEB_CATALOGUE = "WEB-INF";
-	private static final String RECOMENDATION_PAGE_HTML = "templates" + File.separator + "recomendationPage.html";
+	private static final String RECOMENDATION_PAGE_HTML = "templates" + File.separator + "marketInfPage.html";
 	private JFrame frame;
 
 	/**
