@@ -1,327 +1,367 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <title>Recomendation page for investor about SPY ticker (by default)</title>
-    
-    <style>
-    	div { 
-    		border-style: solid; /* Стиль линии вокруг параграфа */
-    		border-width: 1px;
-   			padding: 3px; /* Поля вокруг текста */
-   			border-color: rgba(0, 0, 128, 0.7);
-   		}
-   		
-   		.header-text {
-   			font-size: 25px;
-   		}
-   				
-		.row-graphic-stock-data .image {
-			padding-top: 5px;
-			max-width: 960px;
-		}
-   		
-   		.panel-heading-ma {
-   			background-color: orange;
-   		}
-   		
-   		.graphic-Label {
-   			font-size: 150%;
-   			text-align: left;
-   		}
-   		
-   		$grid-breakpoints: (
-		  xs: 0,
-		  sm: 480px,
-		  md: 768px,
-		  lg: 1024px
-		);
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+<title>Recomendation page for investor about SPY ticker (by
+	default)</title>
 
-		$container-max-widths: (
+<style>
+div123 {
+	border-style: solid; /* Стиль линии вокруг параграфа */
+	border-color: rgba(0, 0, 128, 0.7);
+	border-width: 1px;
+}
+
+div {
+	padding-bottom: 0px; /* Поля вокруг текста */
+	padding-left: 0px;
+}
+
+.header-text {
+	font-size: 25px;
+	font-weight: bold;
+	text-align: left;
+}
+
+
+.row-graphic-stock-data .image {
+	padding-top: 5px;
+	max-width: 960px;
+}
+
+.graphic-label {
+	font-size: 150%;
+	text-align: left;
+}
+
+.hr {
+    border: none; /* Убираем границу */
+    background-color: rgba(0, 0, 128, 0.45);; /* Цвет линии */
+    color: red; /* Цвет линии для IE6-7 */
+    height: 3px; /* Толщина линии */
+ }
+
+$container-max-widths: (
 		  sm: 420px,
 		  md: 720px,
 		  lg: 960px
 		);
-    </style>
+		
+</style>
 
-    <!-- Bootstrap -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
-    
-    <!-- 
+<!-- Bootstrap -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+
+<!-- 
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" 
 		integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
      -->
-    
-   	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" 
-   		integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
-		 integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
-	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" 
-		integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
-  </head>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+	integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+	crossorigin="anonymous"></script>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+	integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+	crossorigin="anonymous"></script>
+<script
+	src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+	integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+	crossorigin="anonymous"></script>
+</head>
 
 <body>
 	<div class="container">
-		<div class="header-block">
-			<p class="header-text">На данной странице представлены различные
-				индикаторы (технические, осцилляторы и т п) для оценки состояния
-				американского фондового рынка (на примере SPY) и других активов на
-				выбор</p>
+		<div class="row">
+			<div class="col-12">
+				<div class="header-text">
+					<p>Различные индикаторы (moving averages,
+						trend line, vxx и прочие) для оценки состояния американского
+						фондового рынка (на примере базового актива SPY) и других активов
+						на выбор пользователя</p>
+				</div>
+			</div>
 		</div>
 
 		<!-- first row start -->
 		<!-- spy information -->
-		<div class="row-stock-data">
+		<div class="row">
 			<div class="col">
-				<div class="row-header-stock-data">
-					<div class="col" style="text-align: left:;">
-						<h4>Данные по активу SPY (SPDR S&P 500 ETF)</h4>
+				<div class="panel panel-primary">
+					<div class="panel-heading">
+						<h4 style="text-align: left; font-style: oblique;">Данные по
+							активу SPY (SPDR S&P 500 ETF)</h4>
+						<div>
+							<button type="submit" class="btn btn-success">open all</button>
+							<button type="submit" class="btn btn-warning">close all</button>
+						</div>
 					</div>
-				</div>
 
-				<!-- graphics panel -->
-				<div class="panel-group ma panel" id="accordion">
-					<div class="panel panel-default">
-						<div class="panel-heading ma">
-							<h5 class="panel-title ma">
-								<a data-toggle="collapse" data-parent="#accordion"
-									href="#collapse1">Индикаторы типа Moving Averages</a>
-							</h5>
-						</div>
-						<div id="collapse1" class="panel-collapse collapse">
-							<div class="panel-body ma">
-								<div class="row-graphic-stock-data">
-									<label class="graphic-Label">Дневной график</label>
-									<img class="image" src="../images/diversification.jpg">
+					<div class="panel-body">
+						<!-- graphics panel -->
+						<div class="panel-group panel" id="accordion">
+							<div class="panel panel-default">
+								<div class="panel-heading">
+									<h5 class="panel-title">
+										<a data-toggle="collapse" data-parent="#accordion"
+											href="#collapse1">Индикаторы типа Moving Averages</a>
+									</h5>
 								</div>
-								<div class="row-graphic-stock-data">
-									<label class="graphic-Label">Недельный график</label>
-									<div>Здесь будет недельный график</div>
+								<div id="collapse1" class="panel-collapse collapse">
+									<div class="panel-body">
+										<div class="row-graphic-stock-data">
+											<label class="graphic-label">Дневной график</label> <img
+												class="image" src="../images/diversification.jpg">
+										</div>
+										<div class="row-graphic-stock-data">
+											<label class="graphic-label">Недельный график</label>
+											<div>Здесь будет недельный график</div>
+										</div>
+									</div>
+								</div>
+
+								<div class="panel panel-default">
+									<div class="panel-heading">
+										<h5 class="panel-title">
+											<a data-toggle="collapse" data-parent="#accordion"
+												href="#collapse2">Индикаторы типа Relative Strength</a>
+										</h5>
+									</div>
+									<div id="collapse2" class="panel-collapse collapse">
+										<div class="panel-body">
+											<div class="row-graphic-stock-data">
+												<label class="graphic-label">Дневной график</label> <img
+													class="image" src="../images/volatility.jpg">
+											</div>
+											<div class="row-graphic-stock-data">
+												<label class="graphic-label">Недельный график</label>
+												<div>Здесь будет недельный график</div>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<div class="panel panel-default">
+									<div class="panel-heading">
+										<h5 class="panel-title">
+											<a data-toggle="collapse" data-parent="#accordion"
+												href="#collapse3">График VXX (iPath S&P 500 VIX ST
+												Futures ETN)</a>
+										</h5>
+									</div>
+									<div id="collapse3" class="panel-collapse collapse">
+										<div class="panel-body">
+											<div class="row-graphic-stock-data">
+												<img class="image" src="../images/dd20years.jpg">
+											</div>
+										</div>
+									</div>
 								</div>
 							</div>
-						</div>
+							<!-- graphics panel end -->
 
-						<div class="panel panel-default">
-							<div class="panel-heading">
-								<h5 class="panel-title">
-									<a data-toggle="collapse" data-parent="#accordion"
-										href="#collapse2">Индикаторы типа Relative Strength</a>
-								</h5>
-							</div>
-							<div id="collapse2" class="panel-collapse collapse">
+							<!-- indicators panel -->
+							<div class="panel panel-info">
+								<div class="panel-heading">
+									<h5 style="text-align: left;">Данные по активу SPY -
+										индикаторы и осцилляторы в табличном виде</h5>
+								</div>
 								<div class="panel-body">
-									<div class="row-graphic-stock-data">
-										<label class="graphic-Label">Дневной график</label> <img
-											class="image" src="../images/volatility.jpg">
-									</div>
-									<div class="row-graphic-stock-data">
-										<label class="graphic-Label">Недельный график</label>
-										<div>Здесь будет недельный график</div>
-									</div>
+									<table class="table">
+										<thead>
+											<tr>
+												<th></th>
+												<th>100D SMA</th>
+												<th>50D SMA</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td>SMA Default</td>
+												<td>Defaultson</td>
+												<td>def@somemail.com</td>
+											</tr>
+											<tr class="success">
+												<td>Last Price vs SMA Success</td>
+												<td>Doe</td>
+												<td>john@example.com</td>
+											</tr>
+											<tr class="danger">
+												<td>Danger</td>
+												<td>Moe</td>
+												<td>mary@example.com</td>
+											</tr>
+											<tr class="info">
+												<td>Info</td>
+												<td>Dooley</td>
+												<td>july@example.com</td>
+											</tr>
+											<tr class="warning">
+												<td>Warning</td>
+												<td>Refs</td>
+												<td>bo@example.com</td>
+											</tr>
+											<tr class="active">
+												<td>Active</td>
+												<td>Activeson</td>
+												<td>act@example.com</td>
+											</tr>
+										</tbody>
+									</table>
 								</div>
 							</div>
-						</div>
+							<!-- indicators panel end -->
 
-						<div class="panel panel-default">
-							<div class="panel-heading">
-								<h5 class="panel-title">
-									<a data-toggle="collapse" data-parent="#accordion"
-										href="#collapse3">График VXX (iPath S&P 500 VIX ST Futures ETN)</a>
-								</h5>
-							</div>
-							<div id="collapse3" class="panel-collapse collapse">
-								<div class="panel-body">
-									<div class="row-graphic-stock-data">
-										<img class="image" src="../images/dd20years.jpg">
-									</div>
+							<!-- recomendation panel -->
+							<div class="panel panel-default">
+								<!-- panel-succes or panel-danger -->
+								<div class="panel-heading">
+									<h5 style="text-align: left;">Рекомендации по активу SPY</h5>
 								</div>
+								<div class="panel-body">Покупать, продавать или держать в
+									портфеле</div>
 							</div>
+							<!-- recomendation panel end -->
 						</div>
 					</div>
 				</div>
-				<!-- graphics panel end -->
-
-				<!-- indicators panel -->
-				<div class="row">
-					<div class="col">
-						<div class="panel panel-primary">
-							<div class="panel-heading">
-								<h5 style="text-align: left;">Данные по активу SPY -
-									индикаторы и осцилляторы в табличном виде</h5>
-							</div>
-							<div class="panel-body">
-								<table class="table">
-									<thead>
-										<tr>
-											<th></th>
-											<th>100D SMA</th>
-											<th>50D SMA</th>
-										</tr>
-									</thead>
-									<tbody>
-										<tr>
-											<td>SMA Default</td>
-											<td>Defaultson</td>
-											<td>def@somemail.com</td>
-										</tr>
-										<tr class="success">
-											<td>Last Price vs SMA Success</td>
-											<td>Doe</td>
-											<td>john@example.com</td>
-										</tr>
-										<tr class="danger">
-											<td>Danger</td>
-											<td>Moe</td>
-											<td>mary@example.com</td>
-										</tr>
-										<tr class="info">
-											<td>Info</td>
-											<td>Dooley</td>
-											<td>july@example.com</td>
-										</tr>
-										<tr class="warning">
-											<td>Warning</td>
-											<td>Refs</td>
-											<td>bo@example.com</td>
-										</tr>
-										<tr class="active">
-											<td>Active</td>
-											<td>Activeson</td>
-											<td>act@example.com</td>
-										</tr>
-									</tbody>
-								</table>
-							</div>
-						</div>
-					</div>
-				</div>
-				<!-- indicators panel end -->
-				
-				<!-- recomendation panel -->
-				<div class="row">
-					<div class="col">
-						<div class="panel panel-primary">
-							<div class="panel-heading">
-								<h5 style="text-align: left;">Рекомендации по активу SPY</h5>
-							</div>
-							<div class="panel-body">
-								Покупать, продавать или держать в портфеле
-							</div>
-						</div>
-					</div>
-				</div>
-				<!-- recomendation panel end -->
-				
 			</div>
 		</div>
 		<!-- first row end -->
 
-		<!-- user ticker information begin -->
-		<div class="row-stock-data">
-			<div class="row">
-				<div class="col">
-					<h4>Рассчитать стандартные индикаторы (по типу SPY) для
-						актива, введенного пользователем</h4>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col">
-					<div class="panel panel-default">
-						<div class="panel-heading ma">
-							<h5 class="panel-title ma">
-								<a data-toggle="collapse" data-parent="#accordion"
-									href="#collapse4">Перейти к форме расчета и данным / Скрыть
-									данные</a>
-							</h5>
-						</div>
-						<div id="collapse4" class="panel-collapse collapse">
-							<div class="panel-body">
-								<div class="form-inline">
-									<div class="form-group col">
-										<button type="submit" class="btn btn-primary">Пересчитать</button>
-									</div>
+		<hr class="hr">
 
-									<div class="form-group col">
-										<label for="inputTicker">Поле для ввода тикера</label> <input
-											type="text" class="form-control" id="inputTickerID"
-											placeholder="inputTicker">
-									</div>
-									<div class="form-group col">
-										<label for="inputPeriod">Период: Daily/Weekly</label> <select
-											id="inputPeriodID" class="form-control">
-											<option selected>Daily</option>
-											<option selected>Weekly</option>
-										</select>
-									</div>
-								</div>
-								<div class="row-graphic-stock-data">
-									<div class="panel-group">
-										<div class="panel panel-info">
-											<div class="panel-heading">Индикаторы типа Moving
-												Averages</div>
-											<div class="panel-body">
-												<div class="row-graphic-stock-data">Здесь будет график
-												</div>
-											</div>
-										</div>
-										<div class="panel panel-info">
-											<div class="panel-heading">Индикаторы типа Relative
-												Strength</div>
-											<div class="panel-body">
-												<div class="row-graphic-stock-data">Здесь будет график
-												</div>
-											</div>
-										</div>
-										<div class="panel panel-primary">
-											<div class="panel-heading">
-												<h5 style="text-align: left;">Данные по активу #SPY# -
-													индикаторы и осцилляторы в табличном виде</h5>
-											</div>
-											<div class="panel-body">
-												<table class="table">
-													<thead>
-														<tr>
-															<th></th>
-															<th>100D SMA</th>
-															<th>50D SMA</th>
-														</tr>
-													</thead>
-													<tbody>
-														<tr>
-															<td>SMA Default</td>
-															<td>Defaultson</td>
-															<td>def@somemail.com</td>
-														</tr>
-														<tr class="success">
-															<td>Last Price vs SMA Success</td>
-															<td>Doe</td>
-															<td>john@example.com</td>
-														</tr>
-														<tr class="danger">
-															<td>Danger</td>
-															<td>Moe</td>
-															<td>mary@example.com</td>
-														</tr>
-														<tr class="info">
-															<td>Info</td>
-															<td>Dooley</td>
-															<td>july@example.com</td>
-														</tr>
-													</tbody>
-												</table>
-											</div>
-										</div>
-										<div class="panel panel-primary">
+		<!-- user ticker information begin -->
+		<div class="row">
+			<div class="col">
+				<div class="row">
+					<div class="col-8">
+						<h4>Рассчитать стандартные индикаторы (по типу SPY) для
+							актива, введенного пользователем</h4>
+					</div>
+					<div class="col-4">
+						<button type="submit" class="btn btn-success">open all</button>
+						<button type="submit" class="btn btn-warning">close all</button>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col">
+						<div class="panel panel-default">
 							<div class="panel-heading">
-								<h5 style="text-align: left;">Рекомендации по активу #SPY#</h5>
+								<h5 class="panel-title">
+									<a data-toggle="collapse" data-parent="#accordion"
+										href="#collapse4">Перейти к форме расчета и данным /
+										Скрыть данные</a>
+								</h5>
 							</div>
-							<div class="panel-body">
-								Покупать, продавать или держать в портфеле
-							</div>
-						</div>
+							<div id="collapse4" class="panel-collapse collapse">
+								<div class="panel-body">
+									<div class="form-inline">
+										<div class="form-group col">
+											<button type="submit" class="btn btn-primary">Пересчитать</button>
+										</div>
+
+										<div class="form-group col">
+											<label for="inputTicker" style="padding-left: 7px; padding-right: 7px">Поле для ввода тикера:</label> <input
+												type="text" class="form-control" id="inputTickerID"
+												placeholder="inputTicker">
+										</div>
+										<div class="form-group col">
+											<label for="inputPeriod" style="padding-left: 7px; padding-right: 7px">Период: Daily/Weekly</label> <select
+												id="inputPeriodID" class="form-control">
+												<option selected>Daily</option>
+												<option selected>Weekly</option>
+											</select>
+										</div>
+									</div>
+									<div class="row-graphic-stock-data">
+										<div class="panel-group">
+											<div class="panel panel-default">
+												<div class="panel-heading">Индикаторы типа Moving
+													Averages</div>
+												<div class="panel-body">
+													<div class="row-graphic-stock-data">
+														<label class="graphic-label">Дневной график</label>
+														<div class="row-graphic-stock-data">Здесь будет
+															график</div>
+													</div>
+													<div class="row-graphic-stock-data">
+														<label class="graphic-label">Недельный график</label>
+														<div class="row-graphic-stock-data">Здесь будет
+															график</div>
+													</div>
+
+												</div>
+											</div>
+											<div class="panel panel-default">
+												<div class="panel-heading">Индикаторы типа Relative
+													Strength</div>
+												<div class="panel-body">
+													<div class="row-graphic-stock-data">
+														<label class="graphic-label">Дневной график</label>
+														<div class="row-graphic-stock-data">Здесь будет
+															график</div>
+													</div>
+													<div class="row-graphic-stock-data">
+														<label class="graphic-label">Недельный график</label>
+														<div class="row-graphic-stock-data">Здесь будет
+															график</div>
+													</div>
+												</div>
+												<div class="panel panel-info">
+													<div class="panel-heading">
+														<h5 style="text-align: left;">Данные по активу #SPY#
+															- индикаторы и осцилляторы в табличном виде</h5>
+													</div>
+													<div class="panel-body">
+														<table class="table">
+															<thead>
+																<tr>
+																	<th></th>
+																	<th>100D SMA</th>
+																	<th>50D SMA</th>
+																</tr>
+															</thead>
+															<tbody>
+																<tr>
+																	<td>SMA Default</td>
+																	<td>Defaultson</td>
+																	<td>def@somemail.com</td>
+																</tr>
+																<tr class="success">
+																	<td>Last Price vs SMA Success</td>
+																	<td>Doe</td>
+																	<td>john@example.com</td>
+																</tr>
+																<tr class="danger">
+																	<td>Danger</td>
+																	<td>Moe</td>
+																	<td>mary@example.com</td>
+																</tr>
+																<tr class="info">
+																	<td>Info</td>
+																	<td>Dooley</td>
+																	<td>july@example.com</td>
+																</tr>
+															</tbody>
+														</table>
+													</div>
+												</div>
+												<div class="panel panel-default">
+													<!-- panel-succes or panel-danger -->
+													<div class="panel-heading">
+														<h5 style="text-align: left;">Рекомендации по активу
+															#SPY#</h5>
+													</div>
+													<div class="panel-body">Покупать, продавать или
+														держать в портфеле</div>
+												</div>
+											</div>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -329,46 +369,29 @@
 					</div>
 				</div>
 			</div>
-		</div>
-		<!-- user ticker information end -->
+			<!-- user ticker information end -->
 
-		<!-- sample -->
-		<div class="row">
-			<div class="col-12">.col-12</div>
-		</div>
-		<div class="row">
-			<div class="col-6">.col-6</div>
-			<div class="col-6">.col-6</div>
-		</div>
-		<div class="row">
-			<div class="col-8">.col-8</div>
-			<div class="col-2">.col-2</div>
-			<div class="col-2">.col-2</div>
-		</div>
-		<!-- sample end -->
-
-		<button type="submit" class="btn btn-primary">toggle</button>
-		<button type="submit" class="btn btn-success">success</button>
-		<button type="submit" class="btn btn-warning">warning</button>
-
-		<div class="footer-block">
-			<p class="footer-text">Designed by ME in Moscow</p>
+			<div class="footer-block">
+				<hr>
+				<p class="footer-text" style="text-align: center;">Designed by ME
+					in Moscow</p>
+			</div>
 		</div>
 	</div>
 
 	<script>
-		$(document).ready(function(){
-		    $(".collapse").collapse('show');
-		    
-			  $(".btn-primary").click(function(){
-			    $(".collapse").collapse('toggle');
-			  });
-			  $(".btn-success").click(function(){
-			    $(".collapse").collapse('show');
-			  });
-			  $(".btn-warning").click(function(){
-			    $(".collapse").collapse('hide');
-			  });
+		$(document).ready(function() {
+			// $(".collapse").collapse('show');
+
+			$(".btn-primary").click(function() {
+				$(".collapse").collapse('toggle');
+			});
+			$(".btn-success").click(function() {
+				$(".collapse").collapse('show');
+			});
+			$(".btn-warning").click(function() {
+				$(".collapse").collapse('hide');
+			});
 		});
 	</script>
 </body>

@@ -7,15 +7,15 @@ import com.teamdev.jxbrowser.chromium.Browser;
 import com.teamdev.jxbrowser.chromium.dom.By;
 import com.teamdev.jxbrowser.chromium.dom.DOMDocument;
 import com.teamdev.jxbrowser.chromium.dom.DOMElement;
-import com.teamdev.jxbrowser.chromium.dom.DOMNode;
 
 import ru.backtesting.gui.BacktestingAppGUIMain;
-import ru.backtesting.test.TablesawTest;
+import ru.backtesting.utils.Logger;
 
-public class RecomendationPageData {
+@Deprecated
+public class RecomendationPageDataSample {
 	private Browser browser;
 	
-	public RecomendationPageData(Browser browser) {
+	public RecomendationPageDataSample(Browser browser) {
 		this.browser = browser;
 	}
 	

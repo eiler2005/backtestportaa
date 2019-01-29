@@ -98,7 +98,7 @@ public class PortfolioTest {
 		PortfolioMetrics metrics = new PortfolioMetrics(simplePort);
 		//metrics.calcDrawdown();
 		
-		System.out.println(metrics.CAGRInPercent());
+		System.out.println("cagr (percent) = " + metrics.CAGRInPercent());
 
 	}
 }

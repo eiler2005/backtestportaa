@@ -72,31 +72,25 @@
 			<artifactId>gson</artifactId>
 			<version>2.8.5</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/tech.tablesaw/tablesaw-core -->
 		<dependency>
-    		<groupId>tech.tablesaw</groupId>
-    		<artifactId>tablesaw-core</artifactId>
-    		<version>LATEST</version>
+			<groupId>tech.tablesaw</groupId>
+			<artifactId>tablesaw-core</artifactId>
+			<version>LATEST</version>
 		</dependency>
 		<dependency>
-    		<groupId>tech.tablesaw</groupId>
-    		<artifactId>tablesaw-jsplot</artifactId>
-    		<version>LATEST</version>
-	</dependency>
+			<groupId>tech.tablesaw</groupId>
+			<artifactId>tablesaw-jsplot</artifactId>
+			<version>LATEST</version>
+		</dependency>
 		<dependency>
 			<groupId>org.patriques</groupId>
 			<artifactId>alphavantage4j</artifactId>
 			<version>1.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-   		 <groupId>eu.verdelhan</groupId>
-    	<artifactId>ta4j</artifactId>
-    	<version>0.9</version>
-	</dependency>
-	<dependency>
-		<groupId>org.zkoss</groupId>
-		<artifactId>zkgooglecharts</artifactId>
-		<version>0.3.0</version>
-	</dependency>
+			<groupId>eu.verdelhan</groupId>
+			<artifactId>ta4j</artifactId>
+			<version>0.9</version>
+		</dependency>
 	</dependencies>
 </project>

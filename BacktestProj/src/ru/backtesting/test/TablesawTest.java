@@ -6,6 +6,7 @@ import ru.backtesting.utils.DateUtils;
 import ru.backtesting.utils.PortfolioUtils;
 import tech.tablesaw.api.DateColumn;
 import tech.tablesaw.api.DoubleColumn;
+import tech.tablesaw.api.NumberColumn;
 import tech.tablesaw.api.StringColumn;
 import tech.tablesaw.api.Table;
 import tech.tablesaw.plotly.Plot;
@@ -36,6 +37,37 @@ public class TablesawTest {
         
         jXBrowserTest.showHtmlInBrowser(htmlResult);
 	}
+	
+	/*
+	public static void scatterplotWithTwoYAxes() {
+		Table baseball = Table.read().csv("../data/baseball.csv");
+        NumberColumn<?> x = baseball.nCol("BA");
+        NumberColumn<?> y = baseball.nCol("W");
+        NumberColumn<?> y2 = baseball.nCol("SLG");
+
+        Layout layout = Layout.builder().title("Wins vs BA and SLG")
+                .xAxis(Axis.builder().title("Batting Average").build())
+                .yAxis(Axis.builder()
+                        .title("Wins")
+                        .build())
+
+                .yAxis2(Axis.builder()
+                        .title("SLG")
+                        .side(Axis.Side.right)
+                        .overlaying(ScatterTrace.YAxis.Y)
+                        .build())
+                .build();
+        Trace trace = ScatterTrace.builder(x, y)
+                .name("Batting avg.")
+                .build();
+
+        Trace trace2 = ScatterTrace.builder(x, y2)
+                .yAxis(ScatterTrace.YAxis.Y2)
+                .name("Slugging pct.")
+                .build();
+        Figure figure = new Figure(layout, trace2, trace);
+        Plot.show(figure);
+	} */
 	
 	public static String timeSeriesPlotWithSpikes() {
 		LocalDate[] dates = new LocalDate[] { 

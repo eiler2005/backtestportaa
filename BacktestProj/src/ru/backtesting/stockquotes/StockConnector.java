@@ -143,7 +143,9 @@ public class StockConnector {
 				waitForFreeAccess(connection.getConnCount());
 				
 				return connection;
-			}
+			} //else
+				//Logger.log().info("Закончились подключения к www.alphavantage.co в пуле[apiKey - " + connection.getapiKey() + 
+				//		"], счетчик вызовов: " + connection.getConnCount());
 		}
 		
 		throw new AlphaVantageException("Закончились соединения с www.alphavantage.co в пуле");
@@ -152,10 +154,10 @@ public class StockConnector {
 	// 5 resuest per 1 minute - free
 	private static void waitForFreeAccess(int count) {
         try {
-        	int i = 13;
+        	int i = 11;
         	
            	if (count % 5 == 0) {
-            	i = 60;
+            	i = 30;
         	}
         	
         	Logger.log().info("Ждем " + i + " секунд из-за ограничений на 5 подключений в минуту к сайту www.alphavantage.co");

@@ -48,15 +48,23 @@ import com.teamdev.jxbrowser.chromium.events.ScriptContextAdapter;
 import com.teamdev.jxbrowser.chromium.events.ScriptContextEvent;
 import com.teamdev.jxbrowser.chromium.swing.BrowserView;
 
-import ru.backtesting.gui.jshelper.RecomendationPageData;
+import ru.backtesting.gui.jshelper.RecomendationPageDataSample;
+import ru.backtesting.gui.jshelper.RecomendationPageJSHelper;
+import ru.backtesting.utils.Logger;
 
 public class BacktestingAppGUIMain {
 
-	private static final String JS_VAR_NAME_RECOMENDATION_PAGE_DATA = "marketInformationPageData";
+	private static final String JS_VAR_NAME_RECOMENDATION_PAGE_DATA = "recomendationPageData";
 	private static final String WEB_CATALOGUE = "WEB-INF";
-	private static final String RECOMENDATION_PAGE_HTML = "templates" + File.separator + "marketInfPage.html";
-	private JFrame frame;
+	private static final String MARKET_INF_PAGE_HTML = "templates" + File.separator + "marketInfPage.html";
+	private static final String RECOMEND_PAGE_HTML = "templates" + File.separator + "recomendationPage.html";
 
+	
+	private JFrame frame;
+	private Browser recomendPageBrowser, marketInfPageBrowser;
+	private BrowserView recomendPageView, marketInfPageView;
+	private boolean isMainViewMarket = true;
+		
 	/**
 	 * Launch the application.
 	 */
@@ -93,7 +101,9 @@ public class BacktestingAppGUIMain {
 	private void initialize() {
 		frame = new JFrame();
 		frame.setTitle("Backtesting Investing Portfolio Tool Application\n");
-		frame.setBounds(100, 100, 1070, 888);
+		frame.setExtendedState(JFrame.MAXIMIZED_BOTH); 
+		//frame.setBounds(100, 100, 1070, 888);
+		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setBackground(Color.WHITE);
 		frame.getContentPane().setBackground(Color.WHITE); 
@@ -107,20 +117,49 @@ public class BacktestingAppGUIMain {
 		JButton recomSystemButton = new JButton("Рекомендательная система");
 		recomSystemButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// to do
+				Logger.log().info("Нажата кнопка \"recomSystemButton\"");
+				
+				if ( recomendPageBrowser == null && recomendPageView == null )
+					try {
+						recomendPageBrowser = initializationBaseBrowser();
+						recomendPageView = createRecomendPageBrowserView(recomendPageBrowser);
+					} catch (IOException exception) {
+						exception.printStackTrace();
+					}
+				
+				if ( isMainViewMarket ) {
+					frame.getContentPane().remove(marketInfPageView);
+					frame.getContentPane().add(recomendPageView, BorderLayout.CENTER);
+					isMainViewMarket = false;
+				}
+				
+				// recomendPageBrowser.reload();
+				recomendPageView.revalidate();
 			}
 		});
 		
 		JButton backtestPortButton = new JButton("Тестирование портфеля");
 		backtestPortButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// to do
+				Logger.log().info("Нажата кнопка \"backtestPortButton\"");
+
 			}
 		});
 		
 		JButton infromationPortButton = new JButton("Интересная информация о инвестировании");
 		infromationPortButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				Logger.log().info("Нажата кнопка \"infromationPortButton\"");
+				
+				if ( recomendPageView != null )
+					frame.getContentPane().remove(recomendPageView);
+								
+				frame.getContentPane().add(marketInfPageView, BorderLayout.CENTER);			
+				
+				isMainViewMarket = true;
+				
+				// marketInfPageBrowser.reload();
+				marketInfPageView.revalidate();
 			}
 		});
 		
@@ -135,11 +174,11 @@ public class BacktestingAppGUIMain {
 					.addGap(446)
 					.addComponent(separator, GroupLayout.PREFERRED_SIZE, 1, GroupLayout.PREFERRED_SIZE)
 					.addPreferredGap(ComponentPlacement.RELATED)
-					.addComponent(recomSystemButton)
+					.addComponent(infromationPortButton)
 					.addGap(10)
 					.addComponent(backtestPortButton)
 					.addGap(70)
-					.addComponent(infromationPortButton, GroupLayout.PREFERRED_SIZE, 199, GroupLayout.PREFERRED_SIZE)
+					.addComponent(recomSystemButton, GroupLayout.PREFERRED_SIZE, 199, GroupLayout.PREFERRED_SIZE)
 					.addContainerGap(219, Short.MAX_VALUE))
 		);
 		groupLayout.setVerticalGroup(
@@ -162,15 +201,17 @@ public class BacktestingAppGUIMain {
 		frame.getContentPane().add(panel, BorderLayout.BEFORE_FIRST_LINE);
 		
 		try {
-			addBrowser();
+			marketInfPageBrowser = initializationBaseBrowser();
+			
+			marketInfPageView = createMarketInfPageBrowserView(marketInfPageBrowser);
+			
+			frame.getContentPane().add(marketInfPageView, BorderLayout.CENTER);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
     }
 	
-	public void addBrowser() throws IOException {
-    	File tempDir = new File(Paths.get(".").toFile().getCanonicalPath() + File.separator + WEB_CATALOGUE);
-    	
+	public Browser initializationBaseBrowser() throws IOException {    	
 		Browser browser = new Browser(BrowserType.LIGHTWEIGHT);
     			
 		// Gets the current Browser's preferences
@@ -203,14 +244,14 @@ public class BacktestingAppGUIMain {
 		    public void onScriptContextCreated(ScriptContextEvent event) {
 		        Browser browser = event.getBrowser();
 		        JSValue window = browser.executeJavaScriptAndReturnValue("window");
-
+		        
                 JSValue value = window.asObject().getProperty(JS_VAR_NAME_RECOMENDATION_PAGE_DATA);
-                if (value.isJavaObject()) {
-                	RecomendationPageData object = (RecomendationPageData) value.asJavaObject();
-                }
+                
+		        Logger.log().info("Результат выполнения скрипта: " + value);
 		    }
 		});
 
+		RecomendationPageJSHelper jsHelperObject = new RecomendationPageJSHelper(browser);
 		
 		browser.addLoadListener(new LoadAdapter() {
 	            @Override
@@ -219,7 +260,11 @@ public class BacktestingAppGUIMain {
 	                	Browser browser = event.getBrowser();
 	                    JSValue value = browser.executeJavaScriptAndReturnValue("window");
         
-	                    value.asObject().setProperty(JS_VAR_NAME_RECOMENDATION_PAGE_DATA, new RecomendationPageData(event.getBrowser()));
+	                    value.asObject().setProperty(JS_VAR_NAME_RECOMENDATION_PAGE_DATA, 
+	                    		jsHelperObject);
+	                    
+	                    Logger.log().info("Загрузили в страницу \"" + event.getBrowser().getURL() + "\" переменную \"" + 
+	                    		JS_VAR_NAME_RECOMENDATION_PAGE_DATA + "\"");
 	                }
 	            }
 	    });
@@ -228,8 +273,8 @@ public class BacktestingAppGUIMain {
 		networkService.setResourceHandler(new ResourceHandler() {
 		    @Override
 		    public boolean canLoadResource(ResourceParams params) {
-                System.out.println("URL: " + params.getURL());
-                System.out.println("Type: " + params.getResourceType());
+                // System.out.println("URL: " + params.getURL());
+                // System.out.println("Type: " + params.getResourceType());
                 
 		        boolean isNotAnImageType = 
 		                params.getResourceType() != ResourceType.IMAGE;
@@ -242,23 +287,51 @@ public class BacktestingAppGUIMain {
 		    }
 		});
 		
-        BrowserView view = new BrowserView(browser);
-        		        
-        browser.setContextMenuHandler(new MyContextMenuHandler(view));
+		return browser;
+	}
+	
+	public BrowserView createMarketInfPageBrowserView(Browser browser) throws IOException {
+		BrowserView view = new BrowserView(browser);
+	        
+		browser.setContextMenuHandler(new MyContextMenuHandler(view));
 
-        
-        String recomedFile = new File(tempDir + File.separator + RECOMENDATION_PAGE_HTML).toURI().toString();
-        
-        // browser.loadHTML(readFile(recomedFile));
-        
-        
-        System.out.println(readFile(recomedFile));
-        
-        browser.loadURL(recomedFile);
+		File webDir = new File(Paths.get(".").toFile().getCanonicalPath() + File.separator + WEB_CATALOGUE);
+
+		String webPageFile = new File(webDir + File.separator + MARKET_INF_PAGE_HTML).toURI().toString();
+
+		// browser.loadHTML(readFile(recomedFile));
+
+		// System.out.println(readFile(recomedFile));
+
+		Logger.log().info("Загружаем страницу в браузере: " + webPageFile);
+		
+		browser.loadURL(webPageFile);
 
 		view.setBackground(Color.WHITE);
-				
-		frame.getContentPane().add(view, BorderLayout.CENTER);
+
+		return view;
+	}
+	
+	public BrowserView createRecomendPageBrowserView(Browser browser) throws IOException {
+		BrowserView view = new BrowserView(browser);
+        
+		browser.setContextMenuHandler(new MyContextMenuHandler(view));
+
+		File webDir = new File(Paths.get(".").toFile().getCanonicalPath() + File.separator + WEB_CATALOGUE);
+
+		String webPageFile = new File(webDir + File.separator + RECOMEND_PAGE_HTML).toURI().toString();
+
+		// browser.loadHTML(readFile(recomedFile));
+
+		// System.out.println(readFile(recomedFile));
+
+		Logger.log().info("Загружаем страницу в браузере: " + webPageFile);
+		
+		browser.loadURL(webPageFile);
+		
+		view.setBackground(Color.WHITE);
+
+		return view;
 	}
 	
 	@Deprecated
@@ -323,143 +396,4 @@ public class BacktestingAppGUIMain {
             return reloadMenuItem;
         }
     }
-	
-	String str = "";
-	String html = "<!DOCTYPE html>\n" + 
-    		"<html lang=\"en\">\n" + 
-    		"<head>\n" + 
-    		"	<title>Table V03</title>\n" + 
-    		"	<meta charset=\"UTF-8\">\n" + 
-    		"	<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
-    		"<!--===============================================================================================-->	\n" + 
-    		"	<link rel=\"icon\" type=\"image/png\" href=\"" + str + "/images/icons/favicon.ico\"/>\n" + 
-    		"<!--===============================================================================================-->\n" + 
-    		"	<link rel=\"stylesheet\" type=\"text/css\" href=\""  + str + "/vendor/bootstrap/css/bootstrap.min.css\">\n" + 
-    		"<!--===============================================================================================-->\n" + 
-    		"	<link rel=\"stylesheet\" type=\"text/css\" href=\""  + str + "/fonts/font-awesome-4.7.0/css/font-awesome.min.css\">\n" + 
-    		"<!--===============================================================================================-->\n" + 
-    		"	<link rel=\"stylesheet\" type=\"text/css\" href=\""  + str + "/vendor/animate/animate.css\">\n" + 
-    		"<!--===============================================================================================-->\n" + 
-    		"	<link rel=\"stylesheet\" type=\"text/css\" href=\""  + str + "/vendor/select2/select2.min.css\">\n" + 
-    		"<!--===============================================================================================-->\n" + 
-    		"	<link rel=\"stylesheet\" type=\"text/css\" href=\""  + str + "/vendor/perfect-scrollbar/perfect-scrollbar.css\">\n" + 
-    		"<!--===============================================================================================-->\n" + 
-    		"	<link rel=\"stylesheet\" type=\"text/css\" href=\""  + str + "/css/util.css\">\n" + 
-    		"	<link rel=\"stylesheet\" type=\"text/css\" href=\""  + str + "/css/main.css\">\n" + 
-    		"<!--===============================================================================================-->" +
-    		"</head>\n" + 
-    		"<body>\n" + 
-    		"	\n" + 
-    		"	<div class=\"limiter\">\n" + 
-    		"		<div class=\"container-table100\">\n" + 
-    		"			<div class=\"wrap-table100\">" +
-    		"<div class=\"table100 ver1 m-b-110\">\n" + 
-    		"					<table data-vertable=\"ver1\">\n" + 
-    		"						<thead>\n" + 
-    		"							<tr class=\"row100 head\">\n" + 
-    		"								<th class=\"column100 column1\" data-column=\"column1\"></th>\n" + 
-    		"								<th class=\"column100 column2\" data-column=\"column2\">Sunday</th>\n" + 
-    		"								<th class=\"column100 column3\" data-column=\"column3\">Monday</th>\n" + 
-    		"								<th class=\"column100 column4\" data-column=\"column4\">Tuesday</th>\n" + 
-    		"								<th class=\"column100 column5\" data-column=\"column5\">Wednesday</th>\n" + 
-    		"								<th class=\"column100 column6\" data-column=\"column6\">Thursday</th>\n" + 
-    		"								<th class=\"column100 column7\" data-column=\"column7\">Friday</th>\n" + 
-    		"								<th class=\"column100 column8\" data-column=\"column8\">Saturday</th>\n" + 
-    		"							</tr>\n" + 
-    		"						</thead>\n" + 
-    		"						<tbody>\n" + 
-    		"							<tr class=\"row100\">\n" + 
-    		"								<td class=\"column100 column1\" data-column=\"column1\">Lawrence Scott</td>\n" + 
-    		"								<td class=\"column100 column2\" data-column=\"column2\">8:00 AM</td>\n" + 
-    		"								<td class=\"column100 column3\" data-column=\"column3\">--</td>\n" + 
-    		"								<td class=\"column100 column4\" data-column=\"column4\">--</td>\n" + 
-    		"								<td class=\"column100 column5\" data-column=\"column5\">8:00 AM</td>\n" + 
-    		"								<td class=\"column100 column6\" data-column=\"column6\">--</td>\n" + 
-    		"								<td class=\"column100 column7\" data-column=\"column7\">5:00 PM</td>\n" + 
-    		"								<td class=\"column100 column8\" data-column=\"column8\">8:00 AM</td>\n" + 
-    		"							</tr>\n" + 
-    		"\n" + 
-    		"							<tr class=\"row100\">\n" + 
-    		"								<td class=\"column100 column1\" data-column=\"column1\">Jane Medina</td>\n" + 
-    		"								<td class=\"column100 column2\" data-column=\"column2\">--</td>\n" + 
-    		"								<td class=\"column100 column3\" data-column=\"column3\">5:00 PM</td>\n" + 
-    		"								<td class=\"column100 column4\" data-column=\"column4\">5:00 PM</td>\n" + 
-    		"								<td class=\"column100 column5\" data-column=\"column5\">--</td>\n" + 
-    		"								<td class=\"column100 column6\" data-column=\"column6\">9:00 AM</td>\n" + 
-    		"								<td class=\"column100 column7\" data-column=\"column7\">--</td>\n" + 
-    		"								<td class=\"column100 column8\" data-column=\"column8\">--</td>\n" + 
-    		"							</tr>\n" + 
-    		"\n" + 
-    		"							<tr class=\"row100\">\n" + 
-    		"								<td class=\"column100 column1\" data-column=\"column1\">Billy Mitchell</td>\n" + 
-    		"								<td class=\"column100 column2\" data-column=\"column2\">9:00 AM</td>\n" + 
-    		"								<td class=\"column100 column3\" data-column=\"column3\">--</td>\n" + 
-    		"								<td class=\"column100 column4\" data-column=\"column4\">--</td>\n" + 
-    		"								<td class=\"column100 column5\" data-column=\"column5\">--</td>\n" + 
-    		"								<td class=\"column100 column6\" data-column=\"column6\">--</td>\n" + 
-    		"								<td class=\"column100 column7\" data-column=\"column7\">2:00 PM</td>\n" + 
-    		"								<td class=\"column100 column8\" data-column=\"column8\">8:00 AM</td>\n" + 
-    		"							</tr>\n" + 
-    		"\n" + 
-    		"							<tr class=\"row100\">\n" + 
-    		"								<td class=\"column100 column1\" data-column=\"column1\">Beverly Reid</td>\n" + 
-    		"								<td class=\"column100 column2\" data-column=\"column2\">--</td>\n" + 
-    		"								<td class=\"column100 column3\" data-column=\"column3\">5:00 PM</td>\n" + 
-    		"								<td class=\"column100 column4\" data-column=\"column4\">5:00 PM</td>\n" + 
-    		"								<td class=\"column100 column5\" data-column=\"column5\">--</td>\n" + 
-    		"								<td class=\"column100 column6\" data-column=\"column6\">9:00 AM</td>\n" + 
-    		"								<td class=\"column100 column7\" data-column=\"column7\">--</td>\n" + 
-    		"								<td class=\"column100 column8\" data-column=\"column8\">--</td>\n" + 
-    		"							</tr>\n" + 
-    		"\n" + 
-    		"							<tr class=\"row100\">\n" + 
-    		"								<td class=\"column100 column1\" data-column=\"column1\">Tiffany Wade</td>\n" + 
-    		"								<td class=\"column100 column2\" data-column=\"column2\">8:00 AM</td>\n" + 
-    		"								<td class=\"column100 column3\" data-column=\"column3\">--</td>\n" + 
-    		"								<td class=\"column100 column4\" data-column=\"column4\">--</td>\n" + 
-    		"								<td class=\"column100 column5\" data-column=\"column5\">8:00 AM</td>\n" + 
-    		"								<td class=\"column100 column6\" data-column=\"column6\">--</td>\n" + 
-    		"								<td class=\"column100 column7\" data-column=\"column7\">5:00 PM</td>\n" + 
-    		"								<td class=\"column100 column8\" data-column=\"column8\">8:00 AM</td>\n" + 
-    		"							</tr>\n" + 
-    		"\n" + 
-    		"							<tr class=\"row100\">\n" + 
-    		"								<td class=\"column100 column1\" data-column=\"column1\">Sean Adams</td>\n" + 
-    		"								<td class=\"column100 column2\" data-column=\"column2\">--</td>\n" + 
-    		"								<td class=\"column100 column3\" data-column=\"column3\">5:00 PM</td>\n" + 
-    		"								<td class=\"column100 column4\" data-column=\"column4\">5:00 PM</td>\n" + 
-    		"								<td class=\"column100 column5\" data-column=\"column5\">--</td>\n" + 
-    		"								<td class=\"column100 column6\" data-column=\"column6\">9:00 AM</td>\n" + 
-    		"								<td class=\"column100 column7\" data-column=\"column7\">--</td>\n" + 
-    		"								<td class=\"column100 column8\" data-column=\"column8\">--</td>\n" + 
-    		"							</tr>\n" + 
-    		"\n" + 
-    		"							<tr class=\"row100\">\n" + 
-    		"								<td class=\"column100 column1\" data-column=\"column1\">Rachel Simpson</td>\n" + 
-    		"								<td class=\"column100 column2\" data-column=\"column2\">9:00 AM</td>\n" + 
-    		"								<td class=\"column100 column3\" data-column=\"column3\">--</td>\n" + 
-    		"								<td class=\"column100 column4\" data-column=\"column4\">--</td>\n" + 
-    		"								<td class=\"column100 column5\" data-column=\"column5\">--</td>\n" + 
-    		"								<td class=\"column100 column6\" data-column=\"column6\">--</td>\n" + 
-    		"								<td class=\"column100 column7\" data-column=\"column7\">2:00 PM</td>\n" + 
-    		"								<td class=\"column100 column8\" data-column=\"column8\">8:00 AM</td>\n" + 
-    		"							</tr>\n" + 
-    		"\n" + 
-    		"							<tr class=\"row100\">\n" + 
-    		"								<td class=\"column100 column1\" data-column=\"column1\">Mark Salazar</td>\n" + 
-    		"								<td class=\"column100 column2\" data-column=\"column2\">8:00 AM</td>\n" + 
-    		"								<td class=\"column100 column3\" data-column=\"column3\">--</td>\n" + 
-    		"								<td class=\"column100 column4\" data-column=\"column4\">--</td>\n" + 
-    		"								<td class=\"column100 column5\" data-column=\"column5\">8:00 AM</td>\n" + 
-    		"								<td class=\"column100 column6\" data-column=\"column6\">--</td>\n" + 
-    		"								<td class=\"column100 column7\" data-column=\"column7\">5:00 PM</td>\n" + 
-    		"								<td class=\"column100 column8\" data-column=\"column8\">8:00 AM</td>\n" + 
-    		"							</tr>\n" + 
-    		"						</tbody>\n" + 
-    		"					</table>\n" + 
-    		"				</div>" +
-    		"	<script src=\""  + str + "/js/main.js\"></script>\n" + 
-    		"\n" + 
-    		"</body>\n" + 
-    		"</html>";
 }
