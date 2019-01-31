@@ -7,45 +7,103 @@ import ru.backtesting.mktindicators.HilbertTrendlineSignal;
 import ru.backtesting.mktindicators.OnBalanceVolumeIndicator;
 import ru.backtesting.mktindicators.RSIOscillatorSignal;
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
-import ru.backtesting.mktindicators.base.MarketIndicatorInterval;
 import ru.backtesting.mktindicators.base.MarketIndicatorType;
 import ru.backtesting.mktindicators.ma.MovingAverageIndicatorSignal;
-import ru.backtesting.rebalancing.Frequency;
 import ru.backtesting.stockquotes.StockQuoteHistory;
+import ru.backtesting.stockquotes.TradingPeriod;
 import ru.backtesting.stockquotes.graphics.GraphicsUtils;
 import ru.backtesting.stockquotes.graphics.MarketIndicatorDataSeries;
 import ru.backtesting.stockquotes.graphics.MarketQuoteDataSeries;
 
 public class GraphicsUtilsTest {
 	public static void main(String[] args) {
-		//String pageHtml = testSPY_and_SMA_WMA_And_Trend_Chart();
+		// String pageHtml = testSPY_and_SMA_WMA_And_Trend_Chart(Frequency.Daily, MarketIndicatorInterval.Daily);
 		
 		String pageHtml = testRSIandSPY_OverlayChart();
 
 		// String pageHtml = testBigChart();
 
-		// String pageHtml = testVXXandSPY_OverlayChart();
+		//String pageHtml = testVXXandSPY_OverlayChart();
 		
 		// String pageHtml =  testSPY_andOBVInd_OverlayChart();
 		
+		// String pageHtml = performanceTest2();
 		
 		System.out.println("chart html = " + pageHtml);
 
+		
 		jXBrowserTest.showHtmlInBrowser(pageHtml);
 	}
 
+	private static String performanceTest1() {		
+		String pageHtml1 = testSPY_and_SMA_WMA_And_Trend_Chart(TradingPeriod.Daily);
+
+		System.out.println("First html = " + pageHtml1);
+
+		String pageHtml2 = testSPY_and_SMA_WMA_And_Trend_Chart(TradingPeriod.Weekly);
+
+		System.out.println("Second html = " + pageHtml2);
+
+		return pageHtml1 + "<br><br>" + pageHtml2;
+	}
+	
+	private static String performanceTest2() {
+		StockQuoteHistory.storage().fillQuotesData("SPY", TradingPeriod.Daily);
+
+		String pageHtml1 = createMAGraphics("SPY", 2018, 2019, TradingPeriod.Daily);
+
+		System.out.println("First html = " + pageHtml1);
+
+		String pageHtml2 = createMAGraphics("SPY", 2016, 2019, TradingPeriod.Weekly);
+
+		System.out.println("Second html = " + pageHtml2);
+
+		return pageHtml1 + "<br><br>" + pageHtml2;
+	}
+	
+	private static String createMAGraphics(String ticker, int startYear, int endYear, TradingPeriod period ) {
+		MarketIndicatorInterface sma50 = new MovingAverageIndicatorSignal(50, MarketIndicatorType.SMA_IND, period, 1);
+		MarketIndicatorInterface sma200 = new MovingAverageIndicatorSignal(200, MarketIndicatorType.SMA_IND, period, 1);
+
+		MarketIndicatorDataSeries sma50DataSeries = new MarketIndicatorDataSeries(ticker, sma50, 
+				sma50.getMarketIndType() + "(" + sma50.getTimePeriod() + ") : " + ticker, startYear, endYear, period);
+		
+		MarketIndicatorDataSeries sma200DataSeries = new MarketIndicatorDataSeries(ticker, sma200, 
+				sma200.getMarketIndType() + "(" + sma200.getTimePeriod() + ") : " + ticker, startYear, endYear, period);
+		
+		MarketQuoteDataSeries quotesDataSeries = new MarketQuoteDataSeries(ticker, startYear, endYear, period, false);
+
+		MarketIndicatorInterface wma50 = new MovingAverageIndicatorSignal(50, MarketIndicatorType.WMA_IND, period, 1);
+		MarketIndicatorDataSeries wma50DataSeries = new MarketIndicatorDataSeries(ticker, wma50, 
+				wma50.getMarketIndType() + "(" + wma50.getTimePeriod() + ") : " + ticker, startYear, endYear, period);
+		
+		MarketIndicatorInterface wma200 = new MovingAverageIndicatorSignal(200, MarketIndicatorType.WMA_IND, period, 1);
+		MarketIndicatorDataSeries wma200DataSeries = new MarketIndicatorDataSeries(ticker, wma200, 
+				wma200.getMarketIndType() + "(" + wma200.getTimePeriod() + ") : " + ticker, startYear, endYear, period);
+		
+		MarketIndicatorInterface hilbertTrend = new HilbertTrendlineSignal(1, period);
+		MarketIndicatorDataSeries hilbertTrendDataSeries = new MarketIndicatorDataSeries(ticker, hilbertTrend, 
+				hilbertTrend.getMarketIndType() + "(none) : " + ticker, startYear, endYear, period);
+		
+		return GraphicsUtils.createMultipleTimeSeriesChart(
+				Arrays.asList(new MarketQuoteDataSeries[] { quotesDataSeries}), 
+				Arrays.asList(new MarketIndicatorDataSeries[] { sma50DataSeries, sma200DataSeries, 
+						wma50DataSeries, wma200DataSeries, hilbertTrendDataSeries }), 
+				"spy/moving averages(50-200) chart " + period, "dates", ticker);
+	}
+	
 	private static String testBigChart() {
 		String ticker1 = "SPY";
 		
 		String ticker2 = "TLT";
 		
-		String htmlSPYwithTLT = simpleTestWithTwoQuotes(ticker1, ticker2, 2018, 2019, Frequency.Monthly);
+		String htmlSPYwithTLT = simpleTestWithTwoQuotes(ticker1, ticker2, 2018, 2019, TradingPeriod.Monthly);
 
-		String htmlSPY = simpleTestWithSmallChart(ticker1, 2018, 2019, Frequency.Daily);
+		String htmlSPY = simpleTestWithSmallChart(ticker1, 2018, 2019, TradingPeriod.Daily);
 		
-		String htmlRSI14 = simpleTestWithRSI14Chart(ticker1, 2018, 2019, Frequency.Daily, 14, MarketIndicatorInterval.Daily);
+		String htmlRSI14 = simpleTestWithRSI14Chart(ticker1, 2018, 2019, 14, TradingPeriod.Daily);
 
-		String htmlRSI14Double = testWithStockAndRSI14Chart(ticker1, 2018, 2019, Frequency.Daily, 14, MarketIndicatorInterval.Daily);
+		String htmlRSI14Double = testWithStockAndRSI14Chart(ticker1, 2018, 2019, 14, TradingPeriod.Daily);
 		
 		String pageHtml = 
 				"  <script src=\"https://cdn.plot.ly/plotly-latest.min.js\"></script>" +
@@ -74,35 +132,33 @@ public class GraphicsUtilsTest {
 	}
 
 	
-	private static String testSPY_and_SMA_WMA_And_Trend_Chart() {
+	private static String testSPY_and_SMA_WMA_And_Trend_Chart(TradingPeriod period) {
 		String ticker = "SPY";
-		Frequency frequency = Frequency.Weekly;
-		MarketIndicatorInterval interval = MarketIndicatorInterval.Weekly;
 		
 		int startYear = 2015, endYear = 2019;
 		
-		MarketIndicatorInterface sma50 = new MovingAverageIndicatorSignal(50, MarketIndicatorType.SMA_IND, interval, 1);
-		MarketIndicatorInterface sma200 = new MovingAverageIndicatorSignal(200, MarketIndicatorType.SMA_IND, interval, 1);
+		MarketIndicatorInterface sma50 = new MovingAverageIndicatorSignal(50, MarketIndicatorType.SMA_IND, period, 1);
+		MarketIndicatorInterface sma200 = new MovingAverageIndicatorSignal(200, MarketIndicatorType.SMA_IND, period, 1);
 
 		MarketIndicatorDataSeries sma50DataSeries = new MarketIndicatorDataSeries(ticker, sma50, 
-				sma50.getMarketIndType() + "(" + sma50.getTimePeriod() + ") : " + ticker, startYear, endYear, frequency);
+				sma50.getMarketIndType() + "(" + sma50.getTimePeriod() + ") : " + ticker, startYear, endYear, period);
 		
 		MarketIndicatorDataSeries sma200DataSeries = new MarketIndicatorDataSeries(ticker, sma200, 
-				sma200.getMarketIndType() + "(" + sma200.getTimePeriod() + ") : " + ticker, startYear, endYear, frequency);
+				sma200.getMarketIndType() + "(" + sma200.getTimePeriod() + ") : " + ticker, startYear, endYear, period);
 		
-		MarketQuoteDataSeries quotesDataSeries = new MarketQuoteDataSeries(ticker, startYear, endYear, frequency, false);
+		MarketQuoteDataSeries quotesDataSeries = new MarketQuoteDataSeries(ticker, startYear, endYear, period, false);
 
-		MarketIndicatorInterface wma50 = new MovingAverageIndicatorSignal(50, MarketIndicatorType.WMA_IND, interval, 1);
+		MarketIndicatorInterface wma50 = new MovingAverageIndicatorSignal(50, MarketIndicatorType.WMA_IND, period, 1);
 		MarketIndicatorDataSeries wma50DataSeries = new MarketIndicatorDataSeries(ticker, wma50, 
-				wma50.getMarketIndType() + "(" + wma50.getTimePeriod() + ") : " + ticker, startYear, endYear, frequency);
+				wma50.getMarketIndType() + "(" + wma50.getTimePeriod() + ") : " + ticker, startYear, endYear, period);
 		
-		MarketIndicatorInterface wma200 = new MovingAverageIndicatorSignal(200, MarketIndicatorType.WMA_IND, interval, 1);
+		MarketIndicatorInterface wma200 = new MovingAverageIndicatorSignal(200, MarketIndicatorType.WMA_IND, period, 1);
 		MarketIndicatorDataSeries wma200DataSeries = new MarketIndicatorDataSeries(ticker, wma200, 
-				wma200.getMarketIndType() + "(" + wma200.getTimePeriod() + ") : " + ticker, startYear, endYear, frequency);
+				wma200.getMarketIndType() + "(" + wma200.getTimePeriod() + ") : " + ticker, startYear, endYear, period);
 		
-		MarketIndicatorInterface hilbertTrend = new HilbertTrendlineSignal(1, interval);
+		MarketIndicatorInterface hilbertTrend = new HilbertTrendlineSignal(1, period);
 		MarketIndicatorDataSeries hilbertTrendDataSeries = new MarketIndicatorDataSeries(ticker, hilbertTrend, 
-				hilbertTrend.getMarketIndType() + "(none) : " + ticker, startYear, endYear, frequency);
+				hilbertTrend.getMarketIndType() + "(none) : " + ticker, startYear, endYear, period);
 		
 		return GraphicsUtils.createMultipleTimeSeriesChart(
 				Arrays.asList(new MarketQuoteDataSeries[] { quotesDataSeries}), 
@@ -113,13 +169,13 @@ public class GraphicsUtilsTest {
 	
 	private static String testVXXandSPY_OverlayChart() {
 		String ticker1 = "SPY";
-		String ticker2 = "vix"; // vxx
+		String ticker2 = "VXXB"; // vxx
 
-		Frequency frequency = Frequency.Daily;
+		TradingPeriod period = TradingPeriod.Daily;
 		
-		MarketQuoteDataSeries quotesDataSeries1 = new MarketQuoteDataSeries(ticker1, 2014, 2019, frequency, false);
+		MarketQuoteDataSeries quotesDataSeries1 = new MarketQuoteDataSeries(ticker1, 2014, 2019, period, false);
 		
-		MarketQuoteDataSeries quotesDataSeries2 = new MarketQuoteDataSeries(ticker2, 2014, 2019, frequency, false);
+		MarketQuoteDataSeries quotesDataSeries2 = new MarketQuoteDataSeries(ticker2, 2014, 2019, period, false);
 
 				
 		return GraphicsUtils.createOverlayTimeSeriesChart(quotesDataSeries1, quotesDataSeries2, 
@@ -129,14 +185,13 @@ public class GraphicsUtilsTest {
 	private static String testSPY_andOBVInd_OverlayChart() {
 		String ticker = "SPX";
 		
-		Frequency frequency = Frequency.Weekly;
-		MarketIndicatorInterval interval = MarketIndicatorInterval.Weekly;
+		TradingPeriod period = TradingPeriod.Weekly;
 		
-		MarketQuoteDataSeries quotesDataSeries = new MarketQuoteDataSeries(ticker, 2018, 2019, frequency, false);
+		MarketQuoteDataSeries quotesDataSeries = new MarketQuoteDataSeries(ticker, 2018, 2019, period, false);
 		
-		OnBalanceVolumeIndicator obvInd = new OnBalanceVolumeIndicator(interval);
+		OnBalanceVolumeIndicator obvInd = new OnBalanceVolumeIndicator(period);
 		MarketIndicatorDataSeries obvIndDataSeries = new MarketIndicatorDataSeries(ticker, obvInd, 
-				"obv(" + interval + ") : " + ticker, 2018, 2019, frequency);
+				"obv(" + period + ") : " + ticker, 2018, 2019, period);
 				
 		return GraphicsUtils.createOverlayTimeSeriesChart(quotesDataSeries, obvIndDataSeries, 
 				"spy/obv chart", "dates");
@@ -144,48 +199,47 @@ public class GraphicsUtilsTest {
 	
 	private static String testRSIandSPY_OverlayChart() {
 		String ticker = "MTUM";
-		int period = 14;
-		Frequency frequency = Frequency.Daily;
-		MarketIndicatorInterval interval = MarketIndicatorInterval.Daily;
+		int timePeriod = 14;
+		TradingPeriod period = TradingPeriod.Daily;
 		
-		MarketIndicatorInterface rsiOsc = new RSIOscillatorSignal(period, interval);
+		MarketIndicatorInterface rsiOsc = new RSIOscillatorSignal(timePeriod, period);
 
-		MarketQuoteDataSeries quotesDataSeries = new MarketQuoteDataSeries(ticker, 2018, 2019, frequency, false);
+		MarketQuoteDataSeries quotesDataSeries = new MarketQuoteDataSeries(ticker, 2018, 2019, period, false);
 		
 		MarketIndicatorDataSeries rsiIndDataSeries = new MarketIndicatorDataSeries(ticker, rsiOsc, 
-				"rsi(" + period + ") : " + ticker, 2018, 2019, frequency);
+				"rsi(" + timePeriod + ") : " + ticker, 2018, 2019, period);
 				
 		return GraphicsUtils.createOverlayTimeSeriesChart(quotesDataSeries, rsiIndDataSeries, 
-				"spy/rsi(" + period + ") chart", "dates");
+				"spy/rsi(" + timePeriod + ") chart", "dates");
 	}
 	
-	private static String testWithStockAndRSI14Chart(String ticker, int startYear, int endYear, Frequency frequency, int rsiPeriod, MarketIndicatorInterval inverval) {
-		MarketIndicatorInterface rsiOsc = new RSIOscillatorSignal(rsiPeriod, inverval);
+	private static String testWithStockAndRSI14Chart(String ticker, int startYear, int endYear, int rsiPeriod, TradingPeriod period) {
+		MarketIndicatorInterface rsiOsc = new RSIOscillatorSignal(rsiPeriod, period);
 		
 		MarketIndicatorDataSeries rsiIndDataSeries = new MarketIndicatorDataSeries(ticker, rsiOsc, 
-				"rsi(" + rsiPeriod + ") : " + ticker, startYear, endYear, frequency);
+				"rsi(" + rsiPeriod + ") : " + ticker, startYear, endYear, period);
 		
-		MarketQuoteDataSeries quotesDataSeries = new MarketQuoteDataSeries(ticker, startYear, endYear, frequency, false);
+		MarketQuoteDataSeries quotesDataSeries = new MarketQuoteDataSeries(ticker, startYear, endYear, period, false);
 		
 		return GraphicsUtils.createMultipleTimeSeriesChart(Arrays.asList(new MarketQuoteDataSeries[] { quotesDataSeries}), 
 				Arrays.asList(new MarketIndicatorDataSeries[] { rsiIndDataSeries}), 
 				"simple graphic spy/tlt", "dates: " + startYear + " - " + endYear, "spy/tlt");
 	}
 	
-	private static String simpleTestWithRSI14Chart(String ticker, int startYear, int endYear, Frequency frequency, int period, MarketIndicatorInterval inverval) {
-		MarketIndicatorInterface rsiOsc = new RSIOscillatorSignal(period, inverval);
+	private static String simpleTestWithRSI14Chart(String ticker, int startYear, int endYear, int timePeriod, TradingPeriod period) {
+		MarketIndicatorInterface rsiOsc = new RSIOscillatorSignal(timePeriod, period);
 		
 		MarketIndicatorDataSeries rsiIndDataSeries = new MarketIndicatorDataSeries(ticker, rsiOsc, 
-				"rsi(" + period + ") : " + ticker, startYear, endYear, frequency);
+				"rsi(" + timePeriod + ") : " + ticker, startYear, endYear, period);
 		
 		return GraphicsUtils.createIndicatorTimeSeriesChart(rsiIndDataSeries, "rsi(14)", 
 				"dates: " + startYear + " - " + endYear);
 	}
 	
-	private static String simpleTestWithSmallChart(String ticker, int startYear, int endYear, Frequency frequency) {
-		StockQuoteHistory.storage().fillQuotesData(ticker, startYear, endYear);
+	private static String simpleTestWithSmallChart(String ticker, int startYear, int endYear, TradingPeriod period) {
+		StockQuoteHistory.storage().fillQuotesData(ticker, period);
 		
-		MarketQuoteDataSeries quotesDataSeries = new MarketQuoteDataSeries(ticker, startYear, endYear, frequency, false);
+		MarketQuoteDataSeries quotesDataSeries = new MarketQuoteDataSeries(ticker, startYear, endYear, period, false);
 		
 		
 		return GraphicsUtils.createSmallTimeSeriesChart(quotesDataSeries, 
@@ -193,10 +247,10 @@ public class GraphicsUtilsTest {
 	}
 
 	@Deprecated
-	private static String simpleTestWithTwoQuotes(String ticker1, String ticker2, int startYear, int endYear, Frequency frequency) {
-		MarketQuoteDataSeries quotesDataSeries1 = new MarketQuoteDataSeries(ticker1, startYear, endYear, frequency, false);
+	private static String simpleTestWithTwoQuotes(String ticker1, String ticker2, int startYear, int endYear, TradingPeriod period) {
+		MarketQuoteDataSeries quotesDataSeries1 = new MarketQuoteDataSeries(ticker1, startYear, endYear, period, false);
 		
-		MarketQuoteDataSeries quotesDataSeries2 = new MarketQuoteDataSeries(ticker2, startYear, endYear, frequency, false);
+		MarketQuoteDataSeries quotesDataSeries2 = new MarketQuoteDataSeries(ticker2, startYear, endYear, period, false);
 		
 		List<MarketQuoteDataSeries> quoteDataSeriesList = Arrays.asList(
 				new MarketQuoteDataSeries[] { quotesDataSeries1, quotesDataSeries2 });

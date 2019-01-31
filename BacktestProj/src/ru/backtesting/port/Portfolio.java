@@ -14,6 +14,7 @@ import ru.backtesting.rebalancing.RebalancingMethod;
 import ru.backtesting.rebalancing.RebalancingType;
 import ru.backtesting.stockquotes.StockQuote;
 import ru.backtesting.stockquotes.StockQuoteHistory;
+import ru.backtesting.stockquotes.TradingPeriod;
 import ru.backtesting.utils.Logger;
 import ru.backtesting.utils.PortfolioUtils;
 
@@ -29,9 +30,10 @@ public class Portfolio {
     private boolean reinvestDividends = false;
     private List<MarketIndicatorInterface> timingSignals;
 	private String outOfMarketPosTicker;
-    
+    private TradingPeriod period;
+	
 	public Portfolio(String name, List<AssetAllocation> assetsAllocation, int startYear, int endYear, int initialAmount,
-			RebalancingType rebalancing, List<MarketIndicatorInterface> timingSignals, boolean reinvestDividends) {
+			RebalancingType rebalancing, TradingPeriod period, List<MarketIndicatorInterface> timingSignals, boolean reinvestDividends) {
 		super();
 		this.name = name;
 		this.assetsAllocation = assetsAllocation;
@@ -39,13 +41,14 @@ public class Portfolio {
 		this.endYear = endYear;
 		this.initialAmount = initialAmount;
 		this.rebalType = rebalancing;
+		this.period = period;
 		this.postionsOnDates = new LinkedHashMap<LocalDateTime, List<PositionInformation>>();
 		this.reinvestDividends = reinvestDividends;
 		this.timingSignals = timingSignals;
 	}
 	
 	public Portfolio(String name, List<AssetAllocation> assetsAllocation, int startYear, int endYear, int initialAmount,
-			RebalancingType rebalancing, List<MarketIndicatorInterface> timingSignals, String outOfMarketTicker, boolean reinvestDividends) {
+			RebalancingType rebalancing, TradingPeriod period, List<MarketIndicatorInterface> timingSignals, String outOfMarketTicker, boolean reinvestDividends) {
 		super();
 		this.name = name;
 		this.assetsAllocation = assetsAllocation;
@@ -53,6 +56,7 @@ public class Portfolio {
 		this.endYear = endYear;
 		this.initialAmount = initialAmount;
 		this.rebalType = rebalancing;
+		this.period = period;
 		this.postionsOnDates = new LinkedHashMap<LocalDateTime, List<PositionInformation>>();
 		this.reinvestDividends = reinvestDividends;
 		
@@ -69,20 +73,28 @@ public class Portfolio {
 		}
 		
 		if (outOfMarketPosTicker != null && !outOfMarketPosTicker.equals(CASH_TICKER)) {
-			if ( StockQuoteHistory.storage().containsDataInStorage(outOfMarketPosTicker) )
+			if ( StockQuoteHistory.storage().containsDataInStorage(outOfMarketPosTicker, period) )
 				return;
 			
-			StockQuoteHistory.storage().fillQuotesData(outOfMarketPosTicker, startYear, endYear);
+			StockQuoteHistory.storage().fillQuotesData(outOfMarketPosTicker, period);
+			
+			if ( !period.equals(TradingPeriod.Daily) )
+				StockQuoteHistory.storage().fillQuotesData(outOfMarketPosTicker, TradingPeriod.Daily);
+
 		}
 	}
 	
 	private void fillQuotesData(String ticker, LinkedHashMap<LocalDateTime, List<PositionInformation>> positions) {
-		if ( StockQuoteHistory.storage().containsDataInStorage(ticker) )
+		if ( StockQuoteHistory.storage().containsDataInStorage(ticker, period) )
 			return;
 		
-		StockQuoteHistory.storage().fillQuotesData(ticker, startYear, endYear);
+		StockQuoteHistory.storage().fillQuotesData(ticker, period);
+		
+		if ( !period.equals(TradingPeriod.Daily) )
+			StockQuoteHistory.storage().fillQuotesData(ticker, TradingPeriod.Daily);
 
-		List<LocalDateTime> dates = StockQuoteHistory.storage().getTradingDates(ticker, startYear, endYear, rebalType.getFrequency());
+
+		List<LocalDateTime> dates = StockQuoteHistory.storage().getTradingDatesByFilter(ticker, period, startYear, endYear, rebalType.getFrequency());
 		
 		for (LocalDateTime date : dates)
 			if ( positions.get(date) == null ) {
@@ -126,7 +138,7 @@ public class Portfolio {
 					
     			Logger.log().info("Начинаем пересчитывать стоимость позиций в портфеле");
 
-				double portfolioBalance = prevDate == null ? initialAmount : PortfolioUtils.calculateAllPositionsBalance(postionsOnDates.get(prevDate), date, reinvestDividends, true);
+				double portfolioBalance = prevDate == null ? initialAmount : PortfolioUtils.calculateAllPositionsBalance(postionsOnDates.get(prevDate), period, date, reinvestDividends, true);
 				
     			Logger.log().info("Пересчитали стоимость портфеля на дату [" + date + "](сколько денег у нас есть для покупки): " + Logger.log().doubleLog(portfolioBalance));
 				
@@ -138,7 +150,7 @@ public class Portfolio {
 		    				    		
 		    		// надо принять решение покупаем текущую акцию или уходим в outOfMarketTicker
 		    		
-		    		boolean isHoldInPortfolio = PortfolioUtils.isHoldInPortfolio(timingSignals, ticker, position.getTime());
+		    		boolean isHoldInPortfolio = PortfolioUtils.isHoldInPortfolio(timingSignals, ticker, period, position.getTime());
 		    				    		
 	    			Logger.log().info("Приняли решение держать в портфеле(true)/продавать(false) [" + ticker + "] : " + isHoldInPortfolio);
 		    		
@@ -150,7 +162,7 @@ public class Portfolio {
 		    		if ( prevDate == null || !postionsOnDates.get(prevDate).get(i).getTicker().equals(CASH_TICKER) || isHoldInPortfolio) {
 		    			// купить в соответствии с assetAllocation
 		    			// считаем сколько стоит акция на данный момент времени
-		    			quote = StockQuoteHistory.storage().getQuoteValueByDate(ticker, position.getTime(), reinvestDividends);
+		    			quote = StockQuoteHistory.storage().getQuoteValueByDate(ticker, period, position.getTime(), reinvestDividends);
 	    			
 		    			// считаем сколько мы можем купить акций по цене на данный момент времени с учетом текущей стоимости портфеля
 		    			quantity = PortfolioUtils.calculateQuantityStocks(ticker, quote, portfolioBalance, assetsAllocation);
@@ -181,7 +193,7 @@ public class Portfolio {
 			    			Logger.log().info("Закрыли позицию и вышли в hedge-актив [" + outOfMarketPosTicker + "] на сумму " + Logger.log().doubleLog(quote*quantity));
 		    			}
 		    			else {
-		    				double hedgeQuote = StockQuoteHistory.storage().getQuoteValueByDate(outOfMarketPosTicker, position.getTime(), reinvestDividends);
+		    				double hedgeQuote = StockQuoteHistory.storage().getQuoteValueByDate(outOfMarketPosTicker, period, position.getTime(), reinvestDividends);
 		    				
 		    				double hedgeQuantity = (double) allocationPercent*portfolioBalance/hedgeQuote/100;
 		    				
@@ -228,8 +240,9 @@ public class Portfolio {
 	}
 	
 	private void sellAllPositionWhenPortIsFull(List<PositionInformation> positions) {		
-		int firstFullIndex = 0;
+		int firstFullIndex = -1;
 		
+		// ищем первую позиции с 100 процентным уровнем аллокации
 		for (int i = 0; i < assetsAllocation.size(); i++) {
     		double allocationPercent = assetsAllocation.get(i).getAllocationPercent();
     		
@@ -239,10 +252,11 @@ public class Portfolio {
     		}
 		}
 		
+		// продаем все кроме позиции с 100 процентным уровнем аллокации
 		for (int i = 0; i < assetsAllocation.size(); i++) {    		
 			PositionInformation position = positions.get(i);
     		
-    		if ( i != firstFullIndex)
+    		if ( firstFullIndex!= - 1 && i != firstFullIndex)
     			position.sell();
 		}
 	}
@@ -314,7 +328,7 @@ public class Portfolio {
 			List<PositionInformation> positions = postionsOnDates.get(date);
 			
 			for (PositionInformation position : positions) {
-				StockQuote quote = StockQuoteHistory.storage().getQuoteByDate(position.getTicker(), position.getTime());
+				StockQuote quote = StockQuoteHistory.storage().getQuoteByDate(position.getTicker(), period, position.getTime());
 				
 				Logger.log().info("____quantity:   " + position.getQuantity());
 				Logger.log().info("____price: " + position.getQuantity()*quote.getClose());
@@ -351,6 +365,10 @@ public class Portfolio {
 		return PortfolioUtils.calculateAllPositionsBalance(positions);
 	}
 		
+	public TradingPeriod getPeriod() {
+		return period;
+	}
+
 	public Set<String> getAllTickersInPort() {
 		Set<String> tickers = new HashSet<String>();
 		for (int i = 0; i < assetsAllocation.size(); i++) {

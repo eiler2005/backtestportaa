@@ -8,8 +8,8 @@ import org.patriques.output.AlphaVantageException;
 
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
 import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
-import ru.backtesting.rebalancing.Frequency;
 import ru.backtesting.stockquotes.StockQuoteHistory;
+import ru.backtesting.stockquotes.TradingPeriod;
 import ru.backtesting.stockquotes.graphics.base.BaseFinancialTimeSeriesChartInformation;
 import ru.backtesting.stockquotes.graphics.base.FinancialTimeSeriesChartInformation;
 import ru.backtesting.utils.DateUtils;
@@ -31,16 +31,16 @@ public class MarketIndicatorDataSeries extends BaseFinancialTimeSeriesChartInfor
 		super.tooltips = tooltips;
 	}
 	
-	public MarketIndicatorDataSeries(String ticker, MarketIndicatorInterface indicator, String indicatorTitle, int startYear, int endYear, Frequency frequency) {
+	public MarketIndicatorDataSeries(String ticker, MarketIndicatorInterface indicator, String indicatorTitle, int startYear, int endYear, TradingPeriod period) {
 		super();
 		super.ticker = ticker;
 		this.indicator = indicator;
 		this.indicatorTitle = indicatorTitle;
 		
-		fillFromStorage(startYear, endYear, frequency);
+		fillFromStorage(startYear, endYear, period);
 	}
 
-	private void fillFromStorage(int startYear, int endYear, Frequency frequency) {	
+	private void fillFromStorage(int startYear, int endYear, TradingPeriod period) {	
 		int period1 = indicator.getTimePeriod();
 		int period2 = 0;
 		
@@ -54,8 +54,8 @@ public class MarketIndicatorDataSeries extends BaseFinancialTimeSeriesChartInfor
 						MarketIndicatorDataSeries.class);
 		}
 		
-		super.dates = StockQuoteHistory.storage().getTradingDates(ticker, startYear, endYear, frequency);
-
+		super.dates = DateUtils.filterDateListByYear(StockQuoteHistory.storage().getTradingDatesByPeriod(ticker, period), startYear, endYear);
+		
 		MarketIndicatorsHistory.storage().fillIndicatosData(ticker, period1, indicator.getMarketIndType(), indicator.getInterval());
 		
 		super.values = MarketIndicatorsHistory.storage().findIndicatorValues(ticker, period1, dates, indicator.getMarketIndType(), indicator.getInterval());

@@ -3,6 +3,7 @@ package ru.backtesting.stockquotes;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -20,14 +21,11 @@ import ru.backtesting.utils.DateUtils;
 public class StockQuoteHistory {
 	private static StockQuoteHistory instance;
 	private HashMap<String, List<StockQuote>> quotes;
-	private HashMap<String, List<LocalDateTime>> dates;
-	
-	private HashMap<TradingPeriod, List<LocalDateTime>> tradingDates;
-	
+	private HashMap<String, List<LocalDateTime>> allDates;
+		
 	private StockQuoteHistory() {
-		dates = new HashMap<String, List<LocalDateTime>>();
+		allDates = new HashMap<String, List<LocalDateTime>>();
 		quotes = new HashMap<String, List<StockQuote>>();
-		tradingDates = new HashMap<TradingPeriod, List<LocalDateTime>>();
 	}
 	
 	public static synchronized StockQuoteHistory storage() {
@@ -38,62 +36,90 @@ public class StockQuoteHistory {
 		return instance;
 	}
 	
-	public List<LocalDateTime> fillQuotesData(String ticker, int startYear, int endYear) {
-		if ( containsDataInStorage(ticker) )
-			return dates.get(ticker);
+	
+	private String getKey(String ticker, TradingPeriod period) {
+		return "[" + ticker + "] , [" + period + "]";
+	}
+	
+	public List<LocalDateTime> fillQuotesData(String ticker, TradingPeriod period) {
+		String tickerKey = getKey(ticker, period);
+		
+		if ( containsDataInStorage(ticker, period) )
+			return allDates.get(tickerKey);
 			
-		Daily response = StockConnector.daily(ticker);
+		TimeSeriesResponse response = null;
+		
+		if (period.equals(TradingPeriod.Daily))
+			response = StockConnector.daily(ticker);
+		else if (period.equals(TradingPeriod.Weekly))
+			response = StockConnector.weekly(ticker);
+		else if (period.equals(TradingPeriod.Monthly))
+			response = StockConnector.monthly(ticker); 
 
 	    List<StockData> stockData = response.getStockData();
 		
 	    Collections.reverse(stockData);
-	    	    	    
+	    	    	   	    
 	    for (StockData stock : stockData) {	
 	    	LocalDateTime dateTime = stock.getDateTime();
 	    		    	
 	    	StockQuote quote = new StockQuote(ticker, dateTime, stock.getOpen(), 
 	    			stock.getClose(), stock.getAdjustedClose(), stock.getHigh(), stock.getLow(), stock.getDividendAmount());   	
-	    		    	
-	    	if (dateTime.getYear() >= startYear && dateTime.getYear() <= endYear) {
-	    		
-	    		if (dates.get(ticker) != null) {
-		    		dates.get(ticker).add(dateTime);
-		    	}
-		    	else {
-		    		List<LocalDateTime> list = new ArrayList<LocalDateTime>();
-		    		list.add(dateTime);
-		    		dates.put(ticker, list);
-		    	}	 
-	    		
-	    		if (quotes.get(ticker) != null)
-	    			quotes.get(ticker).add(quote);
-	    		else {
-	    			List<StockQuote> list = new ArrayList<StockQuote>();
-	    			list.add(quote);
-	    			quotes.put(ticker, list);		    	
-	    		}	
+	    		 
+	    	// add all dates
+    		if (allDates.get(tickerKey) != null) {
+	    		allDates.get(tickerKey).add(dateTime);
 	    	}
+	    	else {
+	    		List<LocalDateTime> list = new ArrayList<LocalDateTime>();
+	    		list.add(dateTime);
+	    		allDates.put(tickerKey, list);
+	    	}	 
+    		
+    		if (quotes.get(tickerKey) != null)
+    			quotes.get(tickerKey).add(quote);
+    		else {
+    			List<StockQuote> list = new ArrayList<StockQuote>();
+    			list.add(quote);
+    			quotes.put(tickerKey, list);		    	
+    		}
 	    }
 	    	    
-	    return dates.get(ticker);
+	    return allDates.get(tickerKey);
 	}
 	
-	public List<LocalDateTime> getQuoteDatesForTicker(String ticker) {
-		return dates.get(ticker);
-	}
-	
-	public double getQuoteValueByDate(String ticker, LocalDateTime date, boolean dividends) {
-		if (dividends)
-			return getQuoteByDate(ticker, date).getAdjustedClose();
+	@Deprecated
+	private List<LocalDateTime> getDatesByYearFilter(String ticker, TradingPeriod period, int startYear, int endYear) {
+		String tickerKey = getKey(ticker, period);
+		
+		List<LocalDateTime> datesByYearFilter = new ArrayList<LocalDateTime>();
+		
+		if ( containsDataInStorage(ticker, period) )
+			datesByYearFilter = DateUtils.filterDateListByYear(allDates.get(tickerKey), startYear, endYear);
+		
+		if ( datesByYearFilter.size() == 0 )
+			throw new AlphaVantageException("По активу [" + ticker + "] не найдены котировки в промежутке между следующими годами [" + startYear + ", " + endYear + "]. "
+				+ "Возможно, данных на указанную дату не существует в хранилище www.alphavantage.com или они не загружены");
 		else
-			return getQuoteByDate(ticker, date).getClose();
+			return datesByYearFilter;
 	}
 	
-	public List<Double> getQuoteValuesByDates(String ticker, List<LocalDateTime> dates, boolean dividens) {
+	public List<LocalDateTime> getQuoteDatesForTicker(String ticker, TradingPeriod period) {
+		return allDates.get(getKey(ticker, period));
+	}
+	
+	public double getQuoteValueByDate(String ticker, TradingPeriod period, LocalDateTime date, boolean dividends) {
+		if (dividends)
+			return getQuoteByDate(ticker, period, date).getAdjustedClose();
+		else
+			return getQuoteByDate(ticker, period, date).getClose();
+	}
+	
+	public List<Double> getQuoteValuesByDates(String ticker, TradingPeriod period, List<LocalDateTime> dates, boolean dividens) {
 		List<Double> quoteValues = new ArrayList<Double>();
 		
 		for (LocalDateTime date : dates) {			
-			double quoteValue = getQuoteValueByDate(ticker, date, dividens);
+			double quoteValue = getQuoteValueByDate(ticker, period, date, dividens);
 			
 			quoteValues.add(quoteValue);			
 		}
@@ -101,19 +127,28 @@ public class StockQuoteHistory {
 		return quoteValues;
 	}
 	
-	public StockQuote getQuoteByDate(String ticker, LocalDateTime date) {
-		List<StockQuote> list = quotes.get(ticker);
+	public StockQuote getQuoteByDate(String ticker, TradingPeriod period, LocalDateTime date) {
+		List<StockQuote> list = quotes.get(getKey(ticker, period));
 				
 		for (StockQuote q : list)
 			if ( DateUtils.compareDatesByDay(q.getTime(), date) ) 
 				return q;
 		
-		throw new AlphaVantageException("По активу [" + ticker + " на дату " + date + " не загружены котировки. "
+		// попытаемся поискать в других периодах значения котировки акции
+		List<TradingPeriod> periods = Arrays.asList(new TradingPeriod[] 
+				{ TradingPeriod.Daily, TradingPeriod.Weekly, TradingPeriod.Monthly });
+		
+		for ( TradingPeriod curPeriod : periods  )
+			if ( !curPeriod.equals(period) && containsDataInStorageOnDate(ticker, curPeriod, date))			
+				return getQuoteByDate(ticker, curPeriod, date);
+		
+		
+		throw new AlphaVantageException("По активу [" + ticker + "] на дату " + date + " не загружены котировки. "
 				+ "Возможно, данных на указанную дату не существует в хранилище www.alphavantage.co");
 	}
 	
-	public LocalDateTime getFirstTradedDay(String ticker, int startYear) {
-		List<LocalDateTime> datesQ = dates.get(ticker);
+	public LocalDateTime getFirstTradedDay(String ticker, TradingPeriod period, int startYear) {
+		List<LocalDateTime> datesQ = allDates.get(getKey(ticker, period));
 		
 		for (LocalDateTime date : datesQ) {
 			if (date.getYear() == startYear && date.getMonth().equals(Month.JANUARY) )
@@ -123,20 +158,22 @@ public class StockQuoteHistory {
 		return null;
 	}
 	
-	public boolean containsDataInStorage(String ticker) {
-		return quotes.containsKey(ticker) && dates.containsKey(ticker);
+	public boolean containsDataInStorage(String ticker, TradingPeriod period) {
+		String tickerKey = getKey(ticker, period);
+		
+		return quotes.containsKey(tickerKey) && allDates.containsKey(tickerKey);
 	}
 	
-	public boolean containsDataInStorageOnDate(Set<String> tickers, LocalDateTime date) {
+	public boolean containsDataInStorageOnDate(Set<String> tickers, TradingPeriod period, LocalDateTime date) {
 		for (String ticker : tickers)
-			if ( !containsDataInStorageOnDate(ticker, date) )
+			if ( !containsDataInStorageOnDate(ticker, period, date) )
 				return false;
 		
 		return true;
 	}
 	
-	public boolean containsDataInStorageOnDate(String ticker, LocalDateTime date) {
-		List<StockQuote> list = quotes.get(ticker);
+	public boolean containsDataInStorageOnDate(String ticker, TradingPeriod period, LocalDateTime date) {
+		List<StockQuote> list = quotes.get(getKey(ticker, period));
 
 		for (StockQuote q : list)
 			if ( DateUtils.compareDatesByDay(q.getTime(), date) ) 
@@ -145,115 +182,74 @@ public class StockQuoteHistory {
 		return false;		
 	}
 
-	@Deprecated
-	public List<LocalDateTime> getTradingDates(String ticker, int startYear, int endYear, Frequency frequency) {
-		TradingPeriod tradingPeriod = new TradingPeriod(ticker, startYear, endYear, frequency);
-		
-		if (tradingDates.containsKey(tradingPeriod))
-			return tradingDates.get(tradingPeriod);
-		
-		TimeSeriesResponse response = null;
-		
-		if (frequency.equals(Frequency.Daily))
-			response = StockConnector.daily(ticker);
-		else if (frequency.equals(Frequency.Weekly))
-			response = StockConnector.weekly(ticker);
+	public List<LocalDateTime> getTradingDatesByPeriod(String ticker, TradingPeriod period) {
+		String tickerKey = getKey(ticker, period);
+
+		if (allDates.containsKey(tickerKey))
+			return allDates.get(tickerKey);
 		else
-			response = StockConnector.monthly(ticker);
-	
-	    List<StockData> stockData = response.getStockData();
-		
-	    Collections.reverse(stockData);
-	    	    	
-	    List<LocalDateTime> dates = new ArrayList<LocalDateTime>();
-	    
-	    // dates.add(getFirstTradedDay(ticker, startYear));
-	    
-	    // ДОДЕЛАТЬ - например, для Annually считает позицию в июле 2018ого только на декабрь 2017 - а нужно на июнь 2018
-	    for (int i = 0; i < stockData.size(); i++) {
-			LocalDateTime date = stockData.get(i).getDateTime();
-			
-			if (date.getYear() >= startYear && date.getYear() <= endYear ) {
-				Month month = date.getMonth();
-				
-				if ( i == 0 || (i == (dates.size() - 1) ) )
-					dates.add(date);
-				else
-				switch(frequency) {
-					case Annually:				
-			        	if (month.equals(Month.DECEMBER) )
-			        		dates.add(date);
-						break;
-					case SemiAnnually:
-						if ( month.equals(Month.JUNE) || month.equals(Month.DECEMBER) )
-		        			dates.add(date);
-						break;
-					case Quarterly:
-						if ( month.equals(Month.MARCH) || month.equals(Month.JUNE) || 
-			        				month.equals(Month.SEPTEMBER) || month.equals(Month.DECEMBER) )
-			        		dates.add(date);
-						break;
-					case Monthly:
-		        		dates.add(date);
-						break;
-					case Weekly:
-		        		dates.add(date);
-						break;
-					default:
-						dates.add(date);
-						break;
-				}
-			}
-	    }
-	    
-	   if ( frequency.equals(Frequency.Annually) )
-	    	dates.add(stockData.get(stockData.size()-1).getDateTime());
-	    
-	    tradingDates.put(tradingPeriod, dates);
-	    
-	    return dates;
+			throw new AlphaVantageException(
+					"Необходимо загрузить данные для тикера " + ticker + " и периода " + period);
 	}
 	
-	private final class TradingPeriod {
-		private String ticker;
-		private int startYear;
-		int endYear;
-		private Frequency period;
+	public List<LocalDateTime> getTradingDatesByFilter(String ticker, TradingPeriod period, int startYear, int endYear, Frequency frequency) {
+		if ( !containsDataInStorage(ticker, period) )
+			throw new AlphaVantageException(
+					"Необходимо загрузить данные для тикера " + ticker + " и периода " + period);
 		
-		public TradingPeriod(String ticker, int startYear, int endYear, Frequency period) {
-			super();
-			this.ticker = ticker;
-			this.startYear = startYear;
-			this.endYear = endYear;
-			this.period = period;
+		// dates.add(getFirstTradedDay(ticker, startYear));
+
+		List<LocalDateTime> filteredDates = new ArrayList<LocalDateTime>();
+
+		List<LocalDateTime> frequencyDates = getTradingDatesByPeriod(ticker, period);
+		
+		// ДОДЕЛАТЬ - например, для Annually считает позицию в июле 2018ого только на
+		// декабрь 2017 - а нужно на июнь 2018
+		for (int i = 0; i < frequencyDates.size(); i++) {
+			LocalDateTime date = frequencyDates.get(i);
+
+			if (date.getYear() >= startYear && date.getYear() <= endYear) {
+				Month month = date.getMonth();
+
+				if (i == 0 || (i == (frequencyDates.size() - 1)))
+					filteredDates.add(date);
+				else
+					switch (frequency) {
+					case Annually:
+						if (month.equals(Month.DECEMBER))
+							filteredDates.add(date);
+						break;
+					case SemiAnnually:
+						if (month.equals(Month.JUNE) || month.equals(Month.DECEMBER))
+							filteredDates.add(date);
+						break;
+					case Quarterly:
+						if (month.equals(Month.MARCH) || month.equals(Month.JUNE) || month.equals(Month.SEPTEMBER)
+								|| month.equals(Month.DECEMBER))
+							filteredDates.add(date);
+						break;
+					case Monthly:
+						filteredDates.add(date);
+						break;
+					case Weekly:
+						filteredDates.add(date);
+						break;
+					default:
+						filteredDates.add(date);
+						break;
+					}
+			}
 		}
 
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + getEnclosingInstance().hashCode();
-			result = prime * result + Objects.hash(endYear, period, startYear, ticker);
-			return result;
-		}
+		if (filteredDates.size() == 0)
+			throw new AlphaVantageException("По активу [" + ticker + 
+					"] не найдены котировки в промежутке между следующими годами [" + startYear + ", " + endYear  + "]. " +
+					"Возможно, данных на указанную дату не существует в хранилище www.alphavantage.com или они не загружены");
 
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			TradingPeriod other = (TradingPeriod) obj;
-			if (!getEnclosingInstance().equals(other.getEnclosingInstance()))
-				return false;
-			return endYear == other.endYear && period == other.period && startYear == other.startYear
-					&& Objects.equals(ticker, other.ticker);
-		}
+		// вставляем последний день года при Frequency.Annually
+		if (frequency.equals(Frequency.Annually))
+			filteredDates.add(frequencyDates.get(frequencyDates.size() - 1));
 
-		private StockQuoteHistory getEnclosingInstance() {
-			return StockQuoteHistory.this;
-		}
+		return filteredDates;
 	}
 }

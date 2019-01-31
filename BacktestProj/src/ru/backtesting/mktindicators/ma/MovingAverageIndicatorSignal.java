@@ -3,9 +3,9 @@ package ru.backtesting.mktindicators.ma;
 import java.time.LocalDateTime;
 
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
-import ru.backtesting.mktindicators.base.MarketIndicatorInterval;
 import ru.backtesting.mktindicators.base.MarketIndicatorType;
 import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
+import ru.backtesting.stockquotes.TradingPeriod;
 import ru.backtesting.stockquotes.StockQuoteHistory;
 import ru.backtesting.utils.Logger;
 
@@ -13,9 +13,9 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 	private int timePeriod1, timePeriod2 = 0;
 	private MarketIndicatorType maType;
 	private double deviationPercent;
-	private MarketIndicatorInterval interval;
+	private TradingPeriod interval;
 	
-	public MovingAverageIndicatorSignal(int timePeriod1, int timePeriod2, MarketIndicatorType maType, MarketIndicatorInterval interval) {
+	public MovingAverageIndicatorSignal(int timePeriod1, int timePeriod2, MarketIndicatorType maType, TradingPeriod interval) {
 		super();
 		this.timePeriod1 = timePeriod1;
 		this.timePeriod2 = timePeriod2;
@@ -24,7 +24,7 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 		this.interval = interval;
 	}
 	
-	public MovingAverageIndicatorSignal(int timePeriod1, int timePeriod2, MarketIndicatorType maType, MarketIndicatorInterval interval, double deviationPercent) {
+	public MovingAverageIndicatorSignal(int timePeriod1, int timePeriod2, MarketIndicatorType maType, TradingPeriod interval, double deviationPercent) {
 		super();
 		this.timePeriod1 = timePeriod1;
 		this.timePeriod2 = timePeriod2;
@@ -34,7 +34,7 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 
 	}
 
-	public MovingAverageIndicatorSignal(int timePeriod, MarketIndicatorType maType, MarketIndicatorInterval interval, double deviationPercent) {
+	public MovingAverageIndicatorSignal(int timePeriod, MarketIndicatorType maType, TradingPeriod interval, double deviationPercent) {
 		super();
 		this.timePeriod1 = timePeriod;
 		this.maType = maType;
@@ -80,7 +80,7 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 		else {
 			double maValue = MarketIndicatorsHistory.storage().findIndicatorValue(ticker, timePeriod1, date, getMarketIndType(), getInterval());
 			
-			double quote = StockQuoteHistory.storage().getQuoteValueByDate(ticker, date, false);
+			double quote = StockQuoteHistory.storage().getQuoteValueByDate(ticker, getInterval(), date, false);
 			
 			Logger.log().info(getMarketIndType() + "[" + timePeriod1 + "] on date [" + date + "]: ticker [" + ticker + "] quote = " + Logger.log().doubleLog(quote) 
 					+ ", " + getMarketIndType() + " = " + Logger.log().doubleLog(maValue));
@@ -123,7 +123,7 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 	}
 	
 	@Override
-	public MarketIndicatorInterval getInterval() {
+	public TradingPeriod getInterval() {
 		return interval;
 	}
 }

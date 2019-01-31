@@ -1,9 +1,11 @@
 package ru.backtesting.utils;
 
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -65,5 +67,15 @@ public class DateUtils {
 	
 	public static Duration duration(LocalDate startDate, LocalDate endDate) {
 		return Duration.between(startDate.atStartOfDay(ZoneId.of(TIME_ZONE)), endDate.atStartOfDay(ZoneId.of(TIME_ZONE)));
+	}
+	
+	public static List<LocalDateTime> filterDateListByYear(List<LocalDateTime> dates, int startYear, int endYear) {
+		List<LocalDateTime> filteredDates = new ArrayList<LocalDateTime>();
+		
+		for (LocalDateTime curDate : dates  ) 
+		    if (curDate.getYear() >= startYear && curDate.getYear() <= endYear) 
+		    	filteredDates.add(curDate);
+	
+		return filteredDates;
 	}
 }

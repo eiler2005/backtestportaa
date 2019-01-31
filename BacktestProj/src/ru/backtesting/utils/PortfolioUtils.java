@@ -10,14 +10,15 @@ import ru.backtesting.port.AssetAllocation;
 import ru.backtesting.port.Portfolio;
 import ru.backtesting.port.PositionInformation;
 import ru.backtesting.stockquotes.StockQuoteHistory;
+import ru.backtesting.stockquotes.TradingPeriod;
 
 public class PortfolioUtils {
-	public static double buyPortfolio(List<PositionInformation> positions, List<AssetAllocation> assetsAllocation, double moneyAmount, boolean dividends) {
+	public static double buyPortfolio(List<PositionInformation> positions, List<AssetAllocation> assetsAllocation, TradingPeriod period, double moneyAmount, boolean dividends) {
 		double price = 0;
 				
 		for (PositionInformation position : positions) {
 			String ticker = position.getTicker();
-			double currentQuote = StockQuoteHistory.storage().getQuoteValueByDate(ticker, position.getTime(), dividends);
+			double currentQuote = StockQuoteHistory.storage().getQuoteValueByDate(ticker, period, position.getTime(), dividends);
 								
 			double quantity = calculateQuantityStocks(ticker, currentQuote, moneyAmount, assetsAllocation);
 			
@@ -52,7 +53,7 @@ public class PortfolioUtils {
 		return sum;
 	}
 	
-	public static double calculateAllPositionsBalance(List<PositionInformation> positions, LocalDateTime date, boolean reinvestDividends, boolean logging) {
+	public static double calculateAllPositionsBalance(List<PositionInformation> positions, TradingPeriod period, LocalDateTime date, boolean reinvestDividends, boolean logging) {
 		double sum = 0;
 		
 		for(PositionInformation pos : positions) {
@@ -63,7 +64,7 @@ public class PortfolioUtils {
 					Logger.log().info("Позиция [" + pos.getTicker() + "] лотов [" + Logger.log().doubleLog(pos.getQuantity()) + "], цена: " + Logger.log().doubleLog(pos.getPrice()));
 			}
 			else {
-				double quoteValue = StockQuoteHistory.storage().getQuoteValueByDate(pos.getTicker(), date, reinvestDividends);
+				double quoteValue = StockQuoteHistory.storage().getQuoteValueByDate(pos.getTicker(), period, date, reinvestDividends);
 				sum += pos.getQuantity()*quoteValue;
 				
 				if (logging)
@@ -75,7 +76,7 @@ public class PortfolioUtils {
 		return sum;
 	}
 	
-	public static boolean isHoldInPortfolio(List<MarketIndicatorInterface> timingSignals, String ticker, LocalDateTime date) {
+	public static boolean isHoldInPortfolio(List<MarketIndicatorInterface> timingSignals, String ticker, TradingPeriod period, LocalDateTime date) {
 		boolean holdInPort = true;
 		
 		if ( timingSignals != null && timingSignals.size() != 0 ) {
@@ -85,7 +86,7 @@ public class PortfolioUtils {
 				
 				Logger.log().info("Для позиции портфеля с тикером " + ticker + " и датой " + date + 
 						" сигнал на покупку/продажу равен: " + result + ", цена акции: " + 
-						StockQuoteHistory.storage().getQuoteValueByDate(ticker, date, false));
+						StockQuoteHistory.storage().getQuoteValueByDate(ticker, period, date, false));
 				
 				if (result == -1 )
 				    holdInPort = false;

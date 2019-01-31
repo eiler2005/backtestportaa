@@ -3,16 +3,16 @@ package ru.backtesting.mktindicators;
 import java.time.LocalDateTime;
 
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
-import ru.backtesting.mktindicators.base.MarketIndicatorInterval;
 import ru.backtesting.mktindicators.base.MarketIndicatorType;
 import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
+import ru.backtesting.stockquotes.TradingPeriod;
 import ru.backtesting.utils.Logger;
 
 public class RSIOscillatorSignal implements MarketIndicatorInterface {
 	private int timePeriod;
-	private MarketIndicatorInterval interval;
+	private TradingPeriod interval;
 	
-	public RSIOscillatorSignal(int timePeriod, MarketIndicatorInterval interval) {
+	public RSIOscillatorSignal(int timePeriod, TradingPeriod interval) {
 		this.timePeriod = timePeriod;
 		this.interval = interval;
 	}
@@ -72,7 +72,7 @@ public class RSIOscillatorSignal implements MarketIndicatorInterface {
 	}
 	
 	@Override
-	public MarketIndicatorInterval getInterval() {
+	public TradingPeriod getInterval() {
 		return interval;
 	}
 }
