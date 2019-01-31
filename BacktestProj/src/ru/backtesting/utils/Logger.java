@@ -3,7 +3,9 @@ package ru.backtesting.utils;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
 
 import tech.tablesaw.api.DateTimeColumn;
 import tech.tablesaw.api.DoubleColumn;
@@ -15,6 +17,7 @@ public class Logger {
     public static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     public static final DateTimeFormatter DATE_FORMAT_SIMPLE = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    public static final SimpleDateFormat DATE_FORMAT_FOR_LOG = new SimpleDateFormat("yyyy.MM.d_HH.mm.ss");
     
 	private static Logger instance;
 
@@ -40,7 +43,11 @@ public class Logger {
 	}
 	
 	public void info(String info) {
-		out.println(info);
+		out.println("[" + DATE_FORMAT_FOR_LOG.format(Calendar.getInstance().getTime()) + "] " + info);
+	}
+	
+	public void error(String info) {
+		out.println("ERROR[" + DATE_FORMAT_FOR_LOG.format(Calendar.getInstance().getTime()) + "] " + info);
 	}
 	
 	public static synchronized void setTableFormatter(Table table) {

@@ -14,6 +14,7 @@ import org.patriques.output.technicalindicators.TechnicalIndicatorResponse;
 import org.patriques.output.technicalindicators.data.BBANDSData;
 import org.patriques.output.technicalindicators.data.IndicatorData;
 
+import ru.backtesting.stockquotes.TradingPeriod;
 import ru.backtesting.stockquotes.StockConnector;
 import ru.backtesting.utils.DateUtils;
 import ru.backtesting.utils.Logger;
@@ -36,16 +37,16 @@ public class MarketIndicatorsHistory {
 		return instance;
 	}
 	
-	private String generateKeyForIndTicker(String ticker, int timePeriod, MarketIndicatorType type, MarketIndicatorInterval interval) {
+	private String generateKeyForIndTicker(String ticker, int timePeriod, MarketIndicatorType type, TradingPeriod interval) {
 		return "[" + ticker + "][" + String.valueOf(timePeriod) + "][" + type + "][" + interval + "]"; 
 	}
 	
-	public List<LocalDateTime> fillIndicatosData(String ticker, int timePeriod, MarketIndicatorType type, MarketIndicatorInterval interval) {
+	public List<LocalDateTime> fillIndicatosData(String ticker, int timePeriod, MarketIndicatorType type, TradingPeriod interval) {
 		org.patriques.input.technicalindicators.Interval invervalAV = Interval.DAILY;
 		
-		if ( interval.equals(MarketIndicatorInterval.Monthly) )
+		if ( interval.equals(TradingPeriod.Monthly) )
 			invervalAV = Interval.MONTHLY;
-		else if ( interval.equals(MarketIndicatorInterval.Weekly) )
+		else if ( interval.equals(TradingPeriod.Weekly) )
 			invervalAV = Interval.WEEKLY;
 		
 		String indStorageKey = generateKeyForIndTicker(ticker, timePeriod, type, interval);
@@ -108,28 +109,28 @@ public class MarketIndicatorsHistory {
 		 return dates;
 	}
 	
-	public List<LocalDateTime> fillHilbertTrendlineData(String ticker, MarketIndicatorInterval interval) {
+	public List<LocalDateTime> fillHilbertTrendlineData(String ticker, TradingPeriod interval) {
 		 return fillIndicatosData(ticker, 0, MarketIndicatorType.HILBER_TRANSFORM_TRENDLINE, interval) ;
 	}
 	
-	public List<LocalDateTime> fillRSIData(String ticker, int timePeriod, MarketIndicatorInterval interval) {
+	public List<LocalDateTime> fillRSIData(String ticker, int timePeriod, TradingPeriod interval) {
 		 return fillIndicatosData(ticker, timePeriod, MarketIndicatorType.RSI_OSC, interval) ;
 	}
 	
-	public List<LocalDateTime> fillCMOData(String ticker, int timePeriod, MarketIndicatorInterval interval) {
+	public List<LocalDateTime> fillCMOData(String ticker, int timePeriod, TradingPeriod interval) {
 		 return fillIndicatosData(ticker, timePeriod, MarketIndicatorType.CHANDE_MOMENTUM_OSC, interval) ;
 	}
 	
-	public List<LocalDateTime> fillBBandsData(String ticker, int timePeriod, MarketIndicatorInterval interval) {
+	public List<LocalDateTime> fillBBandsData(String ticker, int timePeriod, TradingPeriod interval) {
 		 return fillIndicatosData(ticker, timePeriod, MarketIndicatorType.BOLLINGER_BANDS, interval) ;
 	}
 	
-	public List<LocalDateTime> fillOBVData(String ticker, MarketIndicatorInterval interval) {
+	public List<LocalDateTime> fillOBVData(String ticker, TradingPeriod interval) {
 		 return fillIndicatosData(ticker, 0, MarketIndicatorType.OBV, interval) ;
 	}
 	
 	@SuppressWarnings("unused")
-	private List<Object> findIndicatorData(String ticker, int timePeriod, MarketIndicatorType type, MarketIndicatorInterval inverval) {
+	private List<Object> findIndicatorData(String ticker, int timePeriod, MarketIndicatorType type, TradingPeriod inverval) {
 		String indStorageKey = generateKeyForIndTicker(ticker, timePeriod, type, inverval);
 
 		HashMap<String, List<Object>> indicatorData = indicatorsStorage.get(indStorageKey);
@@ -146,7 +147,7 @@ public class MarketIndicatorsHistory {
 		}
 	}
 	
-	public List<Double> findIndicatorValues(String ticker, int timePeriod, List<LocalDateTime> dates, MarketIndicatorType type, MarketIndicatorInterval inverval) {
+	public List<Double> findIndicatorValues(String ticker, int timePeriod, List<LocalDateTime> dates, MarketIndicatorType type, TradingPeriod inverval) {
 		List<Double> values = new ArrayList<Double>();
 		
 		for (LocalDateTime date : dates) {
@@ -158,7 +159,7 @@ public class MarketIndicatorsHistory {
 		return values;
 	}
 
-	public boolean containsIndicatorInStorageOnDate(String ticker, int period, LocalDateTime date, MarketIndicatorType indicatorType, MarketIndicatorInterval inverval) {
+	public boolean containsIndicatorInStorageOnDate(String ticker, int period, LocalDateTime date, MarketIndicatorType indicatorType, TradingPeriod inverval) {
 		String indStorageKey = generateKeyForIndTicker(ticker, period, indicatorType, inverval);
 		
 		HashMap<String, List<Object>> indicatorData = indicatorsStorage.get(indStorageKey);
@@ -188,7 +189,7 @@ public class MarketIndicatorsHistory {
 		}
 	}
 	
-	public double findIndicatorValue(String ticker, int timePeriod, LocalDateTime date, MarketIndicatorType type, MarketIndicatorInterval inverval) {
+	public double findIndicatorValue(String ticker, int timePeriod, LocalDateTime date, MarketIndicatorType type, TradingPeriod inverval) {
 		if ( containsIndicatorInStorageOnDate(ticker, timePeriod, date, type, inverval) ) {
 			String indStorageKey = generateKeyForIndTicker(ticker, timePeriod, type, inverval);
 
@@ -217,7 +218,7 @@ public class MarketIndicatorsHistory {
 				". Самая первая дата для данного индикатора: " + firstDate + ". Либо дата " + date + " раньше первой даты расчета индикатора " + firstDate + " или дата не попадает в период " +  inverval);
 	}
 	
-	private LocalDateTime getFirstDateFromIndicator(String ticker, int timePeriod, MarketIndicatorType type, MarketIndicatorInterval inverval) {
+	private LocalDateTime getFirstDateFromIndicator(String ticker, int timePeriod, MarketIndicatorType type, TradingPeriod inverval) {
 		String indStorageKey = generateKeyForIndTicker(ticker, timePeriod, type, inverval);
 		
 		HashMap<String, List<Object>> indicatorData = indicatorsStorage.get(indStorageKey);
@@ -243,7 +244,7 @@ public class MarketIndicatorsHistory {
 		}
 	}
 	
-	public List<Double> getIndicatorsDataForLastPeriod(String ticker, int indTimePeriod, LocalDateTime date, MarketIndicatorType type, MarketIndicatorInterval inverval, int lastPeriod) {
+	public List<Double> getIndicatorsDataForLastPeriod(String ticker, int indTimePeriod, LocalDateTime date, MarketIndicatorType type, TradingPeriod inverval, int lastPeriod) {
 		String indStorageKey = generateKeyForIndTicker(ticker, indTimePeriod, type, inverval);
 
 		HashMap<String, List<Object>> indicatorData = indicatorsStorage.get(indStorageKey);

@@ -3,15 +3,15 @@ package ru.backtesting.mktindicators;
 import java.time.LocalDateTime;
 
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
-import ru.backtesting.mktindicators.base.MarketIndicatorInterval;
 import ru.backtesting.mktindicators.base.MarketIndicatorType;
 import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
+import ru.backtesting.stockquotes.TradingPeriod;
 import ru.backtesting.utils.Logger;
 
 public class OnBalanceVolumeIndicator implements MarketIndicatorInterface {
-	private MarketIndicatorInterval interval;
+	private TradingPeriod interval;
 	
-	public OnBalanceVolumeIndicator(MarketIndicatorInterval interval) {
+	public OnBalanceVolumeIndicator(TradingPeriod interval) {
 		this.interval = interval;
 	}
 	
@@ -44,7 +44,7 @@ public class OnBalanceVolumeIndicator implements MarketIndicatorInterface {
 	}
 
 	@Override
-	public MarketIndicatorInterval getInterval() {
+	public TradingPeriod getInterval() {
 		return interval;
 	}
 

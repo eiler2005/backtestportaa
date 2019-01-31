@@ -3,17 +3,17 @@ package ru.backtesting.mktindicators;
 import java.time.LocalDateTime;
 
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
-import ru.backtesting.mktindicators.base.MarketIndicatorInterval;
 import ru.backtesting.mktindicators.base.MarketIndicatorType;
 import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
 import ru.backtesting.stockquotes.StockQuoteHistory;
+import ru.backtesting.stockquotes.TradingPeriod;
 import ru.backtesting.utils.Logger;
 
 public class HilbertTrendlineSignal implements MarketIndicatorInterface {
 	private double deviationPercent;
-	private MarketIndicatorInterval interval;
+	private TradingPeriod interval;
 	
-	public HilbertTrendlineSignal(double deviationPercent, MarketIndicatorInterval interval) {
+	public HilbertTrendlineSignal(double deviationPercent, TradingPeriod interval) {
 		super();
 		this.deviationPercent = deviationPercent / 100;
 		this.interval = interval;
@@ -28,7 +28,7 @@ public class HilbertTrendlineSignal implements MarketIndicatorInterface {
 		Logger.log().info("HilbertTrendline value on date [" + date + "]: ticker [" + ticker + "] = " 
 				+ Logger.log().doubleLog(trendValue));
 
-		double quoteValue = StockQuoteHistory.storage().getQuoteValueByDate(ticker, date, false);
+		double quoteValue = StockQuoteHistory.storage().getQuoteValueByDate(ticker, getInterval(), date, false);
 
 		
 		// buy signal
@@ -58,7 +58,7 @@ public class HilbertTrendlineSignal implements MarketIndicatorInterface {
 	
 	
 	@Override
-	public MarketIndicatorInterval getInterval() {
+	public TradingPeriod getInterval() {
 		return interval;
 	}
 }

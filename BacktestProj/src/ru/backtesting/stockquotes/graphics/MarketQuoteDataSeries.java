@@ -6,8 +6,8 @@ import java.util.List;
 
 import org.patriques.output.AlphaVantageException;
 
-import ru.backtesting.rebalancing.Frequency;
 import ru.backtesting.stockquotes.StockQuoteHistory;
+import ru.backtesting.stockquotes.TradingPeriod;
 import ru.backtesting.stockquotes.graphics.base.BaseFinancialTimeSeriesChartInformation;
 import ru.backtesting.stockquotes.graphics.base.FinancialTimeSeriesChartInformation;
 import ru.backtesting.utils.DateUtils;
@@ -15,11 +15,12 @@ import ru.backtesting.utils.DateUtils;
 public class MarketQuoteDataSeries extends BaseFinancialTimeSeriesChartInformation 
 		implements FinancialTimeSeriesChartInformation {
 	
-	public MarketQuoteDataSeries(String ticker, int startYear, int endYear, Frequency frequency, boolean dividens) {
+	public MarketQuoteDataSeries(String ticker, int startYear, int endYear, TradingPeriod period, boolean dividens) {
 		super();
 		this.ticker = ticker;
+		this.period = period;
 		
-		fillFromStorage(startYear, endYear, frequency, dividens);
+		fillFromStorage(startYear, endYear, period, dividens);
 	}
 	
 	public MarketQuoteDataSeries(String ticker, List<LocalDateTime> dates, List<Double> quotes, List<String> tooltips) {
@@ -30,12 +31,12 @@ public class MarketQuoteDataSeries extends BaseFinancialTimeSeriesChartInformati
 		this.tooltips = tooltips;
 	}
 
-	private void fillFromStorage(int startYear, int endYear, Frequency frequency, boolean dividens) {
-		StockQuoteHistory.storage().fillQuotesData(ticker, startYear, endYear);
+	private void fillFromStorage(int startYear, int endYear, TradingPeriod period, boolean dividens) {
+		StockQuoteHistory.storage().fillQuotesData(ticker, period);
 		
-		super.dates = StockQuoteHistory.storage().getTradingDates(ticker, startYear, endYear, frequency);
-
-		super.values = StockQuoteHistory.storage().getQuoteValuesByDates(ticker, dates, dividens);		
+		super.dates = DateUtils.filterDateListByYear(StockQuoteHistory.storage().getTradingDatesByPeriod(ticker, period), startYear, endYear);
+		
+		super.values = StockQuoteHistory.storage().getQuoteValuesByDates(ticker, period, dates, dividens);		
 		
 		// --
 		tooltips = new ArrayList<String>();
@@ -49,7 +50,7 @@ public class MarketQuoteDataSeries extends BaseFinancialTimeSeriesChartInformati
 
 	@Override
 	public double findValueByDate(LocalDateTime date) {
-		if ( !StockQuoteHistory.storage().containsDataInStorageOnDate(ticker, date) )
+		if ( !StockQuoteHistory.storage().containsDataInStorageOnDate(ticker, getTradingPeriod(), date) )
 			throw new AlphaVantageException("По активу [" + ticker + " на дату " + date + " не загружены котировки. "
 					+ "Возможно, данных на указанную дату не существует в хранилище www.alphavantage.co");
 		else {

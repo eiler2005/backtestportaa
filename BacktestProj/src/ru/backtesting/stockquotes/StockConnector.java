@@ -37,51 +37,187 @@ public class StockConnector {
 		
 		Logger.log().info("Использую подключение к AlphaVantage типа full, счетчик вызовов: " + fullConnCount);
 		
-		return new TimeSeries(fullConn()).daily(ticker);
+		try {
+			return new TimeSeries(fullConn()).daily(ticker);
+		}
+		catch (AlphaVantageException e) {
+			e.printStackTrace();
+			
+			Logger.log().error(e.getLocalizedMessage());
+			
+			throw e;
+		}
+		finally {
+			Logger.log().info("Данные [daily] c помощью подключения к AlphaVantage из пула получены");
+		}
 	}
 	
 	public static TimeSeriesResponse weekly(String ticker) {	
-				
-		return new TimeSeries(connFromPool()).weekly(ticker);
+		try {
+			return new TimeSeries(connFromPool()).weekly(ticker);
+		}
+		catch (AlphaVantageException e) {
+			e.printStackTrace();
+			
+			Logger.log().error(e.getLocalizedMessage());
+			
+			throw e;
+		}
+		finally {
+			Logger.log().info("Данные [weekly] c помощью подключения к AlphaVantage из пула получены");
+		}
 	}
 	
 	public static TimeSeriesResponse monthly(String ticker) {		
-		
-		return new TimeSeries(connFromPool()).monthly(ticker);
+		try {
+			return new TimeSeries(connFromPool()).monthly(ticker);
+		}
+		catch (AlphaVantageException e) {
+			e.printStackTrace();
+			
+			Logger.log().error(e.getLocalizedMessage());
+			
+			throw e;
+		}
+		finally {
+			Logger.log().info("Данные [monthly] c помощью подключения к AlphaVantage из пула получены");
+		}		
 	}
 	
 	public static TechnicalIndicatorResponse sma(String symbol, Interval interval, TimePeriod timePeriod, SeriesType seriesType) {
-		return new TechnicalIndicators(connFromPool()).sma(symbol, interval, timePeriod, seriesType);
+		try {
+			return new TechnicalIndicators(connFromPool()).sma(symbol, interval, timePeriod, seriesType);
+		}
+		catch (AlphaVantageException e) {
+			e.printStackTrace();
+			
+			Logger.log().error(e.getLocalizedMessage());
+			
+			throw e;
+		}
+		finally {
+			Logger.log().info("Данные sma[" + symbol + ", " + interval + ", " + timePeriod + ", " + seriesType + 
+					"] c помощью подключения к AlphaVantage из пула получены");
+		}		
 	}
 	
 	// weighted moving average 
 	public static TechnicalIndicatorResponse wma(String symbol, Interval interval, TimePeriod timePeriod, SeriesType seriesType) {
-		return new TechnicalIndicators(connFromPool()).wma(symbol, interval, timePeriod, seriesType);
+		try {
+			return new TechnicalIndicators(connFromPool()).wma(symbol, interval, timePeriod, seriesType);
+		}
+		catch (AlphaVantageException e) {
+			e.printStackTrace();
+			
+			Logger.log().error(e.getLocalizedMessage());
+			
+			throw e;
+		}
+		finally {
+			Logger.log().info("Данные wma[" + symbol + ", " + interval + ", " + timePeriod + ", " + seriesType + 
+					"] c помощью подключения к AlphaVantage из пула получены");
+		}	
 	}
 	
 	public static TechnicalIndicatorResponse ema(String symbol, Interval interval, TimePeriod timePeriod, SeriesType seriesType) {
-		return new TechnicalIndicators(connFromPool()).ema(symbol, interval, timePeriod, seriesType);
+		try {
+			return new TechnicalIndicators(connFromPool()).ema(symbol, interval, timePeriod, seriesType);
+		}
+		catch (AlphaVantageException e) {
+			e.printStackTrace();
+			
+			Logger.log().error(e.getLocalizedMessage());
+			
+			throw e;
+		}
+		finally {
+			Logger.log().info("Данные ema[" + symbol + ", " + interval + ", " + timePeriod + ", " + seriesType + 
+					"] c помощью подключения к AlphaVantage из пула получены");
+		}	
 	}
 	
 	public static TechnicalIndicatorResponse rsi(String symbol, Interval interval, TimePeriod timePeriod, SeriesType seriesType) {
-		
-		return new TechnicalIndicators(connFromPool()).rsi(symbol, interval, timePeriod, seriesType);
+		try {
+			return new TechnicalIndicators(connFromPool()).rsi(symbol, interval, timePeriod, seriesType);
+		}
+		catch (AlphaVantageException e) {
+			e.printStackTrace();
+			
+			Logger.log().error(e.getLocalizedMessage());
+			
+			throw e;
+		}
+		finally {
+			Logger.log().info("Данные rsi[" + symbol + ", " + interval + ", " + timePeriod + ", " + seriesType + 
+					"] c помощью подключения к AlphaVantage из пула получены");
+		}
 	}
 	
 	public static TechnicalIndicatorResponse cmo(String symbol, Interval interval, TimePeriod timePeriod, SeriesType seriesType) {	
-		return new TechnicalIndicators(connFromPool()).cmo(symbol, interval, timePeriod, seriesType);
+		try {
+			return new TechnicalIndicators(connFromPool()).cmo(symbol, interval, timePeriod, seriesType);
+		}
+		catch (AlphaVantageException e) {
+			e.printStackTrace();
+			
+			Logger.log().error(e.getLocalizedMessage());
+			
+			throw e;
+		}
+		finally {
+			Logger.log().info("Данные cmo[" + symbol + ", " + interval + ", " + timePeriod + ", " + seriesType + 
+					"] c помощью подключения к AlphaVantage из пула получены");
+		}
 	}
 	
 	public static TechnicalIndicatorResponse bbands(String symbol, Interval interval, TimePeriod timePeriod, SeriesType seriesType) {	
-		return new TechnicalIndicators(connFromPool()).bbands(symbol, interval, timePeriod, seriesType, NBDevUp.of(2), NBDevDn.of(2), null);
+		try {
+			return new TechnicalIndicators(connFromPool()).bbands(symbol, interval, timePeriod, seriesType, NBDevUp.of(2), NBDevDn.of(2), null);
+		}
+		catch (AlphaVantageException e) {
+			e.printStackTrace();
+			
+			Logger.log().error(e.getLocalizedMessage());
+			
+			throw e;
+		}
+		finally {
+			Logger.log().info("Данные bbands[" + symbol + ", " + interval + ", " + timePeriod + ", " + seriesType + 
+					"] c помощью подключения к AlphaVantage из пула получены");
+		}
 	}
 	
 	public static TechnicalIndicatorResponse ht_trendline(String symbol, Interval interval, SeriesType seriesType) {	
-		return new TechnicalIndicators(connFromPool()).ht_trendline(symbol, interval, seriesType);
+		try {
+			return new TechnicalIndicators(connFromPool()).ht_trendline(symbol, interval, seriesType);
+		}
+		catch (AlphaVantageException e) {
+			e.printStackTrace();
+			
+			Logger.log().error(e.getLocalizedMessage());
+			
+			throw e;
+		}
+		finally {
+			Logger.log().info("Данные ht_trendline[" + symbol + ", " + interval + ", " + seriesType + 
+					"] c помощью подключения к AlphaVantage из пула получены");
+		}
 	}
 	
 	public static TechnicalIndicatorResponse obv(String symbol, Interval interval) {	
-		return new TechnicalIndicators(connFromPool()).obv(symbol, interval);
+		try {
+			return new TechnicalIndicators(connFromPool()).obv(symbol, interval);
+		}
+		catch (AlphaVantageException e) {
+			e.printStackTrace();
+			
+			Logger.log().error(e.getLocalizedMessage());
+			
+			throw e;
+		}
+		finally {
+			Logger.log().info("Данные obv[" + symbol + ", " + interval + "] c помощью подключения к AlphaVantage из пула получены");
+		}
 	}
 	
 	private static AlphaVantageConnector fullConn() {
@@ -96,6 +232,7 @@ public class StockConnector {
 		} catch (AlphaVantageException e) {
 			
 	      System.out.println("something went wrong: AlphaVantageException in connection");
+	      
 	      e.printStackTrace();
 	      
 	      throw e;
@@ -163,6 +300,9 @@ public class StockConnector {
         	Logger.log().info("Ждем " + i + " секунд из-за ограничений на 5 подключений в минуту к сайту www.alphavantage.co");
 			
         	Thread.sleep(i*1000);
+        	
+        	Logger.log().info("Ожидание завершено");
+
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} 

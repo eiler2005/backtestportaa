@@ -3,17 +3,17 @@ package ru.backtesting.mktindicators;
 import java.time.LocalDateTime;
 
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
-import ru.backtesting.mktindicators.base.MarketIndicatorInterval;
 import ru.backtesting.mktindicators.base.MarketIndicatorType;
 import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
+import ru.backtesting.stockquotes.TradingPeriod;
 import ru.backtesting.stockquotes.StockQuoteHistory;
 import ru.backtesting.utils.Logger;
 
 public class BollingerBandsIndicatorSignal implements MarketIndicatorInterface {
 	private int timePeriod;
-	private MarketIndicatorInterval interval;
+	private TradingPeriod interval;
 	
-	public BollingerBandsIndicatorSignal(int timePeriod, MarketIndicatorInterval interval) {
+	public BollingerBandsIndicatorSignal(int timePeriod, TradingPeriod interval) {
 		this.timePeriod = timePeriod;
 		this.interval = interval;
 	}
@@ -25,7 +25,7 @@ public class BollingerBandsIndicatorSignal implements MarketIndicatorInterface {
 		double bbValue = MarketIndicatorsHistory.storage().findIndicatorValue(ticker, timePeriod, 
 				date, getMarketIndType(), getInterval());
 		
-		double stockValue = StockQuoteHistory.storage().getQuoteValueByDate(ticker, date, false);
+		double stockValue = StockQuoteHistory.storage().getQuoteValueByDate(ticker, getInterval(), date, false);
 		
 		Logger.log().info("BOLLINGER BANDS INDICATOR[" + timePeriod + "] on date [" + date + "]: ticker [" + ticker + "] bbands = " 
 			+ Logger.log().doubleLog(bbValue));
@@ -59,7 +59,7 @@ public class BollingerBandsIndicatorSignal implements MarketIndicatorInterface {
 	}
 
 	@Override
-	public MarketIndicatorInterval getInterval() {
+	public TradingPeriod getInterval() {
 		return interval;
 	}
 }

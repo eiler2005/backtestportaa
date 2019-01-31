@@ -4,11 +4,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import ru.backtesting.stockquotes.TradingPeriod;
 import ru.backtesting.utils.DateUtils;
 import ru.backtesting.utils.TypeUtils;
 
 public abstract class BaseFinancialTimeSeriesChartInformation implements FinancialTimeSeriesChartInformation {
 	protected String ticker;
+	protected TradingPeriod period;
 	
 	protected List<String> tooltips;
 	private String[] tooltipsArr;
@@ -25,6 +27,11 @@ public abstract class BaseFinancialTimeSeriesChartInformation implements Financi
 		return ticker;
 	}
 
+	@Override
+	public TradingPeriod getTradingPeriod() {
+		return period;
+	}
+	
 	@Override
 	public List<LocalDateTime> getDates() {
 		return dates;

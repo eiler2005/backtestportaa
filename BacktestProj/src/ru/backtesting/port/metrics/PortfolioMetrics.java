@@ -62,7 +62,7 @@ public class PortfolioMetrics {
 				LocalDate.parse(endYear + "-12-31"))) {	
 			LocalDateTime date = DateUtils.asLocalDateTime(DateUtils.asDate(locDate));
 						
-			boolean isHaveStockData = StockQuoteHistory.storage().containsDataInStorageOnDate(allTickers, date);
+			boolean isHaveStockData = StockQuoteHistory.storage().containsDataInStorageOnDate(allTickers, portfolio.getPeriod(), date);
 			
 			// начинаем обход всех дат, на которые есть котировки по тикерам портфеля
 			if ( isHaveStockData && getPostionOnDateDay(positions, date) != null ) {
@@ -71,7 +71,7 @@ public class PortfolioMetrics {
 				
 				List<PositionInformation> curPositions = positions.get(getPostionOnDateDay(positions, date));
 					
-				double balance = PortfolioUtils.calculateAllPositionsBalance(curPositions, date, false, false);
+				double balance = PortfolioUtils.calculateAllPositionsBalance(curPositions, portfolio.getPeriod(), date, false, false);
 										
 				rebalancedPositions = curPositions;	
 				
@@ -80,7 +80,7 @@ public class PortfolioMetrics {
 				
 			}
 			else if (rebalancedPositions != null && isHaveStockData) {
-				double balance = PortfolioUtils.calculateAllPositionsBalance(rebalancedPositions, date, false, false);
+				double balance = PortfolioUtils.calculateAllPositionsBalance(rebalancedPositions, portfolio.getPeriod(), date, false, false);
 								
 				// ДОДЕЛАТЬ - даты как в портфеле или ежедневный пересчет
 				//datesColumnData.add(date);
