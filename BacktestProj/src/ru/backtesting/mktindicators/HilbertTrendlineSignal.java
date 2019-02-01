@@ -26,7 +26,7 @@ public class HilbertTrendlineSignal implements MarketIndicatorInterface {
 		double trendValue = MarketIndicatorsHistory.storage().findIndicatorValue(ticker, 0, date, getMarketIndType(), getInterval());
 
 		Logger.log().info("HilbertTrendline value on date [" + date + "]: ticker [" + ticker + "] = " 
-				+ Logger.log().doubleLog(trendValue));
+				+ Logger.log().doubleAsString(trendValue));
 
 		double quoteValue = StockQuoteHistory.storage().getQuoteValueByDate(ticker, getInterval(), date, false);
 

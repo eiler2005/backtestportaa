@@ -4,6 +4,8 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 
@@ -17,7 +19,7 @@ public class Logger {
     public static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     public static final DateTimeFormatter DATE_FORMAT_SIMPLE = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    public static final SimpleDateFormat DATE_FORMAT_FOR_LOG = new SimpleDateFormat("yyyy.MM.d_HH.mm.ss");
+    public static final SimpleDateFormat DATE_FORMAT_FOR_LOG = new SimpleDateFormat("yyyy.MM.dd_HH.mm.ss");
     
 	private static Logger instance;
 
@@ -38,8 +40,12 @@ public class Logger {
 		return instance;
 	}
 	
-	public String doubleLog(double number) {
+	public String doubleAsString(double number) {
 		return DOUBLE_FORMAT.format(number);
+	}
+	
+	public String dateAsString(LocalDate date) {
+		return DATE_FORMAT_SIMPLE.format(date);
 	}
 	
 	public void info(String info) {

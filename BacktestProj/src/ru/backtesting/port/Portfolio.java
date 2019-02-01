@@ -140,7 +140,7 @@ public class Portfolio {
 
 				double portfolioBalance = prevDate == null ? initialAmount : PortfolioUtils.calculateAllPositionsBalance(postionsOnDates.get(prevDate), period, date, reinvestDividends, true);
 				
-    			Logger.log().info("Пересчитали стоимость портфеля на дату [" + date + "](сколько денег у нас есть для покупки): " + Logger.log().doubleLog(portfolioBalance));
+    			Logger.log().info("Пересчитали стоимость портфеля на дату [" + date + "](сколько денег у нас есть для покупки): " + Logger.log().doubleAsString(portfolioBalance));
 				
 	    		for (int i = 0; i < assetsAllocation.size(); i++) {
 		    		String ticker = assetsAllocation.get(i).getTicker();
@@ -177,8 +177,8 @@ public class Portfolio {
 		    		}
 		    		
 		    		if ( isHoldInPortfolio ) {
-						Logger.log().info("Купили в портфель [" + ticker + "] " + Logger.log().doubleLog(quantity) + " лотов на сумму " + Logger.log().doubleLog(quantity*quote) + 
-								", цена лота: " + Logger.log().doubleLog(quote) );
+						Logger.log().info("Купили в портфель [" + ticker + "] " + Logger.log().doubleAsString(quantity) + " лотов на сумму " + Logger.log().doubleAsString(quantity*quote) + 
+								", цена лота: " + Logger.log().doubleAsString(quote) );
 		    			
 		    			position.buy(quantity, quantity*quote);
 		    		} else { // купить в соответствии с outOfMarketTicket и других аллокаций
@@ -190,7 +190,7 @@ public class Portfolio {
 		    			if ( outOfMarketPosTicker.equals(CASH_TICKER)) {
 			    			hegdePos.buy(1, quote*quantity);
 			    			
-			    			Logger.log().info("Закрыли позицию и вышли в hedge-актив [" + outOfMarketPosTicker + "] на сумму " + Logger.log().doubleLog(quote*quantity));
+			    			Logger.log().info("Закрыли позицию и вышли в hedge-актив [" + outOfMarketPosTicker + "] на сумму " + Logger.log().doubleAsString(quote*quantity));
 		    			}
 		    			else {
 		    				double hedgeQuote = StockQuoteHistory.storage().getQuoteValueByDate(outOfMarketPosTicker, period, position.getTime(), reinvestDividends);
@@ -201,8 +201,8 @@ public class Portfolio {
 			    			
 			    			Logger.log().info("Зашли в hedge-актив [" + outOfMarketPosTicker + "]");
 			    			
-			    			Logger.log().info("Купили в портфель [" + outOfMarketPosTicker + "] " + Logger.log().doubleLog(hedgeQuantity) + " лотов на сумму " + 
-			    					Logger.log().doubleLog(hedgeQuantity*hedgeQuote) + ", цена лота: " + Logger.log().doubleLog(hedgeQuote) );
+			    			Logger.log().info("Купили в портфель [" + outOfMarketPosTicker + "] " + Logger.log().doubleAsString(hedgeQuantity) + " лотов на сумму " + 
+			    					Logger.log().doubleAsString(hedgeQuantity*hedgeQuote) + ", цена лота: " + Logger.log().doubleAsString(hedgeQuote) );
 		    			}
 		    			
 		    			positions.set(i, hegdePos);	    			
@@ -213,7 +213,7 @@ public class Portfolio {
 	    		
 				double newPortfolioBalance = PortfolioUtils.calculateAllPositionsBalance(positions); 
 	    		
-				Logger.log().info("Стоимость портфеля на [" + date + "] : " + Logger.log().doubleLog(newPortfolioBalance));
+				Logger.log().info("Стоимость портфеля на [" + date + "] : " + Logger.log().doubleAsString(newPortfolioBalance));
 				
     			Logger.log().info("Информация по позициям нового портфеля ниже:");
     			

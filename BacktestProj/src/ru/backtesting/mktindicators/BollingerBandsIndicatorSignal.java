@@ -28,10 +28,10 @@ public class BollingerBandsIndicatorSignal implements MarketIndicatorInterface {
 		double stockValue = StockQuoteHistory.storage().getQuoteValueByDate(ticker, getInterval(), date, false);
 		
 		Logger.log().info("BOLLINGER BANDS INDICATOR[" + timePeriod + "] on date [" + date + "]: ticker [" + ticker + "] bbands = " 
-			+ Logger.log().doubleLog(bbValue));
+			+ Logger.log().doubleAsString(bbValue));
 		
 		Logger.log().info("Stock value on date [" + date + "]: ticker [" + ticker + "] value = " 
-				+ Logger.log().doubleLog(stockValue));
+				+ Logger.log().doubleAsString(stockValue));
 				
 		// buy signal
 		if ( stockValue > bbValue )

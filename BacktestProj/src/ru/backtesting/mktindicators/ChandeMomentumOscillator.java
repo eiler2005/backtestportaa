@@ -26,7 +26,7 @@ public class ChandeMomentumOscillator implements MarketIndicatorInterface {
 		double cmoValue = MarketIndicatorsHistory.storage().findIndicatorValue(ticker, timePeriod, date, getMarketIndType(), getInterval());
 				
 		Logger.log().info("Chande Momentum Oscillator[" + timePeriod + "] on date [" + date + "]: ticker [" + ticker + "] cmo value = " 
-				+ Logger.log().doubleLog(cmoValue));
+				+ Logger.log().doubleAsString(cmoValue));
 				
 		List<Double> sma50Values = MarketIndicatorsHistory.storage()
 				.getIndicatorsDataForLastPeriod(ticker, timePeriod, date, getMarketIndType(), getInterval(), 50);
@@ -43,8 +43,8 @@ public class ChandeMomentumOscillator implements MarketIndicatorInterface {
 		double sma50Val = sma50.getMean();
 		double sma200Val = sma200.getMean();
 		
-		Logger.log().info("sma[50] Chande Momentum Oscillator on date [" + date + "]: ticker [" + ticker + "] = " + Logger.log().doubleLog(sma50Val));
-		Logger.log().info("sma[200] Chande Momentum Oscillator on date [" + date + "]: ticker [" + ticker + "] = " + Logger.log().doubleLog(sma200Val));
+		Logger.log().info("sma[50] Chande Momentum Oscillator on date [" + date + "]: ticker [" + ticker + "] = " + Logger.log().doubleAsString(sma50Val));
+		Logger.log().info("sma[200] Chande Momentum Oscillator on date [" + date + "]: ticker [" + ticker + "] = " + Logger.log().doubleAsString(sma200Val));
 				
 		// нужно считать sma по осциллятору и входить если выше sma и выше 50
 		// for example, sma50 > sma200 - buy signal

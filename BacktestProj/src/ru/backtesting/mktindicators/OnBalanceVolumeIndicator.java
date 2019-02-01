@@ -23,7 +23,7 @@ public class OnBalanceVolumeIndicator implements MarketIndicatorInterface {
 		double rsiValue = MarketIndicatorsHistory.storage().findIndicatorValue(ticker, 0, date, getMarketIndType(), getInterval());
 		
 		Logger.log().info("On Balance Volume[" + getInterval() + "] on date [" + date + "]: ticker [" + ticker + "] obv = " 
-				+ Logger.log().doubleLog(rsiValue));
+				+ Logger.log().doubleAsString(rsiValue));
 		
 		return 1;
 	}

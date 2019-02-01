@@ -244,6 +244,7 @@ public class MarketIndicatorsHistory {
 		}
 	}
 	
+	@Deprecated
 	public List<Double> getIndicatorsDataForLastPeriod(String ticker, int indTimePeriod, LocalDateTime date, MarketIndicatorType type, TradingPeriod inverval, int lastPeriod) {
 		String indStorageKey = generateKeyForIndTicker(ticker, indTimePeriod, type, inverval);
 

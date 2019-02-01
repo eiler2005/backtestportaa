@@ -50,7 +50,7 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 		
 		if (deviationPercent != 0)
 			Logger.log().info("Процент погрешности для скользящих средних (чтобы исключить ложные срабатывания): "+ 
-					Logger.log().doubleLog(deviationPercent*100) + " %");
+					Logger.log().doubleAsString(deviationPercent*100) + " %");
 		
 		if (timePeriod2 != 0) {
 			MarketIndicatorsHistory.storage().fillIndicatosData(ticker, timePeriod2, getMarketIndType(), getInterval());
@@ -58,8 +58,8 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 			double value1 = MarketIndicatorsHistory.storage().findIndicatorValue(ticker, timePeriod1, date, getMarketIndType(), getInterval());
 			double value2 = MarketIndicatorsHistory.storage().findIndicatorValue(ticker, timePeriod2, date, getMarketIndType(), getInterval());
 			
-			Logger.log().info(getMarketIndType() + "[" + timePeriod1 + "] on date [" + date + "]: ticker [" + ticker + "], " + getMarketIndType() + " = " + Logger.log().doubleLog(value1));
-			Logger.log().info(getMarketIndType() + "[" + timePeriod2 + "] on date [" + date + "]: ticker [" + ticker + "], " + getMarketIndType() +" = " + Logger.log().doubleLog(value2));
+			Logger.log().info(getMarketIndType() + "[" + timePeriod1 + "] on date [" + date + "]: ticker [" + ticker + "], " + getMarketIndType() + " = " + Logger.log().doubleAsString(value1));
+			Logger.log().info(getMarketIndType() + "[" + timePeriod2 + "] on date [" + date + "]: ticker [" + ticker + "], " + getMarketIndType() +" = " + Logger.log().doubleAsString(value2));
 
 			// for example, sma50 > sma200 - buy signal
 			if ( value1  > (value2 + value1*deviationPercent) ) {
@@ -82,8 +82,8 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 			
 			double quote = StockQuoteHistory.storage().getQuoteValueByDate(ticker, getInterval(), date, false);
 			
-			Logger.log().info(getMarketIndType() + "[" + timePeriod1 + "] on date [" + date + "]: ticker [" + ticker + "] quote = " + Logger.log().doubleLog(quote) 
-					+ ", " + getMarketIndType() + " = " + Logger.log().doubleLog(maValue));
+			Logger.log().info(getMarketIndType() + "[" + timePeriod1 + "] on date [" + date + "]: ticker [" + ticker + "] quote = " + Logger.log().doubleAsString(quote) 
+					+ ", " + getMarketIndType() + " = " + Logger.log().doubleAsString(maValue));
 			
 			// buy signal
 			if ( quote > (maValue + maValue*deviationPercent) )

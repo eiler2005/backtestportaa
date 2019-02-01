@@ -46,7 +46,7 @@ public class PositionInformation {
 
 	@Override
 	public String toString() {
-		return "PositionInformation [ticker=" + ticker + ", time=" + time + ", quantity=" + Logger.log().doubleLog(quantity) + ", price="
-				+ Logger.log().doubleLog(price) + "]";
+		return "PositionInformation [ticker=" + ticker + ", time=" + time + ", quantity=" + Logger.log().doubleAsString(quantity) + ", price="
+				+ Logger.log().doubleAsString(price) + "]";
 	}
 }

@@ -1,6 +1,5 @@
 package ru.backtesting.utils;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,13 +23,13 @@ public class PortfolioUtils {
 			
 			position.buy(quantity, currentQuote*quantity);
 			
-			Logger.log().info("Купили [ticker: " + position.getTicker() + "] " +Logger.log().doubleLog(quantity) + 
-					" лотов, на сумму " + Logger.log().doubleLog(currentQuote*quantity));
+			Logger.log().info("Купили [ticker: " + position.getTicker() + "] " +Logger.log().doubleAsString(quantity) + 
+					" лотов, на сумму " + Logger.log().doubleAsString(currentQuote*quantity));
 
 			price += currentQuote*quantity;
 		}
 		
-		Logger.log().info("Купили активов на сумму: " + Logger.log().doubleLog(price));
+		Logger.log().info("Купили активов на сумму: " + Logger.log().doubleAsString(price));
 		
 		return price;
 	}
@@ -61,15 +60,15 @@ public class PortfolioUtils {
 				sum += pos.getPrice();
 				
 				if ( logging)
-					Logger.log().info("Позиция [" + pos.getTicker() + "] лотов [" + Logger.log().doubleLog(pos.getQuantity()) + "], цена: " + Logger.log().doubleLog(pos.getPrice()));
+					Logger.log().info("Позиция [" + pos.getTicker() + "] лотов [" + Logger.log().doubleAsString(pos.getQuantity()) + "], цена: " + Logger.log().doubleAsString(pos.getPrice()));
 			}
 			else {
 				double quoteValue = StockQuoteHistory.storage().getQuoteValueByDate(pos.getTicker(), period, date, reinvestDividends);
 				sum += pos.getQuantity()*quoteValue;
 				
 				if (logging)
-					Logger.log().info("Позиция [" + pos.getTicker() + "] лотов [" + Logger.log().doubleLog(pos.getQuantity()) + "], котировка [" + quoteValue + "], " + 
-						"цена: " + Logger.log().doubleLog(pos.getQuantity()*quoteValue));
+					Logger.log().info("Позиция [" + pos.getTicker() + "] лотов [" + Logger.log().doubleAsString(pos.getQuantity()) + "], котировка [" + quoteValue + "], " + 
+						"цена: " + Logger.log().doubleAsString(pos.getQuantity()*quoteValue));
 			}
 		}
 			

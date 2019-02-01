@@ -198,16 +198,16 @@ public class GraphicsUtilsTest {
 	}
 	
 	private static String testRSIandSPY_OverlayChart() {
-		String ticker = "MTUM";
+		String ticker = "TLT";
 		int timePeriod = 14;
 		TradingPeriod period = TradingPeriod.Daily;
 		
 		MarketIndicatorInterface rsiOsc = new RSIOscillatorSignal(timePeriod, period);
 
-		MarketQuoteDataSeries quotesDataSeries = new MarketQuoteDataSeries(ticker, 2018, 2019, period, false);
+		MarketQuoteDataSeries quotesDataSeries = new MarketQuoteDataSeries(ticker, 2014, 2019, period, false);
 		
 		MarketIndicatorDataSeries rsiIndDataSeries = new MarketIndicatorDataSeries(ticker, rsiOsc, 
-				"rsi(" + timePeriod + ") : " + ticker, 2018, 2019, period);
+				"rsi(" + timePeriod + ") : " + ticker, 2014, 2019, period);
 				
 		return GraphicsUtils.createOverlayTimeSeriesChart(quotesDataSeries, rsiIndDataSeries, 
 				"spy/rsi(" + timePeriod + ") chart", "dates");

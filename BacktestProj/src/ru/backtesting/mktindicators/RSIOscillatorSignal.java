@@ -24,11 +24,15 @@ public class RSIOscillatorSignal implements MarketIndicatorInterface {
 		double rsiValue = MarketIndicatorsHistory.storage().findIndicatorValue(ticker, timePeriod, date, getMarketIndType(), getInterval());
 				
 		Logger.log().info("RSI[" + timePeriod + "] on date [" + date + "]: ticker [" + ticker + "] rsi = " 
-				+ Logger.log().doubleLog(rsiValue));
+				+ Logger.log().doubleAsString(rsiValue));
 		
+		return rsiOscillatorBehavior(timePeriod, rsiValue);
+	}
+
+	private int rsiOscillatorBehavior(int timePeriod, double rsiValue) {
 		if (timePeriod >= 80) {
 			// sell signal
-			if (rsiValue >= 80)
+			if (rsiValue >= 70)
 				return -1;
 			
 			// buy signal
@@ -53,9 +57,38 @@ public class RSIOscillatorSignal implements MarketIndicatorInterface {
 			return -1;
 		else
 			return 0;
-		
 	}
-
+	
+	public static int rsiOscillatorBehaviorForGUI(int timePeriod, double rsiValue) {
+		if (timePeriod >= 80) {
+			// sell signal
+			if (rsiValue >= 70)
+				return -1;
+			
+			// buy signal
+			if ( rsiValue <= 32 )
+				return 1;
+		}
+		else if (timePeriod <= 30) {
+			// buy signal
+			if ( rsiValue <= 32 )
+				return 1;
+			
+			// sell signal
+			if (rsiValue >= 70)
+				return -1;
+		}
+			
+		// buy signal
+		if ( timePeriod >= 100 && rsiValue >= 50  )
+			return 1;
+		// sell signal
+		else if ( timePeriod >= 100 && rsiValue < 50  )
+			return -1;
+		else
+			return 0;
+	}
+	
 	@Override
 	public MarketIndicatorType getMarketIndType() {
 		return MarketIndicatorType.RSI_OSC;

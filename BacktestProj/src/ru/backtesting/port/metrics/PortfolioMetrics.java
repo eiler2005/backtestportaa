@@ -137,8 +137,8 @@ public class PortfolioMetrics {
 				double percentMaxProfit = (maxValue-balance)/balance*100;
 				// max profit
 				
-				Logger.log().info("period with loss, in days = " + duration.toDays() + ", max drawdown[balance - " + Logger.log().doubleLog(balance) + 
-						", minvalue - " + Logger.log().doubleLog(minValue) + ", date - " + drawdownDate + "] = " + Logger.log().doubleLog(percentDD) + " %, maxProfit - " + Logger.log().doubleLog(percentMaxProfit) + " %");				
+				Logger.log().info("period with loss, in days = " + duration.toDays() + ", max drawdown[balance - " + Logger.log().doubleAsString(balance) + 
+						", minvalue - " + Logger.log().doubleAsString(minValue) + ", date - " + drawdownDate + "] = " + Logger.log().doubleAsString(percentDD) + " %, maxProfit - " + Logger.log().doubleAsString(percentMaxProfit) + " %");				
 				
 				drawdownColumnData.add(Double.valueOf(percentDD));
 				betterPeriodLenghtData.add(Long.valueOf(duration.toDays()));
@@ -165,16 +165,16 @@ public class PortfolioMetrics {
 		
 		Logger.log().info(balancedTable.sortAscendingOn(CN_NAME_PORT_PERCENT_DRAWDOWN).print(30));
 		
-		Logger.log().info("max dd - " + Logger.log().doubleLog(Collections.max(balancedTable.doubleColumn(CN_NAME_PORT_PERCENT_DRAWDOWN).asList())));
+		Logger.log().info("max dd - " + Logger.log().doubleAsString(Collections.max(balancedTable.doubleColumn(CN_NAME_PORT_PERCENT_DRAWDOWN).asList())));
 		
 		Logger.log().info("||underwater period sort table||");
 		Logger.log().info(balancedTable.sortAscendingOn(CN_NAME_PORT_BETTER_PERIOD_DRAWDOWN).print(30));
-		Logger.log().info("underwater lenght - " + Logger.log().doubleLog(Collections.max(balancedTable.longColumn(CN_NAME_PORT_BETTER_PERIOD_DRAWDOWN).asList())));
+		Logger.log().info("underwater lenght - " + Logger.log().doubleAsString(Collections.max(balancedTable.longColumn(CN_NAME_PORT_BETTER_PERIOD_DRAWDOWN).asList())));
 
 		
 		Logger.log().info("||max profit in period sort table||");
 		Logger.log().info(balancedTable.sortAscendingOn(CN_NAME_PORT_PERCENT_MAXPROFT).print(30));
-		Logger.log().info("max profit in period (%) - " + Logger.log().doubleLog(Collections.max(balancedTable.doubleColumn(CN_NAME_PORT_PERCENT_MAXPROFT).asList())));
+		Logger.log().info("max profit in period (%) - " + Logger.log().doubleAsString(Collections.max(balancedTable.doubleColumn(CN_NAME_PORT_PERCENT_MAXPROFT).asList())));
 	}
 	
 	private LocalDateTime getPostionOnDateDay(LinkedHashMap<LocalDateTime, 

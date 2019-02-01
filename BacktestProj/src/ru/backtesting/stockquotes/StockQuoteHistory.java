@@ -147,13 +147,25 @@ public class StockQuoteHistory {
 				+ "Возможно, данных на указанную дату не существует в хранилище www.alphavantage.co");
 	}
 	
-	public LocalDateTime getFirstTradedDay(String ticker, TradingPeriod period, int startYear) {
+	public LocalDateTime getFirstTradingDayInYear(String ticker, TradingPeriod period, int startYear) {
 		List<LocalDateTime> datesQ = allDates.get(getKey(ticker, period));
 		
 		for (LocalDateTime date : datesQ) {
 			if (date.getYear() == startYear && date.getMonth().equals(Month.JANUARY) )
 					return date;
 		}
+		
+		return null;
+	}
+	
+	public LocalDateTime getLastTradingDayInYear(String ticker, TradingPeriod period, int year) {
+		List<LocalDateTime> datesQ = allDates.get(getKey(ticker, period));
+		
+		Collections.reverse(datesQ);
+		
+		for (LocalDateTime date : datesQ)
+			if (date.getYear() == year )
+				return date;
 		
 		return null;
 	}
