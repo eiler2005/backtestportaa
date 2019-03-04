@@ -5,15 +5,15 @@ import java.time.LocalDateTime;
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
 import ru.backtesting.mktindicators.base.MarketIndicatorType;
 import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
-import ru.backtesting.stockquotes.TradingPeriod;
+import ru.backtesting.stockquotes.TradingTimeFrame;
 import ru.backtesting.stockquotes.StockQuoteHistory;
 import ru.backtesting.utils.Logger;
 
 public class BollingerBandsIndicatorSignal implements MarketIndicatorInterface {
 	private int timePeriod;
-	private TradingPeriod interval;
+	private TradingTimeFrame interval;
 	
-	public BollingerBandsIndicatorSignal(int timePeriod, TradingPeriod interval) {
+	public BollingerBandsIndicatorSignal(int timePeriod, TradingTimeFrame interval) {
 		this.timePeriod = timePeriod;
 		this.interval = interval;
 	}
@@ -59,7 +59,7 @@ public class BollingerBandsIndicatorSignal implements MarketIndicatorInterface {
 	}
 
 	@Override
-	public TradingPeriod getInterval() {
+	public TradingTimeFrame getInterval() {
 		return interval;
 	}
 }

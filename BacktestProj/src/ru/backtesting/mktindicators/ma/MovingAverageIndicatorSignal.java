@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
 import ru.backtesting.mktindicators.base.MarketIndicatorType;
 import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
-import ru.backtesting.stockquotes.TradingPeriod;
+import ru.backtesting.stockquotes.TradingTimeFrame;
 import ru.backtesting.stockquotes.StockQuoteHistory;
 import ru.backtesting.utils.Logger;
 
@@ -13,9 +13,9 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 	private int timePeriod1, timePeriod2 = 0;
 	private MarketIndicatorType maType;
 	private double deviationPercent;
-	private TradingPeriod interval;
+	private TradingTimeFrame interval;
 	
-	public MovingAverageIndicatorSignal(int timePeriod1, int timePeriod2, MarketIndicatorType maType, TradingPeriod interval) {
+	public MovingAverageIndicatorSignal(int timePeriod1, int timePeriod2, MarketIndicatorType maType, TradingTimeFrame interval) {
 		super();
 		this.timePeriod1 = timePeriod1;
 		this.timePeriod2 = timePeriod2;
@@ -24,7 +24,7 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 		this.interval = interval;
 	}
 	
-	public MovingAverageIndicatorSignal(int timePeriod1, int timePeriod2, MarketIndicatorType maType, TradingPeriod interval, double deviationPercent) {
+	public MovingAverageIndicatorSignal(int timePeriod1, int timePeriod2, MarketIndicatorType maType, TradingTimeFrame interval, double deviationPercent) {
 		super();
 		this.timePeriod1 = timePeriod1;
 		this.timePeriod2 = timePeriod2;
@@ -34,7 +34,7 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 
 	}
 
-	public MovingAverageIndicatorSignal(int timePeriod, MarketIndicatorType maType, TradingPeriod interval, double deviationPercent) {
+	public MovingAverageIndicatorSignal(int timePeriod, MarketIndicatorType maType, TradingTimeFrame interval, double deviationPercent) {
 		super();
 		this.timePeriod1 = timePeriod;
 		this.maType = maType;
@@ -123,7 +123,7 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 	}
 	
 	@Override
-	public TradingPeriod getInterval() {
+	public TradingTimeFrame getInterval() {
 		return interval;
 	}
 }

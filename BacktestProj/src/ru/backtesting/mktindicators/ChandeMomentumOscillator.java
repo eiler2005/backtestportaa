@@ -6,15 +6,15 @@ import java.util.List;
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
 import ru.backtesting.mktindicators.base.MarketIndicatorType;
 import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
-import ru.backtesting.stockquotes.TradingPeriod;
+import ru.backtesting.stockquotes.TradingTimeFrame;
 import ru.backtesting.utils.Logger;
 import ru.backtesting.utils.SMACalculator;
 
 public class ChandeMomentumOscillator implements MarketIndicatorInterface {
 	private int timePeriod;
-	private TradingPeriod interval;
+	private TradingTimeFrame interval;
 
-	public ChandeMomentumOscillator(int timePeriod, TradingPeriod interval) {
+	public ChandeMomentumOscillator(int timePeriod, TradingTimeFrame interval) {
 		this.timePeriod = timePeriod;
 		this.interval = interval;
 	}
@@ -89,7 +89,7 @@ public class ChandeMomentumOscillator implements MarketIndicatorInterface {
 	}
 	
 	@Override
-	public TradingPeriod getInterval() {
+	public TradingTimeFrame getInterval() {
 		return interval;
 	}
 }

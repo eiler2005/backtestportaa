@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import ru.backtesting.mktindicators.base.MarketIndicatorType;
 import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
-import ru.backtesting.stockquotes.TradingPeriod;
+import ru.backtesting.stockquotes.TradingTimeFrame;
 import ru.backtesting.stockquotes.StockQuoteHistory;
 
 @Deprecated
@@ -13,7 +13,7 @@ public class StockIndicatorsUtils {
 	// -1 - sell, price belove the sma
 	// 1 - buy 	price above the sma
 	// 0 other
-	public static int haveSMASignal(LocalDateTime date, String ticker, int timePeriod, TradingPeriod period) {
+	public static int haveSMASignal(LocalDateTime date, String ticker, int timePeriod, TradingTimeFrame period) {
 		double smaValue = MarketIndicatorsHistory.storage().findIndicatorValue(ticker, timePeriod, date, MarketIndicatorType.SMA_IND, period);
 		
 		double quote = StockQuoteHistory.storage().getQuoteValueByDate(ticker, period, date, false);

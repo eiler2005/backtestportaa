@@ -14,7 +14,7 @@ import ru.backtesting.rebalancing.RebalancingMethod;
 import ru.backtesting.rebalancing.RebalancingType;
 import ru.backtesting.stockquotes.StockQuote;
 import ru.backtesting.stockquotes.StockQuoteHistory;
-import ru.backtesting.stockquotes.TradingPeriod;
+import ru.backtesting.stockquotes.TradingTimeFrame;
 import ru.backtesting.utils.Logger;
 import ru.backtesting.utils.PortfolioUtils;
 
@@ -30,10 +30,10 @@ public class Portfolio {
     private boolean reinvestDividends = false;
     private List<MarketIndicatorInterface> timingSignals;
 	private String outOfMarketPosTicker;
-    private TradingPeriod period;
+    private TradingTimeFrame period;
 	
 	public Portfolio(String name, List<AssetAllocation> assetsAllocation, int startYear, int endYear, int initialAmount,
-			RebalancingType rebalancing, TradingPeriod period, List<MarketIndicatorInterface> timingSignals, boolean reinvestDividends) {
+			RebalancingType rebalancing, TradingTimeFrame period, List<MarketIndicatorInterface> timingSignals, boolean reinvestDividends) {
 		super();
 		this.name = name;
 		this.assetsAllocation = assetsAllocation;
@@ -48,7 +48,7 @@ public class Portfolio {
 	}
 	
 	public Portfolio(String name, List<AssetAllocation> assetsAllocation, int startYear, int endYear, int initialAmount,
-			RebalancingType rebalancing, TradingPeriod period, List<MarketIndicatorInterface> timingSignals, String outOfMarketTicker, boolean reinvestDividends) {
+			RebalancingType rebalancing, TradingTimeFrame period, List<MarketIndicatorInterface> timingSignals, String outOfMarketTicker, boolean reinvestDividends) {
 		super();
 		this.name = name;
 		this.assetsAllocation = assetsAllocation;
@@ -78,8 +78,8 @@ public class Portfolio {
 			
 			StockQuoteHistory.storage().fillQuotesData(outOfMarketPosTicker, period);
 			
-			if ( !period.equals(TradingPeriod.Daily) )
-				StockQuoteHistory.storage().fillQuotesData(outOfMarketPosTicker, TradingPeriod.Daily);
+			if ( !period.equals(TradingTimeFrame.Daily) )
+				StockQuoteHistory.storage().fillQuotesData(outOfMarketPosTicker, TradingTimeFrame.Daily);
 
 		}
 	}
@@ -90,8 +90,8 @@ public class Portfolio {
 		
 		StockQuoteHistory.storage().fillQuotesData(ticker, period);
 		
-		if ( !period.equals(TradingPeriod.Daily) )
-			StockQuoteHistory.storage().fillQuotesData(ticker, TradingPeriod.Daily);
+		if ( !period.equals(TradingTimeFrame.Daily) )
+			StockQuoteHistory.storage().fillQuotesData(ticker, TradingTimeFrame.Daily);
 
 
 		List<LocalDateTime> dates = StockQuoteHistory.storage().getTradingDatesByFilter(ticker, period, startYear, endYear, rebalType.getFrequency());
@@ -365,7 +365,7 @@ public class Portfolio {
 		return PortfolioUtils.calculateAllPositionsBalance(positions);
 	}
 		
-	public TradingPeriod getPeriod() {
+	public TradingTimeFrame getPeriod() {
 		return period;
 	}
 

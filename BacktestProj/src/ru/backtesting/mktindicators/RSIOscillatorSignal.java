@@ -5,14 +5,14 @@ import java.time.LocalDateTime;
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
 import ru.backtesting.mktindicators.base.MarketIndicatorType;
 import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
-import ru.backtesting.stockquotes.TradingPeriod;
+import ru.backtesting.stockquotes.TradingTimeFrame;
 import ru.backtesting.utils.Logger;
 
 public class RSIOscillatorSignal implements MarketIndicatorInterface {
 	private int timePeriod;
-	private TradingPeriod interval;
+	private TradingTimeFrame interval;
 	
-	public RSIOscillatorSignal(int timePeriod, TradingPeriod interval) {
+	public RSIOscillatorSignal(int timePeriod, TradingTimeFrame interval) {
 		this.timePeriod = timePeriod;
 		this.interval = interval;
 	}
@@ -105,7 +105,7 @@ public class RSIOscillatorSignal implements MarketIndicatorInterface {
 	}
 	
 	@Override
-	public TradingPeriod getInterval() {
+	public TradingTimeFrame getInterval() {
 		return interval;
 	}
 }

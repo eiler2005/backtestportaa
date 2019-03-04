@@ -37,11 +37,11 @@ public class StockQuoteHistory {
 	}
 	
 	
-	private String getKey(String ticker, TradingPeriod period) {
+	private String getKey(String ticker, TradingTimeFrame period) {
 		return "[" + ticker + "] , [" + period + "]";
 	}
 	
-	public List<LocalDateTime> fillQuotesData(String ticker, TradingPeriod period) {
+	public List<LocalDateTime> fillQuotesData(String ticker, TradingTimeFrame period) {
 		String tickerKey = getKey(ticker, period);
 		
 		if ( containsDataInStorage(ticker, period) )
@@ -49,11 +49,11 @@ public class StockQuoteHistory {
 			
 		TimeSeriesResponse response = null;
 		
-		if (period.equals(TradingPeriod.Daily))
+		if (period.equals(TradingTimeFrame.Daily))
 			response = StockConnector.daily(ticker);
-		else if (period.equals(TradingPeriod.Weekly))
+		else if (period.equals(TradingTimeFrame.Weekly))
 			response = StockConnector.weekly(ticker);
-		else if (period.equals(TradingPeriod.Monthly))
+		else if (period.equals(TradingTimeFrame.Monthly))
 			response = StockConnector.monthly(ticker); 
 
 	    List<StockData> stockData = response.getStockData();
@@ -89,7 +89,7 @@ public class StockQuoteHistory {
 	}
 	
 	@Deprecated
-	private List<LocalDateTime> getDatesByYearFilter(String ticker, TradingPeriod period, int startYear, int endYear) {
+	private List<LocalDateTime> getDatesByYearFilter(String ticker, TradingTimeFrame period, int startYear, int endYear) {
 		String tickerKey = getKey(ticker, period);
 		
 		List<LocalDateTime> datesByYearFilter = new ArrayList<LocalDateTime>();
@@ -104,18 +104,18 @@ public class StockQuoteHistory {
 			return datesByYearFilter;
 	}
 	
-	public List<LocalDateTime> getQuoteDatesForTicker(String ticker, TradingPeriod period) {
+	public List<LocalDateTime> getQuoteDatesForTicker(String ticker, TradingTimeFrame period) {
 		return allDates.get(getKey(ticker, period));
 	}
 	
-	public double getQuoteValueByDate(String ticker, TradingPeriod period, LocalDateTime date, boolean dividends) {
+	public double getQuoteValueByDate(String ticker, TradingTimeFrame period, LocalDateTime date, boolean dividends) {
 		if (dividends)
 			return getQuoteByDate(ticker, period, date).getAdjustedClose();
 		else
 			return getQuoteByDate(ticker, period, date).getClose();
 	}
 	
-	public List<Double> getQuoteValuesByDates(String ticker, TradingPeriod period, List<LocalDateTime> dates, boolean dividens) {
+	public List<Double> getQuoteValuesByDates(String ticker, TradingTimeFrame period, List<LocalDateTime> dates, boolean dividens) {
 		List<Double> quoteValues = new ArrayList<Double>();
 		
 		for (LocalDateTime date : dates) {			
@@ -127,7 +127,7 @@ public class StockQuoteHistory {
 		return quoteValues;
 	}
 	
-	public StockQuote getQuoteByDate(String ticker, TradingPeriod period, LocalDateTime date) {
+	public StockQuote getQuoteByDate(String ticker, TradingTimeFrame period, LocalDateTime date) {
 		List<StockQuote> list = quotes.get(getKey(ticker, period));
 				
 		for (StockQuote q : list)
@@ -135,10 +135,10 @@ public class StockQuoteHistory {
 				return q;
 		
 		// попытаемся поискать в других периодах значения котировки акции
-		List<TradingPeriod> periods = Arrays.asList(new TradingPeriod[] 
-				{ TradingPeriod.Daily, TradingPeriod.Weekly, TradingPeriod.Monthly });
+		List<TradingTimeFrame> periods = Arrays.asList(new TradingTimeFrame[] 
+				{ TradingTimeFrame.Daily, TradingTimeFrame.Weekly, TradingTimeFrame.Monthly });
 		
-		for ( TradingPeriod curPeriod : periods  )
+		for ( TradingTimeFrame curPeriod : periods  )
 			if ( !curPeriod.equals(period) && containsDataInStorageOnDate(ticker, curPeriod, date))			
 				return getQuoteByDate(ticker, curPeriod, date);
 		
@@ -147,7 +147,7 @@ public class StockQuoteHistory {
 				+ "Возможно, данных на указанную дату не существует в хранилище www.alphavantage.co");
 	}
 	
-	public LocalDateTime getFirstTradingDayInYear(String ticker, TradingPeriod period, int startYear) {
+	public LocalDateTime getFirstTradingDayInYear(String ticker, TradingTimeFrame period, int startYear) {
 		List<LocalDateTime> datesQ = allDates.get(getKey(ticker, period));
 		
 		for (LocalDateTime date : datesQ) {
@@ -158,7 +158,7 @@ public class StockQuoteHistory {
 		return null;
 	}
 	
-	public LocalDateTime getLastTradingDayInYear(String ticker, TradingPeriod period, int year) {
+	public LocalDateTime getLastTradingDayInYear(String ticker, TradingTimeFrame period, int year) {
 		List<LocalDateTime> datesQ = allDates.get(getKey(ticker, period));
 		
 		Collections.reverse(datesQ);
@@ -170,13 +170,13 @@ public class StockQuoteHistory {
 		return null;
 	}
 	
-	public boolean containsDataInStorage(String ticker, TradingPeriod period) {
+	public boolean containsDataInStorage(String ticker, TradingTimeFrame period) {
 		String tickerKey = getKey(ticker, period);
 		
 		return quotes.containsKey(tickerKey) && allDates.containsKey(tickerKey);
 	}
 	
-	public boolean containsDataInStorageOnDate(Set<String> tickers, TradingPeriod period, LocalDateTime date) {
+	public boolean containsDataInStorageOnDate(Set<String> tickers, TradingTimeFrame period, LocalDateTime date) {
 		for (String ticker : tickers)
 			if ( !containsDataInStorageOnDate(ticker, period, date) )
 				return false;
@@ -184,7 +184,7 @@ public class StockQuoteHistory {
 		return true;
 	}
 	
-	public boolean containsDataInStorageOnDate(String ticker, TradingPeriod period, LocalDateTime date) {
+	public boolean containsDataInStorageOnDate(String ticker, TradingTimeFrame period, LocalDateTime date) {
 		List<StockQuote> list = quotes.get(getKey(ticker, period));
 
 		for (StockQuote q : list)
@@ -194,7 +194,7 @@ public class StockQuoteHistory {
 		return false;		
 	}
 
-	public List<LocalDateTime> getTradingDatesByPeriod(String ticker, TradingPeriod period) {
+	public List<LocalDateTime> getTradingDatesByPeriod(String ticker, TradingTimeFrame period) {
 		String tickerKey = getKey(ticker, period);
 
 		if (allDates.containsKey(tickerKey))
@@ -204,10 +204,14 @@ public class StockQuoteHistory {
 					"Необходимо загрузить данные для тикера " + ticker + " и периода " + period);
 	}
 	
-	public List<LocalDateTime> getTradingDatesByFilter(String ticker, TradingPeriod period, int startYear, int endYear, Frequency frequency) {
+	public List<LocalDateTime> getTradingDatesByFilter(String ticker, TradingTimeFrame period, int startYear, int endYear, Frequency frequency) {
 		if ( !containsDataInStorage(ticker, period) )
 			throw new AlphaVantageException(
 					"Необходимо загрузить данные для тикера " + ticker + " и периода " + period);
+						
+		if ( period == TradingTimeFrame.Daily )
+			throw new RuntimeException("Некорректно указан период TradingPeriod. Нельзя указывать TradingPeriod = Daily. "
+					+ "Это приведет к некорретному расчету портфеля каждый день, что не приведет к хорошим результатам");
 		
 		// dates.add(getFirstTradedDay(ticker, startYear));
 

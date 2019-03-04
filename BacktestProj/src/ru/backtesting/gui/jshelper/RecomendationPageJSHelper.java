@@ -2,6 +2,8 @@ package ru.backtesting.gui.jshelper;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.teamdev.jxbrowser.chromium.Browser;
 import com.teamdev.jxbrowser.chromium.JSFunction;
@@ -12,6 +14,7 @@ import com.teamdev.jxbrowser.chromium.dom.DOMElement;
 import com.teamdev.jxbrowser.chromium.events.ScriptContextAdapter;
 import com.teamdev.jxbrowser.chromium.events.ScriptContextEvent;
 
+import ru.backtesting.mktindicators.BollingerBandsIndicatorSignal;
 import ru.backtesting.mktindicators.HilbertTrendlineSignal;
 import ru.backtesting.mktindicators.RSIOscillatorSignal;
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
@@ -20,7 +23,7 @@ import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
 import ru.backtesting.mktindicators.ma.MovingAverageIndicatorSignal;
 import ru.backtesting.stockquotes.StockQuote;
 import ru.backtesting.stockquotes.StockQuoteHistory;
-import ru.backtesting.stockquotes.TradingPeriod;
+import ru.backtesting.stockquotes.TradingTimeFrame;
 import ru.backtesting.stockquotes.graphics.GraphicsUtils;
 import ru.backtesting.stockquotes.graphics.MarketIndicatorDataSeries;
 import ru.backtesting.stockquotes.graphics.MarketQuoteDataSeries;
@@ -28,68 +31,82 @@ import ru.backtesting.utils.Logger;
 
 public class RecomendationPageJSHelper {
 	private static final String BASE_USA_VOLATILITY_INDEX_TICKER = "VXXB";
-	private static final String BASE_USA_STOCK_INDEX_TICKER = "TLT";
+	private static final String BASE_USA_STOCK_INDEX_TICKER = "SPY";
+	
+	// private static final String BASE_USA_STOCK_INDEX_TICKER = "TLT";
+
+	// private static final String BASE_USA_STOCK_INDEX_TICKER = "HYG"; // hight yeald bonds
+
 	
 	private final DatePeriodForGraphics shortTermPeriod = new DatePeriodForGraphics(2018, 2019);
 	private final DatePeriodForGraphics longTermPeriod = new DatePeriodForGraphics(2016, 2019);
 
 	
 	private Browser browser;
-	private boolean isCalcSpyMovingAverageGraphics;
+	private Map<String, Boolean> isCalcDataForGraphics;
 	
 	public RecomendationPageJSHelper(Browser browser) {
 		this.browser = browser;
-		isCalcSpyMovingAverageGraphics = false;
+		isCalcDataForGraphics = new HashMap<String, Boolean>();
 	}
 	
-	public void loadSpyGraphics() {
-		try {
-			Logger.log().info("Вызов метода \"loadSpyGraphics\"");
+	public void loadGraphics(String ticker) {
+		Logger.log().info("Асинхронный вызов метода \"loadSpyGraphics\" с аргументом: " + ticker);
 
-			if (isCalcSpyMovingAverageGraphics == false) {
-				addMAGraphicsOnPage(browser);
-				
-				addRSIGraphicsOnPage(browser);
-				
-				addVolatilityGraphicsOnPage(browser);
-				
-				addStockIndicatorsTable(browser);
-				
-				Logger.log().info("-||Перезагрузка страницы начата||-");
-				
-				browser.loadHTML(browser.getHTML());
+		if (!isCalcDataForGraphics.containsKey(ticker)) {
 
-				Logger.log().info("-||Перезагрузка страницы завершена||-");
+		} else
+			Logger.log().info("Данные для отображения графиков графиков MA, RSI, VXX и т.п. для " + ticker
+					+ " уже были загружены");
 
-				isCalcSpyMovingAverageGraphics = true;
-			} else
-				Logger.log().info("Данные для отображения графиков графиков MA, RSI, VXX и т.п. для SPY уже были загружены");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		// асинхронный вызов метода
+		new Thread(new Runnable() {
+			public void run() {
+				try {
+					addMAGraphicsOnPage(browser, ticker);
+
+					addRSIGraphicsOnPage(browser, ticker);
+
+					addVolatilityGraphicsOnPage(browser, ticker, BASE_USA_VOLATILITY_INDEX_TICKER);
+
+					addStockIndicatorsTable(browser, ticker);
+
+					Logger.log().info("-||Перезагрузка страницы начата||-");
+
+					browser.loadHTML(browser.getHTML());
+
+					Logger.log().info("-||Перезагрузка страницы завершена||-");
+
+					isCalcDataForGraphics.put(ticker, new Boolean(true));
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}).start();
 	}
 	
-	private void addMAGraphicsOnPage(Browser browser) {
+	private void addMAGraphicsOnPage(Browser browser, String ticker) {
 		DOMDocument document = browser.getDocument();
 
-		DOMElement spyMADailyEl = document.findElement(By.id("spyMADailyGraph"));
+		DOMElement tickerMADailyEl = document.findElement(By.id(ticker + "MADailyGraph"));
 
-		DOMElement spyMAWeeklyEl = document.findElement(By.id("spyMAWeeklyGraph"));
+		DOMElement tickerMAWeeklyEl = document.findElement(By.id(ticker + "MAWeeklyGraph"));
 		
-		Logger.log().info("Строим различные Moving Averages и HilbertTrend для тикера \"" + BASE_USA_STOCK_INDEX_TICKER + "\"");
+		Logger.log().info("Строим различные Moving Averages и HilbertTrend для тикера \"" + ticker + "\"");
 
-		String spyMADailyElText = createMAGraphics(BASE_USA_STOCK_INDEX_TICKER, shortTermPeriod.getStartYear(), 
-				shortTermPeriod.getEndYear(), TradingPeriod.Daily);
+		String tickerMADailyElText = createMAGraphics(ticker, shortTermPeriod.getStartYear(), 
+				shortTermPeriod.getEndYear(), TradingTimeFrame.Daily);
 
-		Logger.log().info("Текст для отображежения графика MA для тикера \"" + BASE_USA_STOCK_INDEX_TICKER + "\" (daily): " + spyMADailyElText);
+		Logger.log().info("Текст для отображежения графика MA для тикера \"" + ticker + "\" (daily): " + tickerMADailyElText);
 
-		String spyMAWeeklyElText = createMAGraphics(BASE_USA_STOCK_INDEX_TICKER, longTermPeriod.getStartYear(), 
-				longTermPeriod.getEndYear(), TradingPeriod.Weekly);
+		String tickerMAWeeklyElText = createMAGraphics(ticker, longTermPeriod.getStartYear(), 
+				longTermPeriod.getEndYear(), TradingTimeFrame.Weekly);
 
-		Logger.log().info("Текст для отображежения графика MA для тикера \"" + BASE_USA_STOCK_INDEX_TICKER +"\" (weekly): " + spyMAWeeklyElText);
+		Logger.log().info("Текст для отображежения графика MA для тикера \"" + ticker +"\" (weekly): " + tickerMAWeeklyElText);
 
-		spyMADailyEl.setInnerHTML(spyMADailyElText);
-		spyMAWeeklyEl.setInnerHTML(spyMAWeeklyElText);
+		tickerMADailyEl.setInnerHTML(tickerMADailyElText);
+		tickerMAWeeklyEl.setInnerHTML(tickerMAWeeklyElText);
 		
 		browser.addScriptContextListener(new ScriptContextAdapter() {
             @Override
@@ -102,27 +119,27 @@ public class RecomendationPageJSHelper {
         });
 	}
 	
-	private void addRSIGraphicsOnPage(Browser browser) {
+	private void addRSIGraphicsOnPage(Browser browser, String ticker) {
 		DOMDocument document = browser.getDocument();
 
-		DOMElement spyRSIShortTermGraphEl = document.findElement(By.id("spyRSIShortTermGraph"));
+		DOMElement tickerRSIShortTermGraphEl = document.findElement(By.id(ticker + "RSIShortTermGraph"));
 
-		DOMElement spyRSILongTermGraphEl = document.findElement(By.id("spyRSILongTermGraph"));
+		DOMElement tickerRSILongTermGraphEl = document.findElement(By.id(ticker + "RSILongTermGraph"));
 
-		Logger.log().info("Строим различные RSI(14- и 100-дневные) для тикера \"" + BASE_USA_STOCK_INDEX_TICKER + "\"");
+		Logger.log().info("Строим различные RSI(14- и 100-дневные) для тикера \"" + ticker + "\"");
 		
-		String spyRSIShortTermGraphElText = createRSIGraphics(BASE_USA_STOCK_INDEX_TICKER, shortTermPeriod.getStartYear(), 
-				shortTermPeriod.getEndYear(), 14, TradingPeriod.Daily);
+		String tickerRSIShortTermGraphElText = createRSIGraphics(ticker, shortTermPeriod.getStartYear(), 
+				shortTermPeriod.getEndYear(), 14, TradingTimeFrame.Daily);
 
-		Logger.log().info("Текст для отображежения графика RSI(14) для тикера \"" + BASE_USA_STOCK_INDEX_TICKER + "\" (daily): " + spyRSIShortTermGraphElText);
+		Logger.log().info("Текст для отображежения графика RSI(14) для тикера \"" + ticker + "\" (daily): " + tickerRSIShortTermGraphElText);
 
-		String spyRSILongTermGraphElText = createRSIGraphics(BASE_USA_STOCK_INDEX_TICKER, longTermPeriod.getStartYear(), 
-				longTermPeriod.getEndYear(), 100, TradingPeriod.Daily);
+		String tickerRSILongTermGraphElText = createRSIGraphics(ticker, longTermPeriod.getStartYear(), 
+				longTermPeriod.getEndYear(), 100, TradingTimeFrame.Daily);
 
-		Logger.log().info("Текст для отображежения графика RSI(100) для тикера \"" + BASE_USA_STOCK_INDEX_TICKER + "\" (weekly): " + spyRSIShortTermGraphElText);
+		Logger.log().info("Текст для отображежения графика RSI(100) для тикера \"" + ticker + "\" (weekly): " + tickerRSIShortTermGraphElText);
 
-		spyRSIShortTermGraphEl.setInnerHTML(spyRSIShortTermGraphElText);
-		spyRSILongTermGraphEl.setInnerHTML(spyRSILongTermGraphElText);
+		tickerRSIShortTermGraphEl.setInnerHTML(tickerRSIShortTermGraphElText);
+		tickerRSILongTermGraphEl.setInnerHTML(tickerRSILongTermGraphElText);
 
 		browser.addScriptContextListener(new ScriptContextAdapter() {
             @Override
@@ -136,21 +153,19 @@ public class RecomendationPageJSHelper {
         });
 	}
 	
-	private void addVolatilityGraphicsOnPage(Browser browser) {
-		String volatilityActiveTicker = BASE_USA_VOLATILITY_INDEX_TICKER; 
-		
+	private void addVolatilityGraphicsOnPage(Browser browser, String baseTicker, String volatilityTicker) {		
 		DOMDocument document = browser.getDocument();
 
-		DOMElement volGraphEl = document.findElement(By.id("volatalityGraph"));
+		DOMElement volGraphEl = document.findElement(By.id(baseTicker + "VolatalityGraph"));
 
-		Logger.log().info("Строим график волатильности для тикера \"" + BASE_USA_STOCK_INDEX_TICKER + "\" c помощью графика "
-				+ "движения цен на актив с тикером \"" + volatilityActiveTicker + "\"");
+		Logger.log().info("Строим график волатильности для тикера \"" + baseTicker + "\" c помощью графика "
+				+ "движения цен на актив с тикером \"" + volatilityTicker + "\"");
 		
-		String volGraphElText = createVolatilityGraphics(BASE_USA_STOCK_INDEX_TICKER, volatilityActiveTicker, 
-				TradingPeriod.Daily, shortTermPeriod.getStartYear(), shortTermPeriod.getEndYear());
+		String volGraphElText = createVolatilityGraphics(baseTicker, volatilityTicker, 
+				TradingTimeFrame.Daily, shortTermPeriod.getStartYear(), shortTermPeriod.getEndYear());
 			
 		Logger.log().info("Текст для отображежения графика движения цен на актив с тикером \"" + 
-				volatilityActiveTicker + "\"" + volGraphElText);
+				volatilityTicker + "\"" + volGraphElText);
 		
 		volGraphEl.setInnerHTML(volGraphElText);
 		
@@ -166,18 +181,16 @@ public class RecomendationPageJSHelper {
         });
 	}
 	
-	private void addStockIndicatorsTable(Browser browser) {
-		String ticker = BASE_USA_STOCK_INDEX_TICKER;
-		
+	private void addStockIndicatorsTable(Browser browser, String ticker) {		
 		Logger.log().info("Заполняем итоговую таблицу с различными Moving Averages, HilbertTrend и индикаторами RSI для тикера \"" + ticker + "\"");
 		
 		StockQuoteHistory stockStorage = StockQuoteHistory.storage();
 		
-		LocalDateTime tradingDay = stockStorage.getLastTradingDayInYear(ticker, TradingPeriod.Daily, shortTermPeriod.getEndYear());
+		LocalDateTime tradingDay = stockStorage.getLastTradingDayInYear(ticker, TradingTimeFrame.Daily, shortTermPeriod.getEndYear());
 		
 		Logger.log().info("Получили ближайший торговый день для тикера \"" + ticker + "\": " + tradingDay);
 
-		StockQuote quote = stockStorage.getQuoteByDate(ticker, TradingPeriod.Daily, tradingDay);
+		StockQuote quote = stockStorage.getQuoteByDate(ticker, TradingTimeFrame.Daily, tradingDay);
 		
 		Logger.log().info("Получили значение котировки для тикера \"" + ticker + "\" в ближайший торговый день " + tradingDay + ": " + quote.getClose());
 		
@@ -185,23 +198,23 @@ public class RecomendationPageJSHelper {
 		
 		DOMDocument document = browser.getDocument();
 
-		DOMElement tickerPriceValueEl = document.findElement(By.id("spyPriceValue"));
+		DOMElement tickerPriceValueEl = document.findElement(By.id(ticker + "PriceValue"));
 		tickerPriceValueEl.setInnerText("Last Price: " + formatter.doubleAsString(quote.getClose()) + " на дату " + 
 				formatter.dateAsString(tradingDay.toLocalDate()));
 		
-		DOMElement indTableBodyEl = document.findElement(By.id("spyRecomIndicatorsTableBody"));
+		DOMElement indTableBodyEl = document.findElement(By.id(ticker + "RecomIndicatorsTableBody"));
 		
-		String tableBodyHTML = fillStockIndicatorsHtmlTable(ticker, quote.getClose(), TradingPeriod.Daily, tradingDay);
+		String tableBodyHTML = fillStockIndicatorsHtmlTable(ticker, quote.getClose(), TradingTimeFrame.Daily, tradingDay);
 		
-		tableBodyHTML += fillStockIndicatorsHtmlTable(ticker, quote.getClose(), TradingPeriod.Weekly, tradingDay);
+		tableBodyHTML += fillStockIndicatorsHtmlTable(ticker, quote.getClose(), TradingTimeFrame.Weekly, tradingDay);
 		
 		indTableBodyEl.setInnerHTML(tableBodyHTML);
 		
-		DOMElement rsiOSCTableBodyEl = document.findElement(By.id("spyRsiOscillatorTableBody"));
-		rsiOSCTableBodyEl.setInnerHTML(fillRSIIndicatorsHtmlTable(ticker, TradingPeriod.Daily, tradingDay));
+		DOMElement rsiOSCTableBodyEl = document.findElement(By.id(ticker + "RsiOscillatorTableBody"));
+		rsiOSCTableBodyEl.setInnerHTML(fillRSIIndicatorsHtmlTable(ticker, TradingTimeFrame.Daily, tradingDay));
 	}
 	
-	private String fillRSIIndicatorsHtmlTable(String ticker, TradingPeriod period, LocalDateTime tradingDay) {
+	private String fillRSIIndicatorsHtmlTable(String ticker, TradingTimeFrame period, LocalDateTime tradingDay) {
 		double rsi14Value = MarketIndicatorsHistory.storage().findIndicatorValue(ticker, 14, tradingDay, MarketIndicatorType.RSI_OSC, period);
 
 		double rsi100Value = MarketIndicatorsHistory.storage().findIndicatorValue(ticker, 100, tradingDay, MarketIndicatorType.RSI_OSC, period);
@@ -237,7 +250,7 @@ public class RecomendationPageJSHelper {
 		return tableRsiOscElHtml;
 	}
 	
-	private String fillStockIndicatorsHtmlTable(String ticker, double tickerPriceValue, TradingPeriod period, LocalDateTime tradingDay) {
+	private String fillStockIndicatorsHtmlTable(String ticker, double tickerPriceValue, TradingTimeFrame period, LocalDateTime tradingDay) {
 		MarketIndicatorsHistory mktIndStorage = MarketIndicatorsHistory.storage();
 		
 		double sma50Value = mktIndStorage.findIndicatorValue(ticker, 50, tradingDay, MarketIndicatorType.SMA_IND, period);
@@ -268,6 +281,9 @@ public class RecomendationPageJSHelper {
 				tableBodyHTML += generateTableDataHTML(tickerPriceValue, wma50Value);
 				// td
 				tableBodyHTML += generateTableDataHTMLWithPercentageDiff(tickerPriceValue, sma50Value);
+				// td
+				tableBodyHTML += generateTableDataHTMLWithPercentageDiff(tickerPriceValue, wma50Value);
+
 				tableBodyHTML +="		</tr>\r\n";
 
 				
@@ -282,6 +298,9 @@ public class RecomendationPageJSHelper {
 				tableBodyHTML += generateTableDataHTML(tickerPriceValue, wma200Value);
 				// td				
 				tableBodyHTML += generateTableDataHTMLWithPercentageDiff(tickerPriceValue, sma200Value);
+				// td
+				tableBodyHTML += generateTableDataHTMLWithPercentageDiff(tickerPriceValue, wma200Value);
+
 				tableBodyHTML +="		</tr>\r\n";
 
 				
@@ -294,6 +313,8 @@ public class RecomendationPageJSHelper {
 				tableBodyHTML += generateTableDataHTML(tickerPriceValue, hilbertTrendValue);
 				// td
 				tableBodyHTML += generateTableDataHTML(tickerPriceValue, hilbertTrendValue);
+				// td
+				tableBodyHTML += generateTableDataHTMLWithPercentageDiff(tickerPriceValue, hilbertTrendValue);
 				// td
 				tableBodyHTML += generateTableDataHTMLWithPercentageDiff(tickerPriceValue, hilbertTrendValue);
 				tableBodyHTML +="		</tr>\r\n";
@@ -335,7 +356,7 @@ public class RecomendationPageJSHelper {
 		return html;
 	}
 	
-	private String createRSIGraphics(String ticker, int startYear, int endYear, int timePeriod, TradingPeriod period) {
+	private String createRSIGraphics(String ticker, int startYear, int endYear, int timePeriod, TradingTimeFrame period) {
 		MarketIndicatorInterface rsiOsc = new RSIOscillatorSignal(timePeriod, period);
 
 		MarketQuoteDataSeries quotesDataSeries = new MarketQuoteDataSeries(ticker, startYear, endYear, period, false);
@@ -347,7 +368,7 @@ public class RecomendationPageJSHelper {
 				ticker + "/rsi(" + timePeriod + ") chart", "dates");
 	}
 	
-	private String createVolatilityGraphics(String baseStockTicker, String volatilityTicker, TradingPeriod period, int startYear, int endYear) {		
+	private String createVolatilityGraphics(String baseStockTicker, String volatilityTicker, TradingTimeFrame period, int startYear, int endYear) {		
 		MarketQuoteDataSeries quotesDataSeries1 = new MarketQuoteDataSeries(baseStockTicker, startYear, endYear, period, false);
 		
 		MarketQuoteDataSeries quotesDataSeries2 = new MarketQuoteDataSeries(volatilityTicker, startYear, endYear, period, false);
@@ -356,7 +377,7 @@ public class RecomendationPageJSHelper {
 				baseStockTicker + "/" + volatilityTicker + "chart", "dates");
 	}
 	
-	private String createMAGraphics(String ticker, int startYear, int endYear, TradingPeriod period ) {
+	private String createMAGraphics(String ticker, int startYear, int endYear, TradingTimeFrame period ) {
 		MarketQuoteDataSeries quotesDataSeries = new MarketQuoteDataSeries(ticker, startYear, endYear, period, false);
 		
 		MarketIndicatorInterface sma50 = new MovingAverageIndicatorSignal(50, MarketIndicatorType.SMA_IND, period, 1);
@@ -380,10 +401,18 @@ public class RecomendationPageJSHelper {
 		MarketIndicatorDataSeries hilbertTrendDataSeries = new MarketIndicatorDataSeries(ticker, hilbertTrend, 
 				hilbertTrend.getMarketIndType() + "(none) : " + ticker, startYear, endYear, period);
 		
+		MarketIndicatorInterface bb50 = new BollingerBandsIndicatorSignal(50, period);
+		MarketIndicatorDataSeries bb50DataSeries = new MarketIndicatorDataSeries(ticker, bb50, 
+				bb50.getMarketIndType() + "(" + bb50.getTimePeriod() + ") : " + ticker, startYear, endYear, period);
+		
+		MarketIndicatorInterface bb200 = new BollingerBandsIndicatorSignal(200, period);
+		MarketIndicatorDataSeries bb200DataSeries = new MarketIndicatorDataSeries(ticker, bb200, 
+				bb200.getMarketIndType() + "(" + bb200.getTimePeriod() + ") : " + ticker, startYear, endYear, period);
+		
 		return GraphicsUtils.createMultipleTimeSeriesChart(
 				Arrays.asList(new MarketQuoteDataSeries[] { quotesDataSeries}), 
 				Arrays.asList(new MarketIndicatorDataSeries[] { sma50DataSeries, sma200DataSeries, 
-						wma50DataSeries, wma200DataSeries, hilbertTrendDataSeries }), 
+						wma50DataSeries, wma200DataSeries, hilbertTrendDataSeries/*, bb50DataSeries, bb200DataSeries*/}), 
 				ticker + "/moving averages(50-200) chart", "dates", ticker);
 	}
 	

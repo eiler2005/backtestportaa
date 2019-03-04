@@ -1,5 +1,6 @@
 package ru.backtesting.test;
 
+import java.io.IOException;
 import java.time.LocalDate;
 
 import ru.backtesting.utils.DateUtils;
@@ -38,8 +39,8 @@ public class TablesawTest {
         jXBrowserTest.showHtmlInBrowser(htmlResult);
 	}
 	
-	/*
-	public static void scatterplotWithTwoYAxes() {
+	
+	public static void scatterplotWithTwoYAxes() throws IOException {
 		Table baseball = Table.read().csv("../data/baseball.csv");
         NumberColumn<?> x = baseball.nCol("BA");
         NumberColumn<?> y = baseball.nCol("W");
@@ -67,7 +68,7 @@ public class TablesawTest {
                 .build();
         Figure figure = new Figure(layout, trace2, trace);
         Plot.show(figure);
-	} */
+	}
 	
 	public static String timeSeriesPlotWithSpikes() {
 		LocalDate[] dates = new LocalDate[] { 

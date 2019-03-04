@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-<title>Recomendation page for investor about SPY ticker (by
+<title>Recomendation page for investor about USA stock market (by
 	default)</title>
 
 <style>
@@ -112,8 +112,8 @@ $container-max-widths: (
             window.RecomendationPageData.save(ticker, period, sma50, sma200, wma50, wma200, rsi);
           }
           
-          function clicklCalcSpyAllBtn() {
-        	  recomendationPageData.loadSpyGraphics();
+          function clickCalcAllInfForTickerBtn(ticker) {        	  
+        	  recomendationPageData.loadGraphics(ticker);
           }
           
           function spyRSIDataClick() {
@@ -148,7 +148,7 @@ $container-max-widths: (
 </head>
 
 <body>
-	<div class="container">
+	<div class="container" id="bootstrapContainer">
 		<div class="row">
 			<div class="col-12">
 				<div class="header-text">
@@ -162,14 +162,14 @@ $container-max-widths: (
 
 		<!-- first row start -->
 		<!-- spy information -->
-		<div class="row">
+		<div class="row" id="spyRow">
 			<div class="col">
 				<div class="panel panel-primary">
 					<div class="panel-heading">
-						<h4 style="text-align: left; font-style: oblique;">Данные по
+						<h4 style="text-align: left; font-style: oblique;" id="#ticker#Header">Данные по
 							активу SPY (SPDR S&P 500 ETF)</h4>
 						<div>
-							<button type="submit" class="btn btn-light" onclick="clicklCalcSpyAllBtn()">Рассчитать данные по SPY</button>
+							<button type="submit" class="btn btn-light" onclick="clickCalcAllInfForTickerBtn('#ticker#')" id="#ticker#Button">Рассчитать данные по SPY</button>
 							<span class="verticalLine"></span>
 							<button type="submit" class="btn btn-success">open all</button>
 							<button type="submit" class="btn btn-warning">close all</button>
@@ -190,11 +190,11 @@ $container-max-widths: (
 									<div class="panel-body">
 										<div class="row-graphic-stock-data">
 											<label class="graphic-label">Дневной график</label>
-											<div id="spyMADailyGraph">--> Здесь будет дневной график</div>
+											<div id="#ticker#MADailyGraph">--> Здесь будет дневной график</div>
 										</div>
 										<div class="row-graphic-stock-data">
 											<label class="graphic-label">Недельный график</label>
-											<div id="spyMAWeeklyGraph">--> Здесь будет недельный график</div>
+											<div id="#ticker#MAWeeklyGraph">--> Здесь будет недельный график</div>
 										</div>
 									</div>
 								</div>
@@ -211,12 +211,12 @@ $container-max-widths: (
 											<div class="row-graphic-stock-data">
 												<label class="graphic-label">График с краткосрочными rsi</label>
 												<!-- rsi(20), rsi(14), RSI(7) -->
-												<div id="spyRSIShortTermGraph">--> Здесь будет график с rsi(14)</div>
+												<div id="#ticker#RSIShortTermGraph">--> Здесь будет график с rsi(14)</div>
 											</div>
 											<div class="row-graphic-stock-data">
 												<label class="graphic-label">График с средне- и долгосрочными rsi</label>
 												<!-- rsi(200), rsi(100), RSI(50) -->
-												<div id="spyRSILongTermGraph">--> Здесь будет график с rsi(100)</div>
+												<div id="#ticker#RSILongTermGraph">--> Здесь будет график с rsi(100)</div>
 											</div>
 										</div>
 									</div>
@@ -232,7 +232,7 @@ $container-max-widths: (
 									<div id="collapse3" class="panel-collapse collapse">
 										<div class="panel-body">
 											<div class="row-graphic-stock-data">
-											<div id="volatalityGraph">--> Здесь будет график VXXB (iPath Series B S&P 500 VIX Short Term Futures ETN)</div>											</div>
+											<div id="#ticker#VolatalityGraph">--> Здесь будет график VXXB (iPath Series B S&P 500 VIX Short Term Futures ETN)</div>											</div>
 										</div>
 									</div>
 								</div>
@@ -242,12 +242,12 @@ $container-max-widths: (
 							<!-- indicators panel -->
 							<div class="panel panel-info">
 								<div class="panel-heading">
-									<h5 style="text-align: left;">Данные по активу SPY -
+									<h5 style="text-align: left;" id="#ticker#DataHeader">Данные по активу SPY -
 										индикаторы и осцилляторы в табличном виде</h5>
 								</div>
 								<div class="panel-body">
 									<label class="table-label">Скользящие средние и линия тренда</label>
-									<span class="table-recomendation" id="spyPriceValue">Last Price (date): price</span>
+									<span class="table-recomendation" id="#ticker#PriceValue">Last Price (date): price</span>
 									<table class="table table-hover">
 										<thead>
 											<tr>
@@ -255,50 +255,57 @@ $container-max-widths: (
 												<th class="success">Simple</th>
 												<th class="success">Weighed</th>
 												<th class="success">Last Price vs MA (or Trend line)</th>
+												<th class="success">Last Price vs WMA (or Trend line)</th>
 											</tr>
 										</thead>
-										<tbody id="spyRecomIndicatorsTableBody">
+										<tbody id="#ticker#RecomIndicatorsTableBody">
 											<tr>
 												<td>MA 50 (daily)</td>
 												<td>sma <br><span class="indBuy">покупать</span></td>
 												<td>wma<br><span class="indSell">продавать</span></td>
 												<td>last price vs ma</td>
+												<td>last price vs wma</td>											
 											</tr>
 											<tr>
 												<td>MA 200 (daily)</td>
 												<td>sma</td>
 												<td>wma</td>
 												<td>last price vs ma</td>
+												<td>last price vs wma</td>																							
 											</tr>
 											<tr>
 												<td>Trend Line (daily)</td>
 												<td>tl</td>
 												<td>tl</td>
 												<td>last price vs ma</td>
+												<td>last price vs wma</td>																							
 											</tr>
 											<tr>
 												<td>MA 50 (weekly)</td>
 												<td>sma</td>
 												<td>wma</td>
 												<td>last price vs ma</td>
+												<td>last price vs wma</td>																							
 											</tr>
 											<tr>
 												<td>MA 200 (weekly)</td>
 												<td>sma</td>
 												<td>wma</td>
 												<td>last price vs ma</td>
+												<td>last price vs wma</td>																							
 											</tr>
 											<tr>
 												<td>Trend Line (weekly)</td>
 												<td>tl</td>
 												<td>tl</td>
 												<td>last price vs ma</td>
+												<td>last price vs wma</td>																							
 											</tr>
 										</tbody>
 									</table>
 									<div>
-										<span id="spyRecomIndicatorsCalc">Покупать: 12  Продавать: 0  </span> <br>
-										<span class="table-recomendation" id="spyIndicatorsFinalRecom">Рекомендация: <span style="color:green">покупать или держать</span></span>
+										<span id="#ticker#RecomIndicatorsCalc">Покупать: 12  Продавать: 0  </span> <br>
+										<span class="table-recomendation" id="#ticker#IndicatorsFinalRecom">Рекомендация: <span style="color:green">покупать или держать</span></span>
 									</div>
 									<label class="table-label">Средне- и долгосрочные rsi</label>
 									<table class="table table-hover">
@@ -308,7 +315,7 @@ $container-max-widths: (
 												<th class="success">Значение осциллятора RSI </th>
 											</tr>
 										</thead>
-										<tbody id="spyRsiOscillatorTableBody">
+										<tbody id="#ticker#RsiOscillatorTableBody">
 											<tr>
 												<td>rsi (14)</td>
 												<td>20 <br><span class="indBuy">перепродан</span></td>
@@ -320,7 +327,7 @@ $container-max-widths: (
 										</tbody>
 									</table>
 										<div>
-											<span class="table-recomendation" id="spyRSIIndicatorsFinalRecom">Рекомендация: <span style="color:green">покупать или держать</span></span>
+											<span class="table-recomendation" id="#ticker#RSIIndicatorsFinalRecom">Рекомендация: <span style="color:green">покупать или держать</span></span>
 										</div>
 								</div>
 							</div>
@@ -343,7 +350,7 @@ $container-max-widths: (
 		</div>
 		<!-- first row end -->
 
-		<hr class="hr">
+		<hr class="hr" id="hrId">
 
 		<!-- user ticker information begin -->
 		<div class="row">
@@ -489,7 +496,7 @@ $container-max-widths: (
 		</div>
 	</div>
 
-	<script>
+	<script id="documentJS">
 		$(document).ready(function() {			
 			$(".btn-primary").click(function() {
 				$(".collapse").collapse('toggle');

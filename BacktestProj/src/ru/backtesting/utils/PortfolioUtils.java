@@ -9,10 +9,10 @@ import ru.backtesting.port.AssetAllocation;
 import ru.backtesting.port.Portfolio;
 import ru.backtesting.port.PositionInformation;
 import ru.backtesting.stockquotes.StockQuoteHistory;
-import ru.backtesting.stockquotes.TradingPeriod;
+import ru.backtesting.stockquotes.TradingTimeFrame;
 
 public class PortfolioUtils {
-	public static double buyPortfolio(List<PositionInformation> positions, List<AssetAllocation> assetsAllocation, TradingPeriod period, double moneyAmount, boolean dividends) {
+	public static double buyPortfolio(List<PositionInformation> positions, List<AssetAllocation> assetsAllocation, TradingTimeFrame period, double moneyAmount, boolean dividends) {
 		double price = 0;
 				
 		for (PositionInformation position : positions) {
@@ -52,7 +52,7 @@ public class PortfolioUtils {
 		return sum;
 	}
 	
-	public static double calculateAllPositionsBalance(List<PositionInformation> positions, TradingPeriod period, LocalDateTime date, boolean reinvestDividends, boolean logging) {
+	public static double calculateAllPositionsBalance(List<PositionInformation> positions, TradingTimeFrame period, LocalDateTime date, boolean reinvestDividends, boolean logging) {
 		double sum = 0;
 		
 		for(PositionInformation pos : positions) {
@@ -75,7 +75,7 @@ public class PortfolioUtils {
 		return sum;
 	}
 	
-	public static boolean isHoldInPortfolio(List<MarketIndicatorInterface> timingSignals, String ticker, TradingPeriod period, LocalDateTime date) {
+	public static boolean isHoldInPortfolio(List<MarketIndicatorInterface> timingSignals, String ticker, TradingTimeFrame period, LocalDateTime date) {
 		boolean holdInPort = true;
 		
 		if ( timingSignals != null && timingSignals.size() != 0 ) {

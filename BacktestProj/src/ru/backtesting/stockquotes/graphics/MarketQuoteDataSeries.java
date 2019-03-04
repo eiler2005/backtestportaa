@@ -7,7 +7,7 @@ import java.util.List;
 import org.patriques.output.AlphaVantageException;
 
 import ru.backtesting.stockquotes.StockQuoteHistory;
-import ru.backtesting.stockquotes.TradingPeriod;
+import ru.backtesting.stockquotes.TradingTimeFrame;
 import ru.backtesting.stockquotes.graphics.base.BaseFinancialTimeSeriesChartInformation;
 import ru.backtesting.stockquotes.graphics.base.FinancialTimeSeriesChartInformation;
 import ru.backtesting.utils.DateUtils;
@@ -15,7 +15,7 @@ import ru.backtesting.utils.DateUtils;
 public class MarketQuoteDataSeries extends BaseFinancialTimeSeriesChartInformation 
 		implements FinancialTimeSeriesChartInformation {
 	
-	public MarketQuoteDataSeries(String ticker, int startYear, int endYear, TradingPeriod period, boolean dividens) {
+	public MarketQuoteDataSeries(String ticker, int startYear, int endYear, TradingTimeFrame period, boolean dividens) {
 		super();
 		this.ticker = ticker;
 		this.period = period;
@@ -31,7 +31,7 @@ public class MarketQuoteDataSeries extends BaseFinancialTimeSeriesChartInformati
 		this.tooltips = tooltips;
 	}
 
-	private void fillFromStorage(int startYear, int endYear, TradingPeriod period, boolean dividens) {
+	private void fillFromStorage(int startYear, int endYear, TradingTimeFrame period, boolean dividens) {
 		StockQuoteHistory.storage().fillQuotesData(ticker, period);
 		
 		super.dates = DateUtils.filterDateListByYear(StockQuoteHistory.storage().getTradingDatesByPeriod(ticker, period), startYear, endYear);

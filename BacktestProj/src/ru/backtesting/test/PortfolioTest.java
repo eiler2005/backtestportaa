@@ -12,23 +12,23 @@ import ru.backtesting.port.metrics.PortfolioMetrics;
 import ru.backtesting.rebalancing.Frequency;
 import ru.backtesting.rebalancing.RebalancingMethod;
 import ru.backtesting.rebalancing.RebalancingType;
-import ru.backtesting.stockquotes.TradingPeriod;
+import ru.backtesting.stockquotes.TradingTimeFrame;
 
 public class PortfolioTest {
 	public void testBestPort() {
 		Portfolio simplePort = new Portfolio("spy - 200", Arrays.asList(
 				new AssetAllocation("SPY", 100)), 
 				2004, 2018, 10000, 
-				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), TradingPeriod.Monthly,
-				Arrays.asList(new MovingAverageIndicatorSignal(50, 200, MarketIndicatorType.WMA_IND, TradingPeriod.Daily), 
-						new RSIOscillatorSignal(100, TradingPeriod.Daily)), "TLT", false);
+				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), TradingTimeFrame.Monthly,
+				Arrays.asList(new MovingAverageIndicatorSignal(50, 200, MarketIndicatorType.WMA_IND, TradingTimeFrame.Daily), 
+						new RSIOscillatorSignal(100, TradingTimeFrame.Daily)), "TLT", false);
 		
 		simplePort = new Portfolio("spy - 200", Arrays.asList(
 				new AssetAllocation("SPY", 100)), 
 				2004, 2018, 10000, 
-				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), TradingPeriod.Monthly,
-				Arrays.asList(new MovingAverageIndicatorSignal(200, MarketIndicatorType.WMA_IND, TradingPeriod.Daily, 1), 
-						new RSIOscillatorSignal(100, TradingPeriod.Daily)), "TLT", false);
+				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), TradingTimeFrame.Monthly,
+				Arrays.asList(new MovingAverageIndicatorSignal(200, MarketIndicatorType.WMA_IND, TradingTimeFrame.Daily, 1), 
+						new RSIOscillatorSignal(100, TradingTimeFrame.Daily)), "TLT", false);
 	}
 	
 	public static void main(String[] args) {
@@ -43,9 +43,9 @@ public class PortfolioTest {
 		Portfolio simplePort = new Portfolio("spy - 200", Arrays.asList(
 				new AssetAllocation("SPY", 100)), 
 				2004, 2019, 10000, 
-				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), TradingPeriod.Monthly,
-				Arrays.asList(new MovingAverageIndicatorSignal(200, MarketIndicatorType.WMA_IND, TradingPeriod.Daily, 1),
-						new RSIOscillatorSignal(100, TradingPeriod.Daily)), "TLT", false);
+				new RebalancingType(Frequency.Monthly, RebalancingMethod.AssetProportion), TradingTimeFrame.Monthly,
+				Arrays.asList(new MovingAverageIndicatorSignal(200, MarketIndicatorType.WMA_IND, TradingTimeFrame.Daily, 1),
+						new RSIOscillatorSignal(100, TradingTimeFrame.Daily)), "TLT", false);
 		
 		List<AssetAllocation> spyAndTlt =  Arrays.asList(
 				new AssetAllocation("SPY", 60), new AssetAllocation("TLT", 40));

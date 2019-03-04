@@ -42,7 +42,19 @@ import com.teamdev.jxbrowser.chromium.PluginManager;
 import com.teamdev.jxbrowser.chromium.ResourceHandler;
 import com.teamdev.jxbrowser.chromium.ResourceParams;
 import com.teamdev.jxbrowser.chromium.ResourceType;
+import com.teamdev.jxbrowser.chromium.XPathResult;
+import com.teamdev.jxbrowser.chromium.XPathResultType;
+import com.teamdev.jxbrowser.chromium.dom.By;
+import com.teamdev.jxbrowser.chromium.dom.DOMDocument;
+import com.teamdev.jxbrowser.chromium.dom.DOMElement;
+import com.teamdev.jxbrowser.chromium.dom.DOMNode;
+import com.teamdev.jxbrowser.chromium.dom.DOMNodePosition;
+import com.teamdev.jxbrowser.chromium.dom.DOMNodeType;
+import com.teamdev.jxbrowser.chromium.dom.events.DOMEvent;
+import com.teamdev.jxbrowser.chromium.dom.events.DOMEventListener;
+import com.teamdev.jxbrowser.chromium.dom.events.DOMEventType;
 import com.teamdev.jxbrowser.chromium.events.FinishLoadingEvent;
+import com.teamdev.jxbrowser.chromium.events.FrameLoadEvent;
 import com.teamdev.jxbrowser.chromium.events.LoadAdapter;
 import com.teamdev.jxbrowser.chromium.events.ScriptContextAdapter;
 import com.teamdev.jxbrowser.chromium.events.ScriptContextEvent;
@@ -225,10 +237,20 @@ public class BacktestingAppGUIMain {
 		browser.setPreferences(preferences);
 		
 		browser.addLoadListener(new LoadAdapter() {
+			@Override
+			public void onDocumentLoadedInFrame(FrameLoadEvent event) {
+				// TODO Auto-generated method stub
+				super.onDocumentLoadedInFrame(event);
+				
+			}
+			
             @Override
             public void onFinishLoadingFrame(FinishLoadingEvent event) {
                 if (event.isMainFrame()) {
                     //System.out.println("HTML = " + event.getBrowser().getHTML());
+                	
+    	            addElementsToRecomPage(event.getBrowser());
+
                 }
             }
         });
@@ -247,7 +269,7 @@ public class BacktestingAppGUIMain {
 		        
                 JSValue value = window.asObject().getProperty(JS_VAR_NAME_RECOMENDATION_PAGE_DATA);
                 
-		        Logger.log().info("Результат выполнения скрипта: " + value);
+		        Logger.log().info("Результат выполнения скрипта: " + value);			    
 		    }
 		});
 
@@ -265,7 +287,7 @@ public class BacktestingAppGUIMain {
 	                    
 	                    Logger.log().info("Загрузили в страницу \"" + event.getBrowser().getURL() + "\" переменную \"" + 
 	                    		JS_VAR_NAME_RECOMENDATION_PAGE_DATA + "\"");
-	                }
+	                }	                
 	            }
 	    });
 		
@@ -332,6 +354,52 @@ public class BacktestingAppGUIMain {
 		view.setBackground(Color.WHITE);
 
 		return view;
+	}
+	
+	private void addElementsToRecomPage(Browser browser) {
+		DOMDocument document = browser.getDocument();
+
+		DOMElement spyRowEl = document.findElement(By.id("spyRow"));
+		
+		String newTicker = "TLT";
+		String newTickerDivId = newTicker + "Row";
+		
+		String jsElId = "documentJS";
+		
+		if ( spyRowEl != null && document.findElement(By.id(newTickerDivId)) == null ) {
+			DOMElement containerEL = document.findElement(By.id("bootstrapContainer"));
+
+			String spyRowELText = spyRowEl.getInnerHTML();
+			
+			// replace #ticker# to spy
+			spyRowEl.setInnerHTML(spyRowELText.replaceAll("#ticker#", "SPY"));
+			
+			DOMElement element = document.createElement("div");
+			
+			element.setInnerHTML(spyRowELText.replaceAll("#ticker#", newTicker));
+			element.setAttribute("class", "row");
+			element.setAttribute("id", newTickerDivId);
+
+			
+			Logger.log().info("Добавляем к странице элемент с id \"" + newTickerDivId + "\"");
+			Logger.log().info("Текст ниже:" + element.getInnerHTML());
+
+			DOMElement hrEL = document.findElement(By.id("hrId"));
+			containerEL.insertChild(element, hrEL);
+			
+			DOMElement tickerHeaderEl = document.findElement(By.id(newTicker + "Header"));
+			tickerHeaderEl.setTextContent("Данные по активу " + newTicker);
+			
+			DOMElement tickerCalcButtonEl = document.findElement(By.id(newTicker + "Button"));
+			tickerCalcButtonEl.setTextContent("Рассчитать данные по " + newTicker);
+			
+			DOMElement documentJSEl = document.findElement(By.id(jsElId));
+
+			Logger.log().info("Получили элемент с id \"" + jsElId + "\"");
+
+			
+			Logger.log().info("Текст элемента с id \"" + jsElId + "\"" + documentJSEl.getTextContent());
+		}
 	}
 	
 	@Deprecated

@@ -4,12 +4,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import ru.backtesting.stockquotes.TradingPeriod;
+import ru.backtesting.stockquotes.TradingTimeFrame;
 
 public interface FinancialTimeSeriesChartInformation {
 	public String getTicker();
 
-	public TradingPeriod getTradingPeriod();
+	public TradingTimeFrame getTradingPeriod();
 	
 	public List<LocalDateTime> getDates();
 	

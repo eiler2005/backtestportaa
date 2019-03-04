@@ -9,7 +9,7 @@ import org.patriques.output.AlphaVantageException;
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
 import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
 import ru.backtesting.stockquotes.StockQuoteHistory;
-import ru.backtesting.stockquotes.TradingPeriod;
+import ru.backtesting.stockquotes.TradingTimeFrame;
 import ru.backtesting.stockquotes.graphics.base.BaseFinancialTimeSeriesChartInformation;
 import ru.backtesting.stockquotes.graphics.base.FinancialTimeSeriesChartInformation;
 import ru.backtesting.utils.DateUtils;
@@ -31,7 +31,7 @@ public class MarketIndicatorDataSeries extends BaseFinancialTimeSeriesChartInfor
 		super.tooltips = tooltips;
 	}
 	
-	public MarketIndicatorDataSeries(String ticker, MarketIndicatorInterface indicator, String indicatorTitle, int startYear, int endYear, TradingPeriod period) {
+	public MarketIndicatorDataSeries(String ticker, MarketIndicatorInterface indicator, String indicatorTitle, int startYear, int endYear, TradingTimeFrame period) {
 		super();
 		super.ticker = ticker;
 		this.indicator = indicator;
@@ -40,7 +40,7 @@ public class MarketIndicatorDataSeries extends BaseFinancialTimeSeriesChartInfor
 		fillFromStorage(startYear, endYear, period);
 	}
 
-	private void fillFromStorage(int startYear, int endYear, TradingPeriod period) {	
+	private void fillFromStorage(int startYear, int endYear, TradingTimeFrame period) {	
 		int period1 = indicator.getTimePeriod();
 		int period2 = 0;
 		

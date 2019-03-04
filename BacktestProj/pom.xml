@@ -12,6 +12,13 @@
 	<url>https://github.com/eiler2005/backtestportaa</url>
 	<inceptionYear>2018</inceptionYear>
 
+	<repositories>
+		<repository>
+			<id>com.teamdev</id>
+			<url>http://maven.teamdev.com/repository/products</url>
+		</repository>
+	</repositories>
+
 	<developers>
 		<developer>
 			<name>Denis Ermilov</name>
@@ -91,6 +98,12 @@
 			<groupId>eu.verdelhan</groupId>
 			<artifactId>ta4j</artifactId>
 			<version>0.9</version>
+		</dependency>
+		<dependency>
+			<groupId>com.teamdev.jxbrowser</groupId>
+			<artifactId>jxbrowser-cross-platform</artifactId>
+			<type>pom</type>
+			<version>LATEST</version>
 		</dependency>
 	</dependencies>
 </project>
