@@ -30,8 +30,8 @@ import ru.backtesting.stockquotes.graphics.MarketQuoteDataSeries;
 import ru.backtesting.utils.Logger;
 
 public class RecomendationPageJSHelper {
-	private static final String BASE_USA_VOLATILITY_INDEX_TICKER = "VXXB";
-	private static final String BASE_USA_STOCK_INDEX_TICKER = "SPY";
+	public static final String BASE_USA_VOLATILITY_INDEX_TICKER = "VXXB";
+	public static final String BASE_USA_STOCK_INDEX_TICKER = "spy";
 	
 	// private static final String BASE_USA_STOCK_INDEX_TICKER = "TLT";
 

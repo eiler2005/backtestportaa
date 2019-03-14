@@ -1,5 +1,6 @@
 package ru.backtesting.test;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
 
@@ -27,12 +28,14 @@ import tech.tablesaw.plotly.traces.Trace;
 // https://jtablesaw.github.io/tablesaw/userguide/toc
 
 public class TablesawTest {	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		// timeSeriesPlot();
 		
 		// histogramTest();
 		
-		String htmlResult = timeSeriesPlotWithSpikes();
+		String htmlResult = scatterplotWithTwoYAxes();
+		
+		// String htmlResult = timeSeriesPlotWithSpikes();
 		
         System.out.println("html = " + htmlResult);
         
@@ -40,8 +43,9 @@ public class TablesawTest {
 	}
 	
 	
-	public static void scatterplotWithTwoYAxes() throws IOException {
-		Table baseball = Table.read().csv("../data/baseball.csv");
+	public static String scatterplotWithTwoYAxes() throws IOException {
+		Table baseball = Table.read().csv(new File("data/baseball.csv").getAbsolutePath());
+		
         NumberColumn<?> x = baseball.nCol("BA");
         NumberColumn<?> y = baseball.nCol("W");
         NumberColumn<?> y2 = baseball.nCol("SLG");
@@ -67,7 +71,8 @@ public class TablesawTest {
                 .name("Slugging pct.")
                 .build();
         Figure figure = new Figure(layout, trace2, trace);
-        Plot.show(figure);
+        
+        return Page.pageBuilder(figure, "divName").build().asJavascript();
 	}
 	
 	public static String timeSeriesPlotWithSpikes() {

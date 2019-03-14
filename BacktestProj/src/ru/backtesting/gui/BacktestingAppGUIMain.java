@@ -372,7 +372,7 @@ public class BacktestingAppGUIMain {
 			String spyRowELText = spyRowEl.getInnerHTML();
 			
 			// replace #ticker# to spy
-			spyRowEl.setInnerHTML(spyRowELText.replaceAll("#ticker#", "SPY"));
+			spyRowEl.setInnerHTML(spyRowELText.replaceAll("#ticker#", RecomendationPageJSHelper.BASE_USA_STOCK_INDEX_TICKER));
 			
 			DOMElement element = document.createElement("div");
 			
