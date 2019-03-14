@@ -31,8 +31,14 @@ import ru.backtesting.utils.Logger;
 
 public class RecomendationPageJSHelper {
 	public static final String BASE_USA_VOLATILITY_INDEX_TICKER = "VXXB";
+<<<<<<< HEAD
 	public static final String BASE_USA_STOCK_INDEX_TICKER = "SPY";
 	public static final String BASE_USA_LONG_TERM_BOND_TICKER = "TLT";
+=======
+	public static final String BASE_USA_STOCK_INDEX_TICKER = "spy";
+	
+	// private static final String BASE_USA_STOCK_INDEX_TICKER = "TLT";
+>>>>>>> branch 'master' of https://github.com/eiler2005/backtestportaa.git
 
 	// private static final String BASE_USA_STOCK_INDEX_TICKER = "HYG"; // hight yeald bonds
 
