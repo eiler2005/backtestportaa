@@ -30,14 +30,12 @@ import ru.backtesting.stockquotes.graphics.MarketQuoteDataSeries;
 import ru.backtesting.utils.Logger;
 
 public class RecomendationPageJSHelper {
-	private static final String BASE_USA_VOLATILITY_INDEX_TICKER = "VXXB";
-	private static final String BASE_USA_STOCK_INDEX_TICKER = "SPY";
-	
-	// private static final String BASE_USA_STOCK_INDEX_TICKER = "TLT";
+	public static final String BASE_USA_VOLATILITY_INDEX_TICKER = "VXXB";
+	public static final String BASE_USA_STOCK_INDEX_TICKER = "SPY";
+	public static final String BASE_USA_LONG_TERM_BOND_TICKER = "TLT";
 
 	// private static final String BASE_USA_STOCK_INDEX_TICKER = "HYG"; // hight yeald bonds
 
-	
 	private final DatePeriodForGraphics shortTermPeriod = new DatePeriodForGraphics(2018, 2019);
 	private final DatePeriodForGraphics longTermPeriod = new DatePeriodForGraphics(2016, 2019);
 

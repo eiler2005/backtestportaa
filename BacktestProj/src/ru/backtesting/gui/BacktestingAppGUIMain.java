@@ -361,7 +361,7 @@ public class BacktestingAppGUIMain {
 
 		DOMElement spyRowEl = document.findElement(By.id("spyRow"));
 		
-		String newTicker = "TLT";
+		String newTicker = RecomendationPageJSHelper.BASE_USA_LONG_TERM_BOND_TICKER;
 		String newTickerDivId = newTicker + "Row";
 		
 		String jsElId = "documentJS";
@@ -372,7 +372,7 @@ public class BacktestingAppGUIMain {
 			String spyRowELText = spyRowEl.getInnerHTML();
 			
 			// replace #ticker# to spy
-			spyRowEl.setInnerHTML(spyRowELText.replaceAll("#ticker#", "SPY"));
+			spyRowEl.setInnerHTML(spyRowELText.replaceAll("#ticker#", RecomendationPageJSHelper.BASE_USA_STOCK_INDEX_TICKER));
 			
 			DOMElement element = document.createElement("div");
 			
