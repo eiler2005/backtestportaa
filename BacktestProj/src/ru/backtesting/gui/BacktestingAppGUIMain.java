@@ -7,6 +7,7 @@ import java.awt.EventQueue;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -35,6 +36,7 @@ import com.teamdev.jxbrowser.chromium.BrowserPreferences;
 import com.teamdev.jxbrowser.chromium.BrowserType;
 import com.teamdev.jxbrowser.chromium.ContextMenuHandler;
 import com.teamdev.jxbrowser.chromium.ContextMenuParams;
+import com.teamdev.jxbrowser.chromium.InputEventsHandler;
 import com.teamdev.jxbrowser.chromium.JSValue;
 import com.teamdev.jxbrowser.chromium.NetworkService;
 import com.teamdev.jxbrowser.chromium.PluginInfo;
@@ -42,17 +44,9 @@ import com.teamdev.jxbrowser.chromium.PluginManager;
 import com.teamdev.jxbrowser.chromium.ResourceHandler;
 import com.teamdev.jxbrowser.chromium.ResourceParams;
 import com.teamdev.jxbrowser.chromium.ResourceType;
-import com.teamdev.jxbrowser.chromium.XPathResult;
-import com.teamdev.jxbrowser.chromium.XPathResultType;
 import com.teamdev.jxbrowser.chromium.dom.By;
 import com.teamdev.jxbrowser.chromium.dom.DOMDocument;
 import com.teamdev.jxbrowser.chromium.dom.DOMElement;
-import com.teamdev.jxbrowser.chromium.dom.DOMNode;
-import com.teamdev.jxbrowser.chromium.dom.DOMNodePosition;
-import com.teamdev.jxbrowser.chromium.dom.DOMNodeType;
-import com.teamdev.jxbrowser.chromium.dom.events.DOMEvent;
-import com.teamdev.jxbrowser.chromium.dom.events.DOMEventListener;
-import com.teamdev.jxbrowser.chromium.dom.events.DOMEventType;
 import com.teamdev.jxbrowser.chromium.events.FinishLoadingEvent;
 import com.teamdev.jxbrowser.chromium.events.FrameLoadEvent;
 import com.teamdev.jxbrowser.chromium.events.LoadAdapter;
@@ -60,8 +54,8 @@ import com.teamdev.jxbrowser.chromium.events.ScriptContextAdapter;
 import com.teamdev.jxbrowser.chromium.events.ScriptContextEvent;
 import com.teamdev.jxbrowser.chromium.swing.BrowserView;
 
-import ru.backtesting.gui.jshelper.RecomendationPageDataSample;
 import ru.backtesting.gui.jshelper.RecomendationPageJSHelper;
+import ru.backtesting.port.MarketConstants;
 import ru.backtesting.utils.Logger;
 
 public class BacktestingAppGUIMain {
@@ -249,7 +243,7 @@ public class BacktestingAppGUIMain {
                 if (event.isMainFrame()) {
                     //System.out.println("HTML = " + event.getBrowser().getHTML());
                 	
-    	            addElementsToRecomPage(event.getBrowser());
+    	            addElementsToRecomPage(event.getBrowser(), MarketConstants.BASE_USA_STOCK_INDEX_TICKER);
 
                 }
             }
@@ -315,6 +309,27 @@ public class BacktestingAppGUIMain {
 	public BrowserView createMarketInfPageBrowserView(Browser browser) throws IOException {
 		BrowserView view = new BrowserView(browser);
 	        
+		view.setKeyEventsHandler(new InputEventsHandler<KeyEvent>() {
+	            public boolean handle(KeyEvent event) {
+	        		Logger.log().info("handle key event: getKeyCode() - " + event.getKeyCode() + ", isAltDown() - " + event.isAltDown());
+	            	
+	            	if ( event.isAltDown() && event.getKeyCode() == KeyEvent.VK_LEFT ) {
+	            		browser.goBack();
+	            		
+	            		browser.reload();
+	            		return true;
+	            	}
+	            	
+	            	if ( event.isAltDown() && event.getKeyCode() == KeyEvent.VK_RIGHT ) {
+	            		browser.goForward();
+	            		browser.reload();
+	            		return true;
+	            	}
+	            	
+	            	return false;
+	            }
+	        });
+		
 		browser.setContextMenuHandler(new MyContextMenuHandler(view));
 
 		File webDir = new File(Paths.get(".").toFile().getCanonicalPath() + File.separator + WEB_CATALOGUE);
@@ -356,12 +371,12 @@ public class BacktestingAppGUIMain {
 		return view;
 	}
 	
-	private void addElementsToRecomPage(Browser browser) {
+	private void addElementsToRecomPage(Browser browser, String ticker) {
 		DOMDocument document = browser.getDocument();
 
 		DOMElement spyRowEl = document.findElement(By.id("spyRow"));
 		
-		String newTicker = RecomendationPageJSHelper.BASE_USA_LONG_TERM_BOND_TICKER;
+		String newTicker = ticker;
 		String newTickerDivId = newTicker + "Row";
 		
 		String jsElId = "documentJS";
@@ -372,7 +387,7 @@ public class BacktestingAppGUIMain {
 			String spyRowELText = spyRowEl.getInnerHTML();
 			
 			// replace #ticker# to spy
-			spyRowEl.setInnerHTML(spyRowELText.replaceAll("#ticker#", RecomendationPageJSHelper.BASE_USA_STOCK_INDEX_TICKER));
+			spyRowEl.setInnerHTML(spyRowELText.replaceAll("#ticker#", newTicker));
 			
 			DOMElement element = document.createElement("div");
 			

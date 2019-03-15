@@ -21,6 +21,7 @@ import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
 import ru.backtesting.mktindicators.base.MarketIndicatorType;
 import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
 import ru.backtesting.mktindicators.ma.MovingAverageIndicatorSignal;
+import ru.backtesting.port.MarketConstants;
 import ru.backtesting.stockquotes.StockQuote;
 import ru.backtesting.stockquotes.StockQuoteHistory;
 import ru.backtesting.stockquotes.TradingTimeFrame;
@@ -30,22 +31,6 @@ import ru.backtesting.stockquotes.graphics.MarketQuoteDataSeries;
 import ru.backtesting.utils.Logger;
 
 public class RecomendationPageJSHelper {
-	public static final String BASE_USA_VOLATILITY_INDEX_TICKER = "VXXB";
-<<<<<<< HEAD
-	public static final String BASE_USA_STOCK_INDEX_TICKER = "SPY";
-	public static final String BASE_USA_LONG_TERM_BOND_TICKER = "TLT";
-=======
-	public static final String BASE_USA_STOCK_INDEX_TICKER = "spy";
-	
-	// private static final String BASE_USA_STOCK_INDEX_TICKER = "TLT";
->>>>>>> branch 'master' of https://github.com/eiler2005/backtestportaa.git
-
-	// private static final String BASE_USA_STOCK_INDEX_TICKER = "HYG"; // hight yeald bonds
-
-	private final DatePeriodForGraphics shortTermPeriod = new DatePeriodForGraphics(2018, 2019);
-	private final DatePeriodForGraphics longTermPeriod = new DatePeriodForGraphics(2016, 2019);
-
-	
 	private Browser browser;
 	private Map<String, Boolean> isCalcDataForGraphics;
 	
@@ -71,7 +56,7 @@ public class RecomendationPageJSHelper {
 
 					addRSIGraphicsOnPage(browser, ticker);
 
-					addVolatilityGraphicsOnPage(browser, ticker, BASE_USA_VOLATILITY_INDEX_TICKER);
+					addVolatilityGraphicsOnPage(browser, ticker, MarketConstants.BASE_USA_VOLATILITY_INDEX_TICKER);
 
 					addStockIndicatorsTable(browser, ticker);
 
@@ -99,13 +84,13 @@ public class RecomendationPageJSHelper {
 		
 		Logger.log().info("Строим различные Moving Averages и HilbertTrend для тикера \"" + ticker + "\"");
 
-		String tickerMADailyElText = createMAGraphics(ticker, shortTermPeriod.getStartYear(), 
-				shortTermPeriod.getEndYear(), TradingTimeFrame.Daily);
+		String tickerMADailyElText = createMAGraphics(ticker, MarketConstants.shortTermPeriod.getStartYear(), 
+				MarketConstants.shortTermPeriod.getEndYear(), TradingTimeFrame.Daily);
 
 		Logger.log().info("Текст для отображежения графика MA для тикера \"" + ticker + "\" (daily): " + tickerMADailyElText);
 
-		String tickerMAWeeklyElText = createMAGraphics(ticker, longTermPeriod.getStartYear(), 
-				longTermPeriod.getEndYear(), TradingTimeFrame.Weekly);
+		String tickerMAWeeklyElText = createMAGraphics(ticker, MarketConstants.longTermPeriod.getStartYear(), 
+				MarketConstants.longTermPeriod.getEndYear(), TradingTimeFrame.Weekly);
 
 		Logger.log().info("Текст для отображежения графика MA для тикера \"" + ticker +"\" (weekly): " + tickerMAWeeklyElText);
 
@@ -132,13 +117,13 @@ public class RecomendationPageJSHelper {
 
 		Logger.log().info("Строим различные RSI(14- и 100-дневные) для тикера \"" + ticker + "\"");
 		
-		String tickerRSIShortTermGraphElText = createRSIGraphics(ticker, shortTermPeriod.getStartYear(), 
-				shortTermPeriod.getEndYear(), 14, TradingTimeFrame.Daily);
+		String tickerRSIShortTermGraphElText = createRSIGraphics(ticker, MarketConstants.shortTermPeriod.getStartYear(), 
+				MarketConstants.shortTermPeriod.getEndYear(), 14, TradingTimeFrame.Daily);
 
 		Logger.log().info("Текст для отображежения графика RSI(14) для тикера \"" + ticker + "\" (daily): " + tickerRSIShortTermGraphElText);
 
-		String tickerRSILongTermGraphElText = createRSIGraphics(ticker, longTermPeriod.getStartYear(), 
-				longTermPeriod.getEndYear(), 100, TradingTimeFrame.Daily);
+		String tickerRSILongTermGraphElText = createRSIGraphics(ticker, MarketConstants.longTermPeriod.getStartYear(), 
+				MarketConstants.longTermPeriod.getEndYear(), 100, TradingTimeFrame.Daily);
 
 		Logger.log().info("Текст для отображежения графика RSI(100) для тикера \"" + ticker + "\" (weekly): " + tickerRSIShortTermGraphElText);
 
@@ -166,7 +151,7 @@ public class RecomendationPageJSHelper {
 				+ "движения цен на актив с тикером \"" + volatilityTicker + "\"");
 		
 		String volGraphElText = createVolatilityGraphics(baseTicker, volatilityTicker, 
-				TradingTimeFrame.Daily, shortTermPeriod.getStartYear(), shortTermPeriod.getEndYear());
+				TradingTimeFrame.Daily, MarketConstants.shortTermPeriod.getStartYear(), MarketConstants.shortTermPeriod.getEndYear());
 			
 		Logger.log().info("Текст для отображежения графика движения цен на актив с тикером \"" + 
 				volatilityTicker + "\"" + volGraphElText);
@@ -190,7 +175,7 @@ public class RecomendationPageJSHelper {
 		
 		StockQuoteHistory stockStorage = StockQuoteHistory.storage();
 		
-		LocalDateTime tradingDay = stockStorage.getLastTradingDayInYear(ticker, TradingTimeFrame.Daily, shortTermPeriod.getEndYear());
+		LocalDateTime tradingDay = stockStorage.getLastTradingDayInYear(ticker, TradingTimeFrame.Daily, MarketConstants.shortTermPeriod.getEndYear());
 		
 		Logger.log().info("Получили ближайший торговый день для тикера \"" + ticker + "\": " + tradingDay);
 
@@ -431,23 +416,5 @@ public class RecomendationPageJSHelper {
 	
 	private double percent(double part, double total) {
 		return (part - total) / total * 100.0d;
-	}
-	
-	private final class DatePeriodForGraphics {
-		private int startYear;
-		private int endYear;
-		
-		private DatePeriodForGraphics(int startYear, int endYear) {
-			super();
-			this.startYear = startYear;
-			this.endYear = endYear;
-		}
-		
-		public int getStartYear() {
-			return startYear;
-		}
-		public int getEndYear() {
-			return endYear;
-		}
 	}
 }
