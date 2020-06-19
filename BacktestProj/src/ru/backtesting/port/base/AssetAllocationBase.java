@@ -1,10 +1,10 @@
-package ru.backtesting.port;
+package ru.backtesting.port.base;
 
-public class AssetAllocation {
+public class AssetAllocationBase {
 	private String ticker;
 	private double allocPercent;
 	
-	public AssetAllocation(String ticker, double allocation) {
+	public AssetAllocationBase(String ticker, double allocation) {
 		super();
 		this.ticker = ticker;
 		this.allocPercent = allocation;

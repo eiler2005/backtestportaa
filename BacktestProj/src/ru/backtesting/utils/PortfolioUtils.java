@@ -5,19 +5,19 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
-import ru.backtesting.port.AssetAllocation;
 import ru.backtesting.port.Portfolio;
 import ru.backtesting.port.PositionInformation;
+import ru.backtesting.port.base.AssetAllocationBase;
 import ru.backtesting.stockquotes.StockQuoteHistory;
 import ru.backtesting.stockquotes.TradingTimeFrame;
 
 public class PortfolioUtils {
-	public static double buyPortfolio(List<PositionInformation> positions, List<AssetAllocation> assetsAllocation, TradingTimeFrame period, double moneyAmount, boolean dividends) {
+	public static double buyPortfolio1(List<PositionInformation> positions, AssetAllocationBase assetsAllocation, TradingTimeFrame period, double moneyAmount) {
 		double price = 0;
 				
 		for (PositionInformation position : positions) {
 			String ticker = position.getTicker();
-			double currentQuote = StockQuoteHistory.storage().getQuoteValueByDate(ticker, period, position.getTime(), dividends);
+			double currentQuote = StockQuoteHistory.storage().getQuoteByDate(ticker, period, position.getTime()).getClose();
 								
 			double quantity = calculateQuantityStocks(ticker, currentQuote, moneyAmount, assetsAllocation);
 			
@@ -35,12 +35,8 @@ public class PortfolioUtils {
 	}
 	
 	public static double calculateQuantityStocks(String ticker, double tickerQuote, 
-			double portfolioBalance, List<AssetAllocation> assetsAllocation) {
-		for (AssetAllocation stock : assetsAllocation)
-			if (stock.getTicker().equalsIgnoreCase(ticker) )
-				return (((double)stock.getAllocationPercent()/100)*portfolioBalance/tickerQuote);
-		
-		throw new RuntimeException("В портфеле нет актива с тикером:" + ticker);
+			double portfolioBalance, AssetAllocationBase assetsAlloc) {
+		return (((double)assetsAlloc.getAllocationPercent()/100)*portfolioBalance/tickerQuote);		
 	}
 	
 	public static double calculateAllPositionsBalance(List<PositionInformation> positions) {
@@ -52,7 +48,7 @@ public class PortfolioUtils {
 		return sum;
 	}
 	
-	public static double calculateAllPositionsBalance(List<PositionInformation> positions, TradingTimeFrame period, LocalDateTime date, boolean reinvestDividends, boolean logging) {
+	public static double calculateAllPositionsBalance(List<PositionInformation> positions, TradingTimeFrame period, LocalDateTime date, boolean logging) {
 		double sum = 0;
 		
 		for(PositionInformation pos : positions) {
@@ -63,7 +59,7 @@ public class PortfolioUtils {
 					Logger.log().info("Позиция [" + pos.getTicker() + "] лотов [" + Logger.log().doubleAsString(pos.getQuantity()) + "], цена: " + Logger.log().doubleAsString(pos.getPrice()));
 			}
 			else {
-				double quoteValue = StockQuoteHistory.storage().getQuoteValueByDate(pos.getTicker(), period, date, reinvestDividends);
+				double quoteValue = StockQuoteHistory.storage().getQuoteByDate(pos.getTicker(), period, date).getClose();
 				sum += pos.getQuantity()*quoteValue;
 				
 				if (logging)
@@ -75,8 +71,13 @@ public class PortfolioUtils {
 		return sum;
 	}
 	
+	
+	
 	public static boolean isHoldInPortfolio(List<MarketIndicatorInterface> timingSignals, String ticker, TradingTimeFrame period, LocalDateTime date) {
 		boolean holdInPort = true;
+		
+		if ( ticker.equals(Portfolio.CASH_TICKER) )
+			return true;
 		
 		if ( timingSignals != null && timingSignals.size() != 0 ) {
 			
@@ -85,7 +86,7 @@ public class PortfolioUtils {
 				
 				Logger.log().info("Для позиции портфеля с тикером " + ticker + " и датой " + date + 
 						" сигнал на покупку/продажу равен: " + result + ", цена акции: " + 
-						StockQuoteHistory.storage().getQuoteValueByDate(ticker, period, date, false));
+						StockQuoteHistory.storage().getQuoteByDate(ticker, period, date).getClose());
 				
 				if (result == -1 )
 				    holdInPort = false;
@@ -103,11 +104,11 @@ public class PortfolioUtils {
 
 	public static double CAGRInPercent(double beginningBalance, double endingBalance, LocalDate beginningDate, LocalDate endingDate) {		
 		long days = DateUtils.duration(beginningDate, endingDate).toDays();
-
-		return CAGRInPercent(beginningBalance, endingBalance, (double) days / 365);
+		
+		return CAGRInPercent(beginningBalance, endingBalance, (double)( days / 365));
 	}
 	
-	public static double CAGRInPercent(double beginningBalance, double endingBalance, double years) {
+	public static double CAGRInPercent(double beginningBalance, double endingBalance, double years) {		
 		return (Math.pow(endingBalance/beginningBalance, 1 / years) - 1)*100;
 	}
 }

@@ -1,10 +1,10 @@
 package ru.backtesting.rebalancing;
 
-public class RebalancingType {
+public class TimingModelInf {
 	private Frequency frequency;
-	private RebalancingMethod method;
+	private TimingModelType method;
 	
-	public RebalancingType(Frequency frequency, RebalancingMethod method) {
+	public TimingModelInf(Frequency frequency, TimingModelType method) {
 		super();
 		this.frequency = frequency;
 		this.method = method;
@@ -14,7 +14,7 @@ public class RebalancingType {
 		return frequency;
 	}
 
-	public RebalancingMethod getRebalMethod() {
+	public TimingModelType getMethod() {
 		return method;
 	}
 

@@ -16,7 +16,7 @@ public class StockIndicatorsUtils {
 	public static int haveSMASignal(LocalDateTime date, String ticker, int timePeriod, TradingTimeFrame period) {
 		double smaValue = MarketIndicatorsHistory.storage().findIndicatorValue(ticker, timePeriod, date, MarketIndicatorType.SMA_IND, period);
 		
-		double quote = StockQuoteHistory.storage().getQuoteValueByDate(ticker, period, date, false);
+		double quote = StockQuoteHistory.storage().getQuoteByDate(ticker, period, date).getClose();
 		
 		double addPercent = 3.0*quote / 100;
 		

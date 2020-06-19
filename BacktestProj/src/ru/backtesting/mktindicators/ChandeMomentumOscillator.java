@@ -3,6 +3,8 @@ package ru.backtesting.mktindicators;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
 import ru.backtesting.mktindicators.base.MarketIndicatorType;
 import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
@@ -91,5 +93,11 @@ public class ChandeMomentumOscillator implements MarketIndicatorInterface {
 	@Override
 	public TradingTimeFrame getInterval() {
 		return interval;
+	}
+	
+
+	@Override
+	public double getIndValue() {
+		throw new NotImplementedException("Метод еще не реализован для индикатора " + getMarketIndType());
 	}
 }

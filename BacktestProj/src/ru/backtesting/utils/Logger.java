@@ -1,20 +1,28 @@
 package ru.backtesting.utils;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
+import java.util.Properties;
+
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.ConfigurationSource;
+import org.apache.logging.log4j.core.config.xml.XmlConfiguration;
 
 import tech.tablesaw.api.DateTimeColumn;
 import tech.tablesaw.api.DoubleColumn;
 import tech.tablesaw.api.Table;
 import tech.tablesaw.columns.Column;
 
-public class Logger {
+public class Logger {		
+	final static org.apache.logging.log4j.Logger logger4j = LoggerContext.getContext().getLogger("PortfolioBacktest");	
+	
     public static final DecimalFormat DOUBLE_FORMAT = new DecimalFormat("0.00");;
     public static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     public static final DateTimeFormatter DATE_FORMAT_SIMPLE = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -27,8 +35,25 @@ public class Logger {
 
     private Logger() {
     	try {
+        	Properties props = System.getProperties();
+        	
+        	String log4ConfigFilePath = props.getProperty("user.dir") + "\\resources\\log4j.xml";
+        	
+        	System.out.println("Current log4j config file path is " + log4ConfigFilePath);
+
+        	ConfigurationSource source = new ConfigurationSource(new FileInputStream(log4ConfigFilePath));
+        	XmlConfiguration xmlConfig = new XmlConfiguration(LoggerContext.getContext(), source);
+        	
+        	LoggerContext.getContext().setConfiguration(xmlConfig);
+        	
+        	LoggerContext.getContext().start();
+    		
 			out = new PrintStream(System.out, true, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
     }
@@ -49,11 +74,17 @@ public class Logger {
 	}
 	
 	public void info(String info) {
-		out.println("[" + DATE_FORMAT_FOR_LOG.format(Calendar.getInstance().getTime()) + "] " + info);
+		logger4j.debug(info);
+
+		// logger4j.debug("[" + DATE_FORMAT_FOR_LOG.format(Calendar.getInstance().getTime()) + "] " + info);
+	}
+	
+	public void trace(String info) {
+		logger4j.trace(info);
 	}
 	
 	public void error(String info) {
-		out.println("ERROR[" + DATE_FORMAT_FOR_LOG.format(Calendar.getInstance().getTime()) + "] " + info);
+		logger4j.error(info);
 	}
 	
 	public static synchronized void setTableFormatter(Table table) {

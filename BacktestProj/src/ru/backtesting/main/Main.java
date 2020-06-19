@@ -52,7 +52,7 @@ https://github.com/wilsonfreitas/awesome-quant#java
 public class Main {
 	
 	public static void main(String[] args) {
-		TimeSeriesResponse response = StockConnector.weekly("SPY");
+		TimeSeriesResponse response = StockConnector.weekly("SPY", true);
 		
 	    Map<String, String> metaData = response.getMetaData();
 	    System.out.println("Information: " + metaData.get("1. Information"));

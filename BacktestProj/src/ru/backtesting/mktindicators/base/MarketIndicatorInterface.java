@@ -10,4 +10,5 @@ public interface MarketIndicatorInterface {
 	public int getTimePeriod();
 	public int getAdditionalTimePeriod();
 	public TradingTimeFrame getInterval();
+	public double getIndValue();
 }

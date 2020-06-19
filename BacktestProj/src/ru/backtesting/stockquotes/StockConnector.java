@@ -12,7 +12,6 @@ import org.patriques.input.technicalindicators.SeriesType;
 import org.patriques.input.technicalindicators.TimePeriod;
 import org.patriques.output.AlphaVantageException;
 import org.patriques.output.technicalindicators.TechnicalIndicatorResponse;
-import org.patriques.output.timeseries.Daily;
 import org.patriques.output.timeseries.TimeSeriesResponse;
 
 import ru.backtesting.utils.Logger;
@@ -32,13 +31,16 @@ public class StockConnector {
 	private static HashMap<String, AlphaVantageConnector> connPool;
 
 	
-	public static Daily daily(String ticker) {
+	public static TimeSeriesResponse daily(String ticker, boolean dividens) {
 		fullConnCount++;
 		
 		Logger.log().info("Использую подключение к AlphaVantage типа full, счетчик вызовов: " + fullConnCount);
 		
 		try {
-			return new TimeSeries(fullConn()).daily(ticker);
+			if ( dividens )
+				return new TimeSeries(fullConn()).dailyAdjusted(ticker);
+			else
+				return new TimeSeries(fullConn()).daily(ticker);
 		}
 		catch (AlphaVantageException e) {
 			e.printStackTrace();
@@ -52,9 +54,12 @@ public class StockConnector {
 		}
 	}
 	
-	public static TimeSeriesResponse weekly(String ticker) {	
+	public static TimeSeriesResponse weekly(String ticker, boolean dividens) {	
 		try {
-			return new TimeSeries(connFromPool()).weekly(ticker);
+			if ( dividens )
+				return new TimeSeries(fullConn()).weeklyAdjusted(ticker);
+			else
+				return new TimeSeries(fullConn()).weekly(ticker);
 		}
 		catch (AlphaVantageException e) {
 			e.printStackTrace();
@@ -68,10 +73,12 @@ public class StockConnector {
 		}
 	}
 	
-	public static TimeSeriesResponse monthly(String ticker) {		
+	public static TimeSeriesResponse monthly(String ticker, boolean dividens) {		
 		try {
-			return new TimeSeries(connFromPool()).monthly(ticker);
-		}
+			if ( dividens )
+				return new TimeSeries(fullConn()).monthlyAdjusted(ticker);
+			else
+				return new TimeSeries(fullConn()).monthly(ticker);		}
 		catch (AlphaVantageException e) {
 			e.printStackTrace();
 			
@@ -122,6 +129,23 @@ public class StockConnector {
 	public static TechnicalIndicatorResponse ema(String symbol, Interval interval, TimePeriod timePeriod, SeriesType seriesType) {
 		try {
 			return new TechnicalIndicators(connFromPool()).ema(symbol, interval, timePeriod, seriesType);
+		}
+		catch (AlphaVantageException e) {
+			e.printStackTrace();
+			
+			Logger.log().error(e.getLocalizedMessage());
+			
+			throw e;
+		}
+		finally {
+			Logger.log().info("Данные ema[" + symbol + ", " + interval + ", " + timePeriod + ", " + seriesType + 
+					"] c помощью подключения к AlphaVantage из пула получены");
+		}	
+	}
+	
+	public static TechnicalIndicatorResponse kama(String symbol, Interval interval, TimePeriod timePeriod, SeriesType seriesType) {
+		try {
+			return new TechnicalIndicators(connFromPool()).kama(symbol, interval, timePeriod, seriesType);
 		}
 		catch (AlphaVantageException e) {
 			e.printStackTrace();

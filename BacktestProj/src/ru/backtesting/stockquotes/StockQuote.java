@@ -11,9 +11,9 @@ public class StockQuote {
 	private LocalDateTime time;
 	private double dividentAmount;
 	private double adjustedClose;
-
+	private boolean dividends;
 	
-	public StockQuote(String ticker, LocalDateTime time, double open, double close, double adjustedClose, double high, double low, double dividentAmount) {
+	public StockQuote(String ticker, LocalDateTime time, double open, double close, double adjustedClose, double high, double low, double dividentAmount, boolean dividends) {
 		super();
 		this.ticker = ticker;
 		this.open = open;
@@ -23,6 +23,7 @@ public class StockQuote {
 		this.low = low;
 		this.time = time;
 		this.dividentAmount = dividentAmount;
+		this.dividends = dividends;
 	}
 	
 	public LocalDateTime getTime() {
@@ -36,7 +37,10 @@ public class StockQuote {
 		return open;
 	}
 	public double getClose() {
-		return close;
+		if ( dividends )
+			return adjustedClose;
+		else
+			return close;
 	}
 	public double getHigh() {
 		return high;
@@ -44,13 +48,17 @@ public class StockQuote {
 	public double getLow() {
 		return low;
 	}
+	
+	public double getAdjustedClose() {
+		return adjustedClose;
+	}
 
 	public double getDividentAmount() {
 		return dividentAmount;
 	}
 	
-	public double getAdjustedClose() {
-		return adjustedClose;
+	public boolean isDividends() {
+		return dividends;
 	}
 
 	@Override

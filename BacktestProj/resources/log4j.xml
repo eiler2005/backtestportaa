@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Configuration status="warn">
+	<Appenders>
+		<RollingFile name="fileLogger"
+			fileName="logs/backtest-info-${date:yyyy-MM-dd_HH_mm}.log"
+			filePattern="logs/backtest-info-%d{yyyy-MM-dd_HH_mm}.log">
+			<PatternLayout>
+				<pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</pattern>
+			</PatternLayout>
+			<Policies>
+				<SizeBasedTriggeringPolicy size="10 MB"/>
+			</Policies>
+		</RollingFile>
+
+		<Console name="console" target="SYSTEM_OUT">
+			<PatternLayout
+				pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n" />
+		</Console>
+	</Appenders>
+    <Loggers>
+        <Logger name="PortfolioBacktest" level="trace" additivity="true">
+            <appender-ref ref="fileLogger" level="trace" />
+        </Logger>
+        <Root level="trace" additivity="true">
+            <appender-ref ref="console" />
+        </Root>
+        </Loggers>
+</Configuration>

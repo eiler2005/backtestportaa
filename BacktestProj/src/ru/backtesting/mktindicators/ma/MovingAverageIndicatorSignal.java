@@ -5,8 +5,8 @@ import java.time.LocalDateTime;
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
 import ru.backtesting.mktindicators.base.MarketIndicatorType;
 import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
-import ru.backtesting.stockquotes.TradingTimeFrame;
 import ru.backtesting.stockquotes.StockQuoteHistory;
+import ru.backtesting.stockquotes.TradingTimeFrame;
 import ru.backtesting.utils.Logger;
 
 public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
@@ -14,6 +14,8 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 	private MarketIndicatorType maType;
 	private double deviationPercent;
 	private TradingTimeFrame interval;
+	
+	private double maValue = 0, additionalMaValue = 0;
 	
 	public MovingAverageIndicatorSignal(int timePeriod1, int timePeriod2, MarketIndicatorType maType, TradingTimeFrame interval) {
 		super();
@@ -61,6 +63,9 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 			Logger.log().info(getMarketIndType() + "[" + timePeriod1 + "] on date [" + date + "]: ticker [" + ticker + "], " + getMarketIndType() + " = " + Logger.log().doubleAsString(value1));
 			Logger.log().info(getMarketIndType() + "[" + timePeriod2 + "] on date [" + date + "]: ticker [" + ticker + "], " + getMarketIndType() +" = " + Logger.log().doubleAsString(value2));
 
+			maValue = value1;
+			additionalMaValue = value2;
+			
 			// for example, sma50 > sma200 - buy signal
 			if ( value1  > (value2 + value1*deviationPercent) ) {
 				if (timePeriod1 == 50 && timePeriod2 == 200 )
@@ -80,13 +85,15 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 		else {
 			double maValue = MarketIndicatorsHistory.storage().findIndicatorValue(ticker, timePeriod1, date, getMarketIndType(), getInterval());
 			
-			double quote = StockQuoteHistory.storage().getQuoteValueByDate(ticker, getInterval(), date, false);
+			double quote = StockQuoteHistory.storage().getQuoteByDate(ticker, getInterval(), date).getClose();
 			
 			Logger.log().info(getMarketIndType() + "[" + timePeriod1 + "] on date [" + date + "]: ticker [" + ticker + "] quote = " + Logger.log().doubleAsString(quote) 
 					+ ", " + getMarketIndType() + " = " + Logger.log().doubleAsString(maValue));
 			
+			this.maValue = maValue;
+			
 			// buy signal
-			if ( quote > (maValue + maValue*deviationPercent) )
+			if ( quote >= (maValue + maValue*deviationPercent) )
 				return 1;
 			// sell signal
 			if (quote < (maValue - maValue*deviationPercent) )
@@ -95,6 +102,8 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 				return 0;
 		}		
 	}
+	
+	
 
 	@Override
 	public MarketIndicatorType getMarketIndType() {
@@ -104,8 +113,10 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 			return MarketIndicatorType.EMA_IND;
 		else if ( maType.equals(MarketIndicatorType.WMA_IND))
 			return MarketIndicatorType.WMA_IND;
+		else if ( maType.equals(MarketIndicatorType.KaufmanAdaptiveMA_IND))
+			return MarketIndicatorType.KaufmanAdaptiveMA_IND;
 		
-		throw new RuntimeException("Некорретно указан тип для индикатора типа \"скользящая средняя\", indicator type = " 
+		throw new IllegalArgumentException("Некорретно указан тип для индикатора типа \"скользящая средняя\", indicator type = " 
 				+ maType + ". Проверьте корректность указания типа индикатора!");
 	}
 	
@@ -114,10 +125,23 @@ public class MovingAverageIndicatorSignal implements MarketIndicatorInterface {
 		return timePeriod1;
 	}
 
+	public boolean havingAdditaionalTimePeriod() {
+		return timePeriod2 != 0;
+	}
+	
+	@Override
+	public double getIndValue() {
+		return maValue;
+	}
+	
+	public double getAdditionalMaValue() {
+		return additionalMaValue;
+	}
+
 	@Override
 	public int getAdditionalTimePeriod() {
 		if ( timePeriod2 == 0)
-			throw new UnsupportedOperationException();
+			throw new UnsupportedOperationException("Не задан второй для период moving average");
 		else
 			return timePeriod2;
 	}

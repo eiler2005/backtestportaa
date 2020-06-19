@@ -63,6 +63,8 @@ public class MarketIndicatorsHistory {
 					resp = StockConnector.ema(ticker, invervalAV, TimePeriod.of(timePeriod), SeriesType.CLOSE);
 				} else if (type.equals(MarketIndicatorType.WMA_IND)) {
 					resp = StockConnector.wma(ticker, invervalAV, TimePeriod.of(timePeriod), SeriesType.CLOSE);
+				} else if (type.equals(MarketIndicatorType.KaufmanAdaptiveMA_IND)) {
+					resp = StockConnector.kama(ticker, invervalAV, TimePeriod.of(timePeriod), SeriesType.CLOSE);
 				} else if (type.equals(MarketIndicatorType.RSI_OSC)) {
 					resp = StockConnector.rsi(ticker, invervalAV, TimePeriod.of(timePeriod), SeriesType.CLOSE);
 				} else if (type.equals(MarketIndicatorType.CHANDE_MOMENTUM_OSC)) {

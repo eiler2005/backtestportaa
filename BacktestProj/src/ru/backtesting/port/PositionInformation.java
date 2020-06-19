@@ -1,6 +1,10 @@
 package ru.backtesting.port;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import ru.backtesting.utils.Logger;
 
@@ -48,5 +52,14 @@ public class PositionInformation {
 	public String toString() {
 		return "PositionInformation [ticker=" + ticker + ", time=" + time + ", quantity=" + Logger.log().doubleAsString(quantity) + ", price="
 				+ Logger.log().doubleAsString(price) + "]";
+	}
+	
+	public static List<String> getTickers(List<PositionInformation> positions) {
+		List<String> posList = new ArrayList<String>();
+		
+		for (PositionInformation pos : positions)
+			posList.add(pos.getTicker());
+		
+		return posList;
 	}
 }

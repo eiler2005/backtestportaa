@@ -96,6 +96,7 @@ $container-max-widths: (
 </style>
 
 <script type="text/javascript">
+		  // sample function
           function sendPortRecomendationData() {        	  
             var ticker = stockForm.elements['ticker'].value;           
             var period = stockForm.elements['period'].value;
@@ -122,6 +123,16 @@ $container-max-widths: (
           
           function spyVXXDataClick()  {
         	  // alert("hello spy vxx");
+          }
+          
+          function clickCalcAllInfForUserTickerBtn() {
+        	  var ticker = document.getElementById("inputUserTickerID").value;
+        	  var period = document.getElementById("inputUserPeriodID").value;
+        	  
+        	  if (ticker == "")
+        	  	alert("Не указан ticker");
+        	  else
+        	  	recomendationPageData.loadUserGraphics(ticker);
           }
 </script>
 
@@ -353,7 +364,8 @@ $container-max-widths: (
 		<hr class="hr" id="hrId">
 
 		<!-- user ticker information begin -->
-		<div class="row">
+		<!-- ///////////////////////////////// -->
+		<div class="row" id="userTickerRowId">
 			<div class="col">
 				<div class="row">
 					<div class="col-8">
@@ -379,17 +391,17 @@ $container-max-widths: (
 								<div class="panel-body">
 									<div class="form-inline">
 										<div class="form-group col">
-											<button type="submit" class="btn btn-primary">Пересчитать</button>
+											<button type="submit" class="btn btn-primary" onclick="clickCalcAllInfForUserTickerBtn()" id="userTickerButton">Пересчитать</button>
 										</div>
 
 										<div class="form-group col">
 											<label for="inputTicker" style="padding-left: 7px; padding-right: 7px">Поле для ввода тикера:</label> <input
-												type="text" class="form-control" id="inputTickerID"
-												placeholder="inputTicker">
+												type="text" class="form-control" id="inputUserTickerID"
+												placeholder="inputUserTicker">
 										</div>
 										<div class="form-group col">
 											<label for="inputPeriod" style="padding-left: 7px; padding-right: 7px">Период: Daily/Weekly</label> <select
-												id="inputPeriodID" class="form-control">
+												id="inputUserPeriodID" class="form-control">
 												<option selected>Daily</option>
 												<option selected>Weekly</option>
 											</select>
@@ -403,13 +415,13 @@ $container-max-widths: (
 												<div class="panel-body">
 													<div class="row-graphic-stock-data">
 														<label class="graphic-label">Дневной график</label>
-														<div class="row-graphic-stock-data">Здесь будет
-															график</div>
+														<div class="row-graphic-stock-data"
+															id="userTickerMADailyGraph">Здесь будет график</div>
 													</div>
 													<div class="row-graphic-stock-data">
 														<label class="graphic-label">Недельный график</label>
-														<div class="row-graphic-stock-data">Здесь будет
-															график</div>
+														<div class="row-graphic-stock-data"
+															id="userTickerMAWeeklyGraph">Здесь будет график</div>
 													</div>
 
 												</div>
@@ -420,59 +432,119 @@ $container-max-widths: (
 												<div class="panel-body">
 													<div class="row-graphic-stock-data">
 														<label class="graphic-label">Дневной график</label>
-														<div class="row-graphic-stock-data">Здесь будет
-															график</div>
+														<div class="row-graphic-stock-data"
+															id="userRSIShortTermGraph">Здесь будет график</div>
 													</div>
 													<div class="row-graphic-stock-data">
 														<label class="graphic-label">Недельный график</label>
-														<div class="row-graphic-stock-data">Здесь будет
-															график</div>
+														<div class="row-graphic-stock-data"
+															id="userRSILongTermGraph">Здесь будет график</div>
 													</div>
 												</div>
 												<div class="panel panel-info">
 													<div class="panel-heading">
-														<h5 style="text-align: left;">Данные по активу #SPY#
-															- индикаторы и осцилляторы в табличном виде</h5>
+														<h5 style="text-align: left;" id="userTickerDataHeader">Данные
+															по активу #SPY# - индикаторы и осцилляторы в табличном
+															виде</h5>
 													</div>
 													<div class="panel-body">
-														<table class="table">
+														<span class="table-recomendation" id="userTickerPriceValue">Last
+															Price (date): price</span>
+														<table class="table table-hover">
 															<thead>
 																<tr>
-																	<th></th>
-																	<th>100D SMA</th>
-																	<th>50D SMA</th>
+																	<th class="success">Период (daily/weekly)</th>
+																	<th class="success">Simple</th>
+																	<th class="success">Weighed</th>
+																	<th class="success">Last Price vs MA (or Trend line)</th>
+																	<th class="success">Last Price vs WMA (or Trend line)</th>
 																</tr>
 															</thead>
-															<tbody>
+															<tbody id="userTickerRecomIndicatorsTableBody">
 																<tr>
-																	<td>SMA Default</td>
-																	<td>Defaultson</td>
-																	<td>def@somemail.com</td>
+																	<td>MA 50 (daily)</td>
+																	<td>sma <br>
+																	<span class="indBuy">покупать</span></td>
+																	<td>wma<br>
+																	<span class="indSell">продавать</span></td>
+																	<td>last price vs ma</td>
+																	<td>last price vs wma</td>
 																</tr>
-																<tr class="success">
-																	<td>Last Price vs SMA Success</td>
-																	<td>Doe</td>
-																	<td>john@example.com</td>
+																<tr>
+																	<td>MA 200 (daily)</td>
+																	<td>sma</td>
+																	<td>wma</td>
+																	<td>last price vs ma</td>
+																	<td>last price vs wma</td>
 																</tr>
-																<tr class="danger">
-																	<td>Danger</td>
-																	<td>Moe</td>
-																	<td>mary@example.com</td>
+																<tr>
+																	<td>Trend Line (daily)</td>
+																	<td>tl</td>
+																	<td>tl</td>
+																	<td>last price vs ma</td>
+																	<td>last price vs wma</td>
 																</tr>
-																<tr class="info">
-																	<td>Info</td>
-																	<td>Dooley</td>
-																	<td>july@example.com</td>
+																<tr>
+																	<td>MA 50 (weekly)</td>
+																	<td>sma</td>
+																	<td>wma</td>
+																	<td>last price vs ma</td>
+																	<td>last price vs wma</td>
+																</tr>
+																<tr>
+																	<td>MA 200 (weekly)</td>
+																	<td>sma</td>
+																	<td>wma</td>
+																	<td>last price vs ma</td>
+																	<td>last price vs wma</td>
+																</tr>
+																<tr>
+																	<td>Trend Line (weekly)</td>
+																	<td>tl</td>
+																	<td>tl</td>
+																	<td>last price vs ma</td>
+																	<td>last price vs wma</td>
 																</tr>
 															</tbody>
 														</table>
+														<div>
+															<span id="userTickerRecomIndicatorsCalc">Покупать: 12 Продавать: 0 </span> <br> <span
+																class="table-recomendation" id="#userTickerIndicatorsFinalRecom">Рекомендация: 
+															<spanstyle="color: green">покупать или держать</span></span>
+														</div>
+														<label class="table-label">Средне- и долгосрочные rsi</label>
+														<table class="table table-hover">
+															<thead>
+																<tr>
+																	<th class="success">Период (daily)</th>
+																	<th class="success">Значение осциллятора RSI</th>
+																</tr>
+															</thead>
+															<tbody id="#ticker#RsiOscillatorTableBody">
+																<tr>
+																	<td>rsi (14)</td>
+																	<td>20 <br>
+																	<span class="indBuy">перепродан</span></td>
+																</tr>
+																<tr>
+																	<td>rsi (100)</td>
+																	<td>75 <br>
+																	<span class="indSell">перекуплен</span></td>
+																</tr>
+															</tbody>
+														</table>
+														<div>
+															<span class="table-recomendation"
+																id="#ticker#RSIIndicatorsFinalRecom">Рекомендация:
+																<span style="color: green">покупать или держать</span>
+															</span>
+														</div>
 													</div>
 												</div>
 												<div class="panel panel-default">
 													<!-- panel-succes or panel-danger -->
 													<div class="panel-heading">
-														<h5 style="text-align: left;">Рекомендации по активу
-															#SPY#</h5>
+														<h5 style="text-align: left;">Рекомендации по активу #SPY#</h5>
 													</div>
 													<div class="panel-body">Покупать, продавать или
 														держать в портфеле</div>

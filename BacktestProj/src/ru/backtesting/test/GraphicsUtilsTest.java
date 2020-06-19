@@ -48,7 +48,7 @@ public class GraphicsUtilsTest {
 	}
 	
 	private static String performanceTest2() {
-		StockQuoteHistory.storage().fillQuotesData("SPY", TradingTimeFrame.Daily);
+		StockQuoteHistory.storage().loadQuotesData("SPY", TradingTimeFrame.Daily, false);
 
 		String pageHtml1 = createMAGraphics("SPY", 2018, 2019, TradingTimeFrame.Daily);
 
@@ -237,7 +237,7 @@ public class GraphicsUtilsTest {
 	}
 	
 	private static String simpleTestWithSmallChart(String ticker, int startYear, int endYear, TradingTimeFrame period) {
-		StockQuoteHistory.storage().fillQuotesData(ticker, period);
+		StockQuoteHistory.storage().loadQuotesData(ticker, period, false);
 		
 		MarketQuoteDataSeries quotesDataSeries = new MarketQuoteDataSeries(ticker, startYear, endYear, period, false);
 		

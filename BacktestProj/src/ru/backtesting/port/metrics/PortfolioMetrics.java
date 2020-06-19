@@ -15,6 +15,7 @@ import com.google.common.primitives.Longs;
 import ru.backtesting.port.Portfolio;
 import ru.backtesting.port.PositionInformation;
 import ru.backtesting.stockquotes.StockQuoteHistory;
+import ru.backtesting.stockquotes.TradingTimeFrame;
 import ru.backtesting.utils.DateUtils;
 import ru.backtesting.utils.Logger;
 import ru.backtesting.utils.PortfolioUtils;
@@ -51,18 +52,20 @@ public class PortfolioMetrics {
 		int startYear = portfolio.getStartYear();
 		int endYear = portfolio.getEndYear();
 
-		Set<String> allTickers = portfolio.getAllTickersInPort();
+		List<String> allTickers = portfolio.getTimingModel().getPortTickers();
 		
 		List<PositionInformation> rebalancedPositions = null;
 				
 		List<LocalDateTime> datesColumnData = new ArrayList<LocalDateTime>();
 		List<Number> balanceOnDateColumnData = new ArrayList<Number>();
 		
+		TradingTimeFrame timeFrame = portfolio.getTimingModel().getTimeFrame();
+		
 		for (LocalDate locDate : DateUtils.getDatesBetweenUsingJava8(LocalDate.parse(startYear + "-01-01"), 
 				LocalDate.parse(endYear + "-12-31"))) {	
 			LocalDateTime date = DateUtils.asLocalDateTime(DateUtils.asDate(locDate));
 						
-			boolean isHaveStockData = StockQuoteHistory.storage().containsDataInStorageOnDate(allTickers, portfolio.getPeriod(), date);
+			boolean isHaveStockData = StockQuoteHistory.storage().containsDataInStorageOnDate(allTickers, timeFrame, date);
 			
 			// начинаем обход всех дат, на которые есть котировки по тикерам портфеля
 			if ( isHaveStockData && getPostionOnDateDay(positions, date) != null ) {
@@ -71,7 +74,7 @@ public class PortfolioMetrics {
 				
 				List<PositionInformation> curPositions = positions.get(getPostionOnDateDay(positions, date));
 					
-				double balance = PortfolioUtils.calculateAllPositionsBalance(curPositions, portfolio.getPeriod(), date, false, false);
+				double balance = PortfolioUtils.calculateAllPositionsBalance(curPositions, timeFrame, date, false);
 										
 				rebalancedPositions = curPositions;	
 				
@@ -80,7 +83,7 @@ public class PortfolioMetrics {
 				
 			}
 			else if (rebalancedPositions != null && isHaveStockData) {
-				double balance = PortfolioUtils.calculateAllPositionsBalance(rebalancedPositions, portfolio.getPeriod(), date, false, false);
+				double balance = PortfolioUtils.calculateAllPositionsBalance(rebalancedPositions, timeFrame, date, false);
 								
 				// ДОДЕЛАТЬ - даты как в портфеле или ежедневный пересчет
 				//datesColumnData.add(date);

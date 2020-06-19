@@ -39,6 +39,40 @@ public class RecomendationPageJSHelper {
 		isCalcDataForGraphics = new HashMap<String, Boolean>();
 	}
 	
+	public void loadUserGraphics(String ticker) {
+		Logger.log().info("Асинхронный вызов метода \"loadUserGraphics\" с аргументом: " + ticker);
+
+		if (!isCalcDataForGraphics.containsKey(ticker)) {
+
+		} else
+			Logger.log().info("Данные для отображения графиков графиков MA, RSI, VXX и т.п. для " + ticker
+					+ " уже были загружены");
+		
+		// асинхронный вызов метода
+		new Thread(new Runnable() {
+			public void run() {
+				try {
+					addMAGraphicsOnPage(browser, ticker);
+
+					addRSIGraphicsOnPage(browser, ticker);
+
+					addStockIndicatorsTable(browser, ticker);
+
+					Logger.log().info("-||Перезагрузка страницы начата||-");
+
+					browser.loadHTML(browser.getHTML());
+
+					Logger.log().info("-||Перезагрузка страницы завершена||-");
+
+					isCalcDataForGraphics.put(ticker, new Boolean(true));
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}).start();
+	}
+	
 	public void loadGraphics(String ticker) {
 		Logger.log().info("Асинхронный вызов метода \"loadSpyGraphics\" с аргументом: " + ticker);
 

@@ -28,7 +28,7 @@ public class TechIndicatorsTest {
 	public static void rsiTest() {
 		String ticker = "spy";
 		
-		StockQuoteHistory.storage().fillQuotesData(ticker, TradingTimeFrame.Daily);
+		StockQuoteHistory.storage().loadQuotesData(ticker, TradingTimeFrame.Daily, false);
 				
 		TechnicalIndicatorResponse resp = StockConnector.rsi(ticker, Interval.DAILY, TimePeriod.of(14), SeriesType.CLOSE);
 		Map<String, String> metaData = resp.getMetaData();
@@ -42,11 +42,11 @@ public class TechIndicatorsTest {
 					data.getDateTime().getMonth() == Month.OCTOBER || data.getDateTime().getMonth() == Month.SEPTEMBER || 
 					data.getDateTime().getMonth() == Month.AUGUST || data.getDateTime().getMonth() == Month.JULY) )
 				System.out.println("indicator data["+ data.getDateTime() + "]: " + data.getData() + ", " + ticker + ":" + 
-			StockQuoteHistory.storage().getQuoteValueByDate(ticker,  TradingTimeFrame.Daily, data.getDateTime(), false));
+			StockQuoteHistory.storage().getQuoteByDate(ticker,  TradingTimeFrame.Daily, data.getDateTime()));
 	}
 	
 	public static void smaTest( ) {		
-		StockQuoteHistory.storage().fillQuotesData("VOO", TradingTimeFrame.Daily);
+		StockQuoteHistory.storage().loadQuotesData("VOO", TradingTimeFrame.Daily, false);
 		MarketIndicatorsHistory.storage().fillIndicatosData("VOO", 200, MarketIndicatorType.SMA_IND, TradingTimeFrame.Daily);
 		
 		// Data:276.3265, 2018-10-26T00:00
@@ -57,7 +57,7 @@ public class TechIndicatorsTest {
 		System.out.println("sma 1: " + MarketIndicatorsHistory.storage().findIndicatorValue("VOO", 200, date1, MarketIndicatorType.SMA_IND, TradingTimeFrame.Daily));
 		System.out.println("sma 2: " + MarketIndicatorsHistory.storage().findIndicatorValue("VOO", 200, date2, MarketIndicatorType.SMA_IND, TradingTimeFrame.Daily));
 		
-		StockQuoteHistory.storage().fillQuotesData("MTUM", TradingTimeFrame.Daily);
+		StockQuoteHistory.storage().loadQuotesData("MTUM", TradingTimeFrame.Daily, false);
 		MarketIndicatorsHistory.storage().fillIndicatosData("MTUM", 200, MarketIndicatorType.SMA_IND, TradingTimeFrame.Daily);
 
 		

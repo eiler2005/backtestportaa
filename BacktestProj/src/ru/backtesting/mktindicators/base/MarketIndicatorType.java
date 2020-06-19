@@ -4,6 +4,8 @@ public enum MarketIndicatorType {
 	SMA_IND("SMA"),
 	EMA_IND("EMA"),
 	WMA_IND("WMA"),
+	KaufmanAdaptiveMA_IND("KAMA"),
+
 
 	RSI_OSC("RSI"),
 	CHANDE_MOMENTUM_OSC("CMO"),

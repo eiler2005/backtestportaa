@@ -2,6 +2,8 @@ package ru.backtesting.mktindicators;
 
 import java.time.LocalDateTime;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
 import ru.backtesting.mktindicators.base.MarketIndicatorType;
 import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
@@ -28,7 +30,7 @@ public class HilbertTrendlineSignal implements MarketIndicatorInterface {
 		Logger.log().info("HilbertTrendline value on date [" + date + "]: ticker [" + ticker + "] = " 
 				+ Logger.log().doubleAsString(trendValue));
 
-		double quoteValue = StockQuoteHistory.storage().getQuoteValueByDate(ticker, getInterval(), date, false);
+		double quoteValue = StockQuoteHistory.storage().getQuoteByDate(ticker, getInterval(), date).getClose();
 
 		
 		// buy signal
@@ -60,5 +62,11 @@ public class HilbertTrendlineSignal implements MarketIndicatorInterface {
 	@Override
 	public TradingTimeFrame getInterval() {
 		return interval;
+	}
+	
+
+	@Override
+	public double getIndValue() {
+		throw new NotImplementedException("Метод еще не реализован для индикатора " + getMarketIndType());
 	}
 }

@@ -243,8 +243,7 @@ public class BacktestingAppGUIMain {
                 if (event.isMainFrame()) {
                     //System.out.println("HTML = " + event.getBrowser().getHTML());
                 	
-    	            addElementsToRecomPage(event.getBrowser(), MarketConstants.BASE_USA_STOCK_INDEX_TICKER);
-
+    	            buildRecomendPagePage(event.getBrowser());
                 }
             }
         });
@@ -371,36 +370,35 @@ public class BacktestingAppGUIMain {
 		return view;
 	}
 	
-	private void addElementsToRecomPage(Browser browser, String ticker) {
+	private void buildRecomendPagePage(Browser browser) {
 		DOMDocument document = browser.getDocument();
 
 		DOMElement spyRowEl = document.findElement(By.id("spyRow"));
 		
-		String newTicker = ticker;
+		String newTicker = MarketConstants.BASE_USA_LONG_TERM_BOND_TICKER;
 		String newTickerDivId = newTicker + "Row";
 		
 		String jsElId = "documentJS";
 		
 		if ( spyRowEl != null && document.findElement(By.id(newTickerDivId)) == null ) {
-			DOMElement containerEL = document.findElement(By.id("bootstrapContainer"));
-
 			String spyRowELText = spyRowEl.getInnerHTML();
 			
-			// replace #ticker# to spy
-			spyRowEl.setInnerHTML(spyRowELText.replaceAll("#ticker#", newTicker));
+			// replace #ticker# to "spy"
+			spyRowEl.setInnerHTML(spyRowELText.replaceAll("#ticker#", MarketConstants.BASE_USA_STOCK_INDEX_TICKER));
 			
-			DOMElement element = document.createElement("div");
+			DOMElement newTickerDivEl = document.createElement("div");
 			
-			element.setInnerHTML(spyRowELText.replaceAll("#ticker#", newTicker));
-			element.setAttribute("class", "row");
-			element.setAttribute("id", newTickerDivId);
+			newTickerDivEl.setInnerHTML(spyRowELText.replaceAll("#ticker#", newTicker));
+			newTickerDivEl.setAttribute("class", "row");
+			newTickerDivEl.setAttribute("id", newTickerDivId);
 
 			
 			Logger.log().info("Добавляем к странице элемент с id \"" + newTickerDivId + "\"");
-			Logger.log().info("Текст ниже:" + element.getInnerHTML());
+			Logger.log().info("Текст ниже:" + newTickerDivEl.getInnerHTML());
 
+			DOMElement containerEL = document.findElement(By.id("bootstrapContainer"));
 			DOMElement hrEL = document.findElement(By.id("hrId"));
-			containerEL.insertChild(element, hrEL);
+			containerEL.insertChild(newTickerDivEl, hrEL);
 			
 			DOMElement tickerHeaderEl = document.findElement(By.id(newTicker + "Header"));
 			tickerHeaderEl.setTextContent("Данные по активу " + newTicker);

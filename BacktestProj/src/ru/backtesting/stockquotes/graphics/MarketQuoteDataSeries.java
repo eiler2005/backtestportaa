@@ -32,11 +32,11 @@ public class MarketQuoteDataSeries extends BaseFinancialTimeSeriesChartInformati
 	}
 
 	private void fillFromStorage(int startYear, int endYear, TradingTimeFrame period, boolean dividens) {
-		StockQuoteHistory.storage().fillQuotesData(ticker, period);
+		StockQuoteHistory.storage().loadQuotesData(ticker, period, dividens);
 		
 		super.dates = DateUtils.filterDateListByYear(StockQuoteHistory.storage().getTradingDatesByPeriod(ticker, period), startYear, endYear);
 		
-		super.values = StockQuoteHistory.storage().getQuoteValuesByDates(ticker, period, dates, dividens);		
+		super.values = StockQuoteHistory.storage().getQuoteValuesByDates(ticker, period, dates);		
 		
 		// --
 		tooltips = new ArrayList<String>();

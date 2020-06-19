@@ -2,6 +2,8 @@ package ru.backtesting.mktindicators;
 
 import java.time.LocalDateTime;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
 import ru.backtesting.mktindicators.base.MarketIndicatorType;
 import ru.backtesting.mktindicators.base.MarketIndicatorsHistory;
@@ -25,7 +27,7 @@ public class BollingerBandsIndicatorSignal implements MarketIndicatorInterface {
 		double bbValue = MarketIndicatorsHistory.storage().findIndicatorValue(ticker, timePeriod, 
 				date, getMarketIndType(), getInterval());
 		
-		double stockValue = StockQuoteHistory.storage().getQuoteValueByDate(ticker, getInterval(), date, false);
+		double stockValue = StockQuoteHistory.storage().getQuoteByDate(ticker, getInterval(), date).getClose();
 		
 		Logger.log().info("BOLLINGER BANDS INDICATOR[" + timePeriod + "] on date [" + date + "]: ticker [" + ticker + "] bbands = " 
 			+ Logger.log().doubleAsString(bbValue));
@@ -61,5 +63,10 @@ public class BollingerBandsIndicatorSignal implements MarketIndicatorInterface {
 	@Override
 	public TradingTimeFrame getInterval() {
 		return interval;
+	}
+
+	@Override
+	public double getIndValue() {
+		throw new NotImplementedException("Метод еще не реализован для индикатора " + getMarketIndType());
 	}
 }
