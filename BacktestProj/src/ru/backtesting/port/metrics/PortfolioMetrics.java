@@ -5,17 +5,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
 
 import ru.backtesting.port.Portfolio;
-import ru.backtesting.port.PositionInformation;
-import ru.backtesting.stockquotes.StockQuoteHistory;
-import ru.backtesting.stockquotes.TradingTimeFrame;
 import ru.backtesting.utils.DateUtils;
 import ru.backtesting.utils.Logger;
 import ru.backtesting.utils.PortfolioUtils;
@@ -32,9 +26,14 @@ public class PortfolioMetrics {
 	private final static String CN_NAME_PORT_BETTER_PERIOD_DRAWDOWN = "better period lenght (days)";
 	private final static String CN_NAME_PORT_DATE = "initial date";
 	private final static String CN_NAME_MAX_DRAWDOWN_DATE = "max drawdown date";
+	private final static String CN_NAME_MIN_BALANCE_FOR_DRAWDOWN_DATE = "min balance (for drawdown date)";
+
+	
 	private final static String TABLE_NAME_PORT_BALANCE_ON_DATE = "Portfolio balance on date (for drawdown calculating)";
 	
 	private Portfolio portfolio;
+	private double maxDrawdown;
+	private double underwaterPeriodLenght;
 	
 	public PortfolioMetrics(Portfolio port) {
 		// TODO Auto-generated constructor stub
@@ -46,49 +45,13 @@ public class PortfolioMetrics {
 	// Drawdowns for Timing Portfolio
     //	Rank	Start	    End	          Length	Recovery    By	Recovery     Time	Underwater Period   Drawdown
     //	1	    Sep 1987	Nov 1987	3 months	Jan 1989	1 year 2 months	   1 year 5 months	         -19.36%
-	public void calcDrawdown() {
-		LinkedHashMap<LocalDateTime, List<PositionInformation>> positions = portfolio.getPostionsOnDates();
-		
-		int startYear = portfolio.getStartYear();
-		int endYear = portfolio.getEndYear();
-
-		List<String> allTickers = portfolio.getTimingModel().getPortTickers();
-		
-		List<PositionInformation> rebalancedPositions = null;
-				
+	public void calcDrawdown() {		
 		List<LocalDateTime> datesColumnData = new ArrayList<LocalDateTime>();
 		List<Number> balanceOnDateColumnData = new ArrayList<Number>();
-		
-		TradingTimeFrame timeFrame = portfolio.getTimingModel().getTimeFrame();
-		
-		for (LocalDate locDate : DateUtils.getDatesBetweenUsingJava8(LocalDate.parse(startYear + "-01-01"), 
-				LocalDate.parse(endYear + "-12-31"))) {	
-			LocalDateTime date = DateUtils.asLocalDateTime(DateUtils.asDate(locDate));
-						
-			boolean isHaveStockData = StockQuoteHistory.storage().containsDataInStorageOnDate(allTickers, timeFrame, date);
-			
-			// начинаем обход всех дат, на которые есть котировки по тикерам портфеля
-			if ( isHaveStockData && getPostionOnDateDay(positions, date) != null ) {
-				// берем позиции из портфеля и пересчитываем баланс на дату
-				// далее по указанным позициям пересчитываем портфель до слебующей ребалансировке
 				
-				List<PositionInformation> curPositions = positions.get(getPostionOnDateDay(positions, date));
-					
-				double balance = PortfolioUtils.calculateAllPositionsBalance(curPositions, timeFrame, date, false);
-										
-				rebalancedPositions = curPositions;	
-				
-				datesColumnData.add(date);
-				balanceOnDateColumnData.add(new Double(balance));
-				
-			}
-			else if (rebalancedPositions != null && isHaveStockData) {
-				double balance = PortfolioUtils.calculateAllPositionsBalance(rebalancedPositions, timeFrame, date, false);
-								
-				// ДОДЕЛАТЬ - даты как в портфеле или ежедневный пересчет
-				//datesColumnData.add(date);
-				//balanceOnDateColumnData.add(new Double(balance));
-			}
+		for (LocalDateTime date : portfolio.getBacktestDates() ) {							
+			datesColumnData.add(date);
+			balanceOnDateColumnData.add(portfolio.getBalanceOnDate().get(date));
 		}
 		
 		DoubleColumn balanceColumn = DoubleColumn.create(CN_NAME_PORT_BALANCE, balanceOnDateColumnData);		
@@ -100,14 +63,16 @@ public class PortfolioMetrics {
 		List<Number> drawdownColumnData = new ArrayList<Number>();
 		List<Number> betterPeriodLenghtData = new ArrayList<Number>();
 		List<LocalDateTime> maxDrawdownDateData = new ArrayList<LocalDateTime>();
+		List<Number> minBalanceForDDColumnData = new ArrayList<Number>();
 		List<Number> betterPeriodMaxProfitData = new ArrayList<Number>();
 		
 		for(int i =0; i < datesColumnData.size(); i++) {
 			LocalDateTime date = datesColumnData.get(i);
 			double balance = balanceOnDateColumnData.get(i).doubleValue();
 			
-			Logger.log().info("|| filter - " + date + ", balance - " + balance);
-
+			Logger.log().trace("|| Заполняем таблицу для расчета drawdown - " + Logger.log().dateAsString(date.toLocalDate()) + ", balance - " 
+					+ Logger.log().doubleAsString(balance));
+			
 			// ищем все даты, на время которых баланс портфеля был меньше текущего - просадки и время в течение которого портфель мог уйти в минус
 			Table datesAndBalanceWithDrawndownT = balancedTable.select(CN_NAME_PORT_DATE, CN_NAME_PORT_BALANCE).
 				where(balancedTable.dateTimeColumn(CN_NAME_PORT_DATE).isBetweenIncluding(date, LocalDateTime.now()).
@@ -116,18 +81,19 @@ public class PortfolioMetrics {
 			Logger.setTableFormatter(datesAndBalanceWithDrawndownT);			
 			
 			
+			
 			if ( !datesAndBalanceWithDrawndownT.isEmpty() ) {
 				List<LocalDateTime> filteredDates = datesAndBalanceWithDrawndownT.dateTimeColumn(CN_NAME_PORT_DATE).asList();
 				List<Double> filteredValue = datesAndBalanceWithDrawndownT.doubleColumn(CN_NAME_PORT_BALANCE).asList();
 			
-				double minValue = Collections.min(filteredValue);
-				double percentDD = (balance-minValue)/balance*100;
+				double minBalance = Collections.min(filteredValue);
+				double percentDD = (balance-minBalance)/balance*100;
 
-				LocalDateTime drawdownDate = filteredDates.get(filteredValue.indexOf(minValue));
+				LocalDateTime drawdownDate = filteredDates.get(filteredValue.indexOf(minBalance));
 				
 				Duration duration = DateUtils.duration(date.toLocalDate(), drawdownDate.toLocalDate());
 				
-				Logger.log().info(datesAndBalanceWithDrawndownT.print(50));
+				Logger.log().trace(datesAndBalanceWithDrawndownT.printAll() + "\n");
 				
 				// ищем все даты, на время которых баланс портфеля был больше текущего - для max profit
 				Table datesAndBalanceWithoutDrawndownT = balancedTable.select(CN_NAME_PORT_DATE, CN_NAME_PORT_BALANCE).
@@ -140,12 +106,13 @@ public class PortfolioMetrics {
 				double percentMaxProfit = (maxValue-balance)/balance*100;
 				// max profit
 				
-				Logger.log().info("period with loss, in days = " + duration.toDays() + ", max drawdown[balance - " + Logger.log().doubleAsString(balance) + 
-						", minvalue - " + Logger.log().doubleAsString(minValue) + ", date - " + drawdownDate + "] = " + Logger.log().doubleAsString(percentDD) + " %, maxProfit - " + Logger.log().doubleAsString(percentMaxProfit) + " %");				
+				Logger.log().trace("period with loss, in days = " + duration.toDays() + ", max drawdown[balance - " + Logger.log().doubleAsString(balance) + 
+						", minvalue - " + Logger.log().doubleAsString(minBalance) + ", date - " + drawdownDate + "] = " + Logger.log().doubleAsString(percentDD) + " %, maxProfit - " + Logger.log().doubleAsString(percentMaxProfit) + " %");				
 				
 				drawdownColumnData.add(Double.valueOf(percentDD));
 				betterPeriodLenghtData.add(Long.valueOf(duration.toDays()));
 				maxDrawdownDateData.add(drawdownDate);
+				minBalanceForDDColumnData.add(new Double(minBalance));
 				betterPeriodMaxProfitData.add(percentMaxProfit);
 			}
 			else {
@@ -156,8 +123,15 @@ public class PortfolioMetrics {
 		}
 				
 		balancedTable.addColumns(DoubleColumn.create(CN_NAME_PORT_PERCENT_DRAWDOWN, drawdownColumnData));
+		
 		balancedTable.addColumns(LongColumn.create(CN_NAME_PORT_BETTER_PERIOD_DRAWDOWN, Longs.toArray(betterPeriodLenghtData)));
+
+		// дата низшей точки и баланс
 		balancedTable.addColumns(DateTimeColumn.create(CN_NAME_MAX_DRAWDOWN_DATE, maxDrawdownDateData));
+		
+		balancedTable.addColumns(DoubleColumn.create(CN_NAME_MIN_BALANCE_FOR_DRAWDOWN_DATE, minBalanceForDDColumnData));
+				
+		
 		balancedTable.addColumns(DoubleColumn.create(CN_NAME_PORT_PERCENT_MAXPROFT, betterPeriodMaxProfitData));
 
 		Logger.setTableFormatter(balancedTable);
@@ -165,14 +139,19 @@ public class PortfolioMetrics {
 		// таблицу с максимальной просадкой после даты входа в портфель	
 		
 		Logger.log().info("||drawdown sort table||");
+		Logger.log().info(balancedTable.sortAscendingOn(CN_NAME_PORT_DATE).printAll());
+
+		// Logger.log().info(balancedTable.sortAscendingOn(CN_NAME_PORT_PERCENT_DRAWDOWN).printAll());
 		
-		Logger.log().info(balancedTable.sortAscendingOn(CN_NAME_PORT_PERCENT_DRAWDOWN).print(30));
+		this.maxDrawdown  = Collections.max(balancedTable.doubleColumn(CN_NAME_PORT_PERCENT_DRAWDOWN).asList()).doubleValue();
+				
+		Logger.log().info("max dd - " + Logger.log().doubleAsString(maxDrawdown));
 		
-		Logger.log().info("max dd - " + Logger.log().doubleAsString(Collections.max(balancedTable.doubleColumn(CN_NAME_PORT_PERCENT_DRAWDOWN).asList())));
+		this.underwaterPeriodLenght = Collections.max(balancedTable.longColumn(CN_NAME_PORT_BETTER_PERIOD_DRAWDOWN).asList()).doubleValue();
 		
 		Logger.log().info("||underwater period sort table||");
 		Logger.log().info(balancedTable.sortAscendingOn(CN_NAME_PORT_BETTER_PERIOD_DRAWDOWN).print(30));
-		Logger.log().info("underwater lenght - " + Logger.log().doubleAsString(Collections.max(balancedTable.longColumn(CN_NAME_PORT_BETTER_PERIOD_DRAWDOWN).asList())));
+		Logger.log().info("underwater lenght - " + Logger.log().doubleAsString(underwaterPeriodLenght));
 
 		
 		Logger.log().info("||max profit in period sort table||");
@@ -180,21 +159,21 @@ public class PortfolioMetrics {
 		Logger.log().info("max profit in period (%) - " + Logger.log().doubleAsString(Collections.max(balancedTable.doubleColumn(CN_NAME_PORT_PERCENT_MAXPROFT).asList())));
 	}
 	
-	private LocalDateTime getPostionOnDateDay(LinkedHashMap<LocalDateTime, 
-			List<PositionInformation>> positions, LocalDateTime myDate) {
-		for(LocalDateTime date : positions.keySet() ) 
-			if ( DateUtils.compareDatesByDay(date, myDate) )
-				return date;
-		
-		return null;
+	public double getMaxDrawdown() {
+		return maxDrawdown;
 	}
-	
-	public double CAGRInPercent() {		
-		LocalDate startYear = LocalDate.parse(portfolio.getStartYear() + "-01-01");
-		
-		List<LocalDateTime> portDates = Lists.newArrayList(portfolio.getPostionsOnDates().keySet());
 
-		LocalDate endDate = portDates.get(portDates.size() - 1).toLocalDate();
+	public double getUnderwaterPeriodLenght() {
+		return underwaterPeriodLenght;
+	}
+
+	public double CAGRInPercent() {		
+		
+		List<LocalDateTime> backtestDates = new ArrayList<>(portfolio.getBalanceOnDate().keySet());
+		
+		LocalDate startYear = backtestDates.get(0).toLocalDate();
+		
+		LocalDate endDate = backtestDates.get(backtestDates.size() - 1).toLocalDate();
 		
 		double finalBalance = portfolio.getFinalBalance();
 				

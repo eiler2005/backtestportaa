@@ -5,7 +5,8 @@ public enum Frequency {
 	SemiAnnually("Quarterly"), 
 	Quarterly("Quarterly"), 
 	Monthly("Monthly"), 
-	Weekly("Weekly");
+	Weekly("Weekly"),
+	Daily("Daily");
 	
 	final String value;
 

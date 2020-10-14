@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -14,34 +15,46 @@ import org.junit.jupiter.api.Test;
 import ru.backtesting.port.base.aa.AssetAllocPerfInf;
 import ru.backtesting.port.base.aa.momentum.DualMomUtils;
 import ru.backtesting.port.base.aa.momentum.MomAssetAllocPerfInf;
-import ru.backtesting.rebalancing.Frequency;
+import ru.backtesting.port.base.ticker.Ticker;
+import ru.backtesting.port.base.ticker.TickerInf;
 import ru.backtesting.stockquotes.StockQuoteHistory;
 import ru.backtesting.stockquotes.TradingTimeFrame;
 import ru.backtesting.utils.Logger;
 
 public class DualMomentumTest {
 	public static void main(String[] args) throws IOException {
-		// testAllocTickers();
+		testAllocTickers();
 		
-		// daysAssetAllocPeriod();
+		daysAssetAllocPeriod();
 		
-		ioskaPortTest();
+		// ioskaPortTest();
+	}
+	
+	private static List<TickerInf> getList(List<String> tickers) {
+		List<TickerInf> list = new ArrayList<TickerInf>();
+				
+		
+		for(String ticker : tickers) {
+			list.add(new Ticker(ticker));
+		}
+		
+		return list;
 	}
 	
 	@Test
 	public static void ioskaPortTest() {
-		List<String> tickers = Arrays.asList("smh", "QQQ", "xbi", "ita", "ihi");
+		List<TickerInf> tickers = getList(Arrays.asList("smh", "QQQ", "xbi", "ita", "ihi"));
 			
-		for(String ticker : tickers)
-			StockQuoteHistory.loadStockData(ticker, TradingTimeFrame.Daily, false);
+		for(TickerInf ticker : tickers)
+			StockQuoteHistory.loadStockData(ticker.getTicker(), TradingTimeFrame.Daily, false);
 
 		
 		LocalDateTime date = LocalDateTime.parse("2007-01-03T00:00:00");
 		
 		int monthPerfPeriod = 1;
 		
-		List<AssetAllocPerfInf> assetsPerfSet = DualMomUtils.getAssetAllocInfListForParams(
-				tickers, date, tickers.size(), monthPerfPeriod, true);
+		List<AssetAllocPerfInf> assetsPerfSet = DualMomUtils.getAssetAllocInfListForPerfomance(
+				tickers, date, tickers.size(), 100, monthPerfPeriod, true);
 
 		Logger.log().info("assetsPerfSet: " + assetsPerfSet.toString());
 		
@@ -113,18 +126,18 @@ public class DualMomentumTest {
 
 		assertEquals(Logger.log().doubleAsString(percGrowth2), "2,97");
 		
-		List<String> tickers = Arrays.asList("LQD", "HYG", "SCZ", "VNQ", "QQQ", "DIA", "EFA", "EEM", "IHI", "XLE");
+		List<TickerInf> tickers = getList(Arrays.asList("LQD", "HYG", "SCZ", "VNQ", "QQQ", "DIA", "EFA", "EEM", "IHI", "XLE"));
 		
-		for (String curTicker : tickers)
-			StockQuoteHistory.loadStockData(curTicker, period, dividens);
+		for (TickerInf curTicker : tickers)
+			StockQuoteHistory.loadStockData(curTicker.getTicker(), period, dividens);
 		
-		SortedSet<Map.Entry<String, MomAssetAllocPerfInf>> assetsPerfSet = DualMomUtils.calcSortedPerformanceScoreInPercentToMonths(curDate, tickers, perfPeriodMonth);
+		SortedSet<Map.Entry<TickerInf, MomAssetAllocPerfInf>> assetsPerfSet = DualMomUtils.calcSortedPerformanceScoreInPercentToMonths(curDate, tickers, perfPeriodMonth);
 		
 		Logger.log().info("По активам [" + tickers + "] на дату " + curDate + " процент роста за период " + perfPeriodMonth + 
 				" месяца составил: \n" + assetsPerfSet);
 				
-		for (Map.Entry<String, MomAssetAllocPerfInf> assetPerf : assetsPerfSet) {
-			String tickerCur = assetPerf.getKey();
+		for (Map.Entry<TickerInf, MomAssetAllocPerfInf> assetPerf : assetsPerfSet) {
+			String tickerCur = assetPerf.getKey().getTickerId();
 			
 			double perf = assetPerf.getValue().getPercGrowth();
 			double startQuote = assetPerf.getValue().getStockQuoteStart();
@@ -175,24 +188,29 @@ public class DualMomentumTest {
 	
 	@Test
 	public static void testAllocTickers() {
-		List<String> tickers = Arrays.asList("LQD", "HYG", "SCZ", "VNQ", "QQQ", "DIA", "EFA", "EEM", "IHI");
+		List<TickerInf> tickers = getList(Arrays.asList("LQD", "HYG", "SCZ", "VNQ", "QQQ", "DIA", "EFA", "EEM", "IHI"));
 
-		assertEquals("{QQQ=11.0, EFA=11.0, HYG=11.0, VNQ=11.0, SCZ=11.0, IHI=12.0, EEM=11.0, DIA=11.0, LQD=11.0}", 
-				DualMomUtils.getEquivalentAssetAllocPercent(tickers).toString());
+		assertEquals("{SCZ=11.11, EFA=11.11, EEM=11.11, QQQ=11.11, VNQ=11.11, DIA=11.11, HYG=11.11, IHI=11.120000000000005, LQD=11.11}", 
+				DualMomUtils.getEquivalentAssetAllocPercent(tickers, 100).toString());
 
-		tickers = Arrays.asList("LQD", "HYG", "SCZ");
+		tickers = getList(Arrays.asList("LQD", "HYG", "SCZ"));
 		
-		assertEquals("{HYG=33.0, SCZ=34.0, LQD=33.0}", 
-				DualMomUtils.getEquivalentAssetAllocPercent(tickers).toString());
+		assertEquals("{HYG=33.33, SCZ=33.34, LQD=33.33}", 
+				DualMomUtils.getEquivalentAssetAllocPercent(tickers, 100).toString());
 		
-		tickers = Arrays.asList("LQD", "HYG");
+		tickers = getList(Arrays.asList("LQD", "HYG"));
 		
-		assertEquals("{HYG=50.0, LQD=50.0}", 
-				DualMomUtils.getEquivalentAssetAllocPercent(tickers).toString());
+		assertEquals("{LQD=50.0, HYG=50.0}", 
+				DualMomUtils.getEquivalentAssetAllocPercent(tickers, 100).toString());
 		
-		tickers = Arrays.asList("LQD", "HYG", "SCZ", "VNQ");
+		tickers = getList(Arrays.asList("LQD", "HYG", "SCZ", "VNQ"));
 
 		assertEquals("{HYG=25.0, VNQ=25.0, SCZ=25.0, LQD=25.0}", 
-				DualMomUtils.getEquivalentAssetAllocPercent(tickers).toString());	
+				DualMomUtils.getEquivalentAssetAllocPercent(tickers, 100).toString());
+		
+		tickers = getList(Arrays.asList("LQD", "HYG", "SCZ", "VNQ", "QQQ", "SPY"));
+		
+		assertEquals("{SCZ=16.67, SPY=16.64999999999999, LQD=16.67, HYG=16.67, VNQ=16.67, QQQ=16.67}", 
+				DualMomUtils.getEquivalentAssetAllocPercent(tickers, 100).toString());
 	}
 }

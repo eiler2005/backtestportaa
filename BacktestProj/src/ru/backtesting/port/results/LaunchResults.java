@@ -10,29 +10,35 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.patriques.output.AlphaVantageException;
 
 import ru.backtesting.mktindicators.ma.MovingAverageIndicatorSignal;
+import ru.backtesting.port.CoreSatellitePortfolio;
 import ru.backtesting.port.Portfolio;
 import ru.backtesting.port.PositionInformation;
+import ru.backtesting.port.PositionSet;
 import ru.backtesting.port.base.AllocChoiceModelType;
 import ru.backtesting.port.base.TimingModel;
 import ru.backtesting.port.base.aa.AssetAllocPerfInf;
 import ru.backtesting.port.base.aa.momentum.MomAssetAllocPerfInf;
 import ru.backtesting.port.base.aa.sma.MovingAverageAssetAllocInf;
+import ru.backtesting.port.base.ticker.TickerInf;
+import ru.backtesting.port.signals.FixedLossOrProfitSignalHandler;
+import ru.backtesting.port.signals.TopOverMovingAverFixedHandler;
 import ru.backtesting.stockquotes.StockQuoteHistory;
 import ru.backtesting.stockquotes.TradingTimeFrame;
 import ru.backtesting.utils.Logger;
+import ru.backtesting.utils.doubles.DeduplicateValues;
 import tech.tablesaw.api.BooleanColumn;
 import tech.tablesaw.api.DateColumn;
 import tech.tablesaw.api.DateTimeColumn;
 import tech.tablesaw.api.DoubleColumn;
-import tech.tablesaw.api.StringColumn;
 import tech.tablesaw.api.Table;
 import tech.tablesaw.columns.Column;
 
 public class LaunchResults {
 	private LocalDateTime launchTime;
-	private Portfolio portfilio;
+	private Portfolio portfolio;
 
 	private Table monthlyRetunsTable;
 	private Table riskOnOffTable;
@@ -55,12 +61,12 @@ public class LaunchResults {
 	public LaunchResults(LocalDateTime launchTime, Portfolio portfilio) {
 		super();
 		this.launchTime = launchTime;
-		this.portfilio = portfilio;
+		this.portfolio = portfilio;
 
 		riskResults = new HashMap<LocalDateTime, Boolean>();
 
 		basePortParams(portfilio.getName(), portfilio.getPvzLink(), portfilio.getStartYear(), portfilio.getEndYear(),
-				portfilio.getInitialAmount(), portfilio.getTimingModel().getOutOfMarketPosTicker(),
+				portfilio.getInitialAmount(), portfilio.getTimingModel().getOutOfMarketPosTicker().getTicker(),
 				portfilio.isReinvestDividends());
 	}
 
@@ -69,7 +75,7 @@ public class LaunchResults {
 	}
 
 	public Portfolio getPortfolio() {
-		return portfilio;
+		return portfolio;
 	}
 
 	private void basePortParams(String portName, String pvzLink, int startYear, int endYear, double initialBalance,
@@ -87,6 +93,38 @@ public class LaunchResults {
 		portParamsMap.put("reinvest dividends", new Boolean(reinvestDividents));
 		portParamsMap.put("out of market ticker", outOfMarketPosTicker);
 
+		if ( portfolio instanceof CoreSatellitePortfolio ) {
+			CoreSatellitePortfolio coreSatPort = (CoreSatellitePortfolio) portfolio;
+			
+			portParamsMap.put("core allocaton (in %)",  new Double(coreSatPort.getCoreAlloc()));
+			portParamsMap.put("satellite allocaton (in %)",  new Double(coreSatPort.getSatelliteAlloc()));
+		}
+		
+		if ( portfolio.getPosSignalHandler() != null && portfolio.getPosSignalHandler() instanceof FixedLossOrProfitSignalHandler ) {
+			FixedLossOrProfitSignalHandler handler = (FixedLossOrProfitSignalHandler) portfolio.getPosSignalHandler();
+			
+			if ( handler.getPercentPerf() >= 0 )
+				portParamsMap.put("fixed profit per month (in %)", new Double(handler.getPercentPerf()));
+			else
+				portParamsMap.put("fixed loss per month (in %)",  new Double(handler.getPercentPerf()));
+		}
+		
+		if ( portfolio.getPosSignalHandler() != null && portfolio.getPosSignalHandler() instanceof TopOverMovingAverFixedHandler ) {
+			TopOverMovingAverFixedHandler handler = (TopOverMovingAverFixedHandler) portfolio.getPosSignalHandler();
+			
+			String ticker = handler.getTicker();
+			
+			portParamsMap.put("fixed top over moving average", "");
+			portParamsMap.put("moving average type", handler.getSma().getMarketIndType());
+			portParamsMap.put("moving average time period", handler.getSma().getTimePeriod());
+			portParamsMap.put("ticker", ticker);
+			
+			if ( handler.getPercentOver() >= 0 )
+				portParamsMap.put("fixed profit per month (in %)", new Double(handler.getPercentOver()));
+			else
+				portParamsMap.put("fixed loss per month (in %)",  new Double(handler.getPercentOver()));
+		}
+		
 		this.startYear = startYear;
 		this.endYear = endYear;
 
@@ -105,7 +143,14 @@ public class LaunchResults {
 		
 		DateColumn date1Column = null, date2Column = null;
 		
-		for (AssetAllocPerfInf inf : assetAllocPerfInfList) {			
+		DeduplicateValues deduplicator = new DeduplicateValues();
+		
+		for (AssetAllocPerfInf inf : assetAllocPerfInfList) {	
+			if ( inf.getStartDate() == null )
+				throw new AlphaVantageException("Не загружены котировки для тикера " + inf.getTicker() + " на дату " + 
+						Logger.log().dateAsString(date.toLocalDate()) + ". Первая доступная дата для котировок: " + 
+							StockQuoteHistory.storage().getFirstQuoteAvailabilityDay(inf.getTicker(), TradingTimeFrame.Daily));
+			
 			LocalDate date1 = inf.getStartDate().toLocalDate();
 			
 			date1Column = DateColumn.create("date1",
@@ -115,25 +160,25 @@ public class LaunchResults {
 
 			double stockQuote1 = inf.getStockQuoteStart();
 
-			DoubleColumn quote1Column = DoubleColumn.create(ticker + " date1",
+			DoubleColumn quote1Column = DoubleColumn.create(deduplicator.check(ticker + " date1"),
 					Arrays.asList(new Double[] { new Double(stockQuote1) }));
 			
 			DoubleColumn quote2Column = null;
 			
-			if (inf.getType() == AllocChoiceModelType.Momentum && inf instanceof MomAssetAllocPerfInf) {			
+			if (inf.getAllocModelType() == AllocChoiceModelType.Momentum && inf instanceof MomAssetAllocPerfInf) {			
 				LocalDate date2 = ((MomAssetAllocPerfInf)inf).getEndDate().toLocalDate();
 		
 				double perfPercent = ((MomAssetAllocPerfInf)inf).getPercGrowth();
 				
 				double stockQuote2 = ((MomAssetAllocPerfInf)inf).getStockQuoteEnd();
 				
-				DoubleColumn tickerPerfColumn = DoubleColumn.create(ticker + " (perf)",
+				DoubleColumn tickerPerfColumn = DoubleColumn.create(deduplicator.check(ticker + " (perf)"),
 						Arrays.asList(new Double[] { new Double(perfPercent) }));
 		
 				date2Column = DateColumn.create("date2",
 						Arrays.asList(new LocalDate[] { date2 }));
 				
-				quote2Column = DoubleColumn.create(ticker + " date2",
+				quote2Column = DoubleColumn.create(deduplicator.check(ticker + " date2"),
 						Arrays.asList(new Double[] { new Double(stockQuote2) }));
 				
 				assInfColumnList.add(tickerPerfColumn);
@@ -180,30 +225,32 @@ public class LaunchResults {
 	private List<Column<?>> fillDetailedAssetsiInfTable(List<AssetAllocPerfInf> assetAllocPerfInfList) {
 		List<Column<?>> assInfColumnList = new ArrayList<>();
 		
+		DeduplicateValues deduplicator = new DeduplicateValues();
+		
 		for (AssetAllocPerfInf inf : assetAllocPerfInfList) {						
 			String ticker = inf.getTicker();
 
-			DoubleColumn allocColumn = DoubleColumn.create(ticker + " (aa,%)",
+			DoubleColumn allocColumn = DoubleColumn.create(deduplicator.check(ticker + " (aa,%)"),
 					Arrays.asList(new Double[] { new Double(inf.getAllocationPercent()) }));
 			
 			assInfColumnList.add(allocColumn);
 			
 			double stockQuote1 = inf.getStockQuoteStart();
 
-			DoubleColumn quote1Column = DoubleColumn.create(ticker + " date1",
+			DoubleColumn quote1Column = DoubleColumn.create(deduplicator.check(ticker + " date1"),
 					Arrays.asList(new Double[] { new Double(stockQuote1) }));
 			
 			DoubleColumn quote2Column = null;
 			
-			if (inf.getType() == AllocChoiceModelType.Momentum && inf instanceof MomAssetAllocPerfInf) {		
+			if (inf.getAllocModelType() == AllocChoiceModelType.Momentum && inf instanceof MomAssetAllocPerfInf) {		
 				double perfPercent = ((MomAssetAllocPerfInf)inf).getPercGrowth();
 				
 				double stockQuote2 = ((MomAssetAllocPerfInf)inf).getStockQuoteEnd();
 				
-				DoubleColumn tickerPerfColumn = DoubleColumn.create(ticker + " (perf,%)",
+				DoubleColumn tickerPerfColumn = DoubleColumn.create(deduplicator.check(ticker + " (perf,%)"),
 						Arrays.asList(new Double[] { new Double(perfPercent) }));
 				
-				quote2Column = DoubleColumn.create(ticker + " date2",
+				quote2Column = DoubleColumn.create(deduplicator.check(ticker + " date2"),
 						Arrays.asList(new Double[] { new Double(stockQuote2) }));
 				
 				assInfColumnList.add(tickerPerfColumn);
@@ -222,13 +269,15 @@ public class LaunchResults {
 	private List<Column<?>> fillStockQuoteTable(List<AssetAllocPerfInf> assetAllocPerfInfList) {
 		List<Column<?>> quoteColumnList = new ArrayList<>();
 		
+		DeduplicateValues deduplicator = new DeduplicateValues();
+		
 		for (AssetAllocPerfInf inf : assetAllocPerfInfList) {
 			String ticker = inf.getTicker();
 
-			if (inf.getType() == AllocChoiceModelType.Momentum && inf instanceof MomAssetAllocPerfInf) {			
+			if (inf.getAllocModelType() == AllocChoiceModelType.Momentum && inf instanceof MomAssetAllocPerfInf) {			
 				double quoteValue = ((MomAssetAllocPerfInf)inf).getStockQuoteEnd();
 				
-				DoubleColumn quoteColumn = DoubleColumn.create(ticker,
+				DoubleColumn quoteColumn = DoubleColumn.create(deduplicator.check(ticker),
 						Arrays.asList(new Double[] { new Double(quoteValue) }));
 				
 				quoteColumnList.add(quoteColumn);
@@ -244,13 +293,15 @@ public class LaunchResults {
 	private List<Column<?>> fillPerfAssetsTable(List<AssetAllocPerfInf> assetAllocPerfInfList) {
 		List<Column<?>> perfColumnList = new ArrayList<>();
 		
+		DeduplicateValues deduplicator = new DeduplicateValues();
+		
 		for (AssetAllocPerfInf inf : assetAllocPerfInfList) {
 			String ticker = inf.getTicker();
 
-			if (inf.getType() == AllocChoiceModelType.Momentum && inf instanceof MomAssetAllocPerfInf) {			
+			if (inf.getAllocModelType() == AllocChoiceModelType.Momentum && inf instanceof MomAssetAllocPerfInf) {			
 				double perfPercent = ((MomAssetAllocPerfInf)inf).getPercGrowth();
 				
-				DoubleColumn perfColumn = DoubleColumn.create(ticker,
+				DoubleColumn perfColumn = DoubleColumn.create(deduplicator.check(ticker),
 						Arrays.asList(new Double[] { new Double(perfPercent) }));
 				
 				perfColumnList.add(perfColumn);
@@ -265,12 +316,14 @@ public class LaunchResults {
 		// asset alloc table
 		List<Column<?>> asetsAllocColumnList = new ArrayList<>();
 
+		DeduplicateValues deduplicator = new DeduplicateValues();
+		
 		for (AssetAllocPerfInf inf : assetAllocPerfInfList) {
 			String ticker = inf.getTicker();
 
 			double allocPersent = inf.getAllocationPercent();
 
-			DoubleColumn allocColumn = DoubleColumn.create(ticker,
+			DoubleColumn allocColumn = DoubleColumn.create(deduplicator.check(ticker),
 					Arrays.asList(new Double[] { new Double(allocPersent) }));
 
 			asetsAllocColumnList.add(allocColumn);
@@ -284,7 +337,9 @@ public class LaunchResults {
 		BooleanColumn riskResColumn = BooleanColumn.create("result",
 				Arrays.asList(new Boolean[] { new Boolean(riskValue) }));
 
-		DoubleColumn signalColumn = DoubleColumn.create(inf.getTicker(),
+		DeduplicateValues deduplicator = new DeduplicateValues();
+		
+		DoubleColumn signalColumn = DoubleColumn.create(deduplicator.check(inf.getTicker()),
 				Arrays.asList(new Double[] { new Double(inf.getStockQuoteEnd()) }));
 
 		String smaSignalHeader;
@@ -321,34 +376,40 @@ public class LaunchResults {
 		riskResults.put(date, new Boolean(riskValue));
 	}
 
-	public void putPortBalanceOnDate(LocalDateTime date, double balance) {
-		DateTimeColumn dateColumn = DateTimeColumn.create("date", Arrays.asList(new LocalDateTime[] { date }));
+	public void putPortBalance(Map<LocalDateTime, Double> portBalance) {
+		for(LocalDateTime date : portBalance.keySet() ) {
+			DateTimeColumn dateColumn = DateTimeColumn.create("date", Arrays.asList(new LocalDateTime[] { date }));
 
-		DoubleColumn balanceColumn = DoubleColumn.create("balance",
-				Arrays.asList(new Double[] { new Double(balance) }));
-
-		monthlyRetunsTable = appendColumns("monthly returns", monthlyRetunsTable, dateColumn, balanceColumn);
+			DoubleColumn balanceColumn = DoubleColumn.create("balance",
+				Arrays.asList(new Double[] { portBalance.get(date)} ));
+			
+			monthlyRetunsTable = appendColumns("monthly returns", monthlyRetunsTable, dateColumn, balanceColumn);
+		}
 	}
 
 	public void putStockQuantityInPort(TimingModel timingModel,
-			LinkedHashMap<LocalDateTime, List<PositionInformation>> postionsOnDates) {
-		List<String> tickers = timingModel.getPortTickers();
+			PositionSet postionsOnDates) {
+		List<TickerInf> tickersId = timingModel.getPortTickers();
 
-		tickers.add(timingModel.getOutOfMarketPosTicker());
+		tickersId.addAll((Arrays.asList(
+				new TickerInf[] {timingModel.getOutOfMarketPosTicker() } )));
 		
-		for (LocalDateTime curDate : postionsOnDates.keySet()) {
+		for (LocalDateTime curDate : postionsOnDates.getDates() ) {
 			List<Column<?>> columnList = new ArrayList<>();
 			
-			for (String ticker : tickers) {
+			DeduplicateValues deduplicator = new DeduplicateValues();
+			
+			for (TickerInf ticker : tickersId) {
 
 				double quantityStock = 0;
 
-				for (PositionInformation position : postionsOnDates.get(curDate)) {
-					if (position.getTicker().equalsIgnoreCase(ticker))
+				for (PositionInformation position : postionsOnDates.getPositions(curDate) ) {
+					if (position.getTickerInf().equals(ticker))
 						quantityStock = position.getQuantity();
 				}
 				
-				DoubleColumn quantityColumn = DoubleColumn.create(ticker,
+				DoubleColumn quantityColumn = DoubleColumn.create(
+						deduplicator.check(ticker.getTicker()),
 						Arrays.asList(new Double[] { new Double(quantityStock) }));
 
 				columnList.add(quantityColumn);

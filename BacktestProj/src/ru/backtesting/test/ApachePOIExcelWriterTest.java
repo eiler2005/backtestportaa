@@ -48,6 +48,9 @@ public class ApachePOIExcelWriterTest {
     private static final String FILE_NAME_WITH_TABLE = "\\results\\backtest-result-#date#.xlsx";
 
     public static void main(String[] args) throws IOException {
+    	Logger.log().info(new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss").format(DateUtils.asDate(
+    			LocalDateTime.now())));
+    	
     	testTableWithDataAdDouble();
     	
     	//testExcelExporter();

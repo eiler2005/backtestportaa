@@ -95,7 +95,7 @@ public class AlphaVantageConnector implements ApiConnector {
       bufferedReader.close();
       return responseBuilder.toString();
     } catch (IOException e) {
-      throw new AlphaVantageException("failure sending request", e);
+      throw new AlphaVantageException("failure sending request [" + params + "]", e);
     }
   }
 

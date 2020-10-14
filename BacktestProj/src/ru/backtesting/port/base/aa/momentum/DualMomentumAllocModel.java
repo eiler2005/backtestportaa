@@ -8,8 +8,12 @@ import java.util.List;
 import java.util.Map;
 
 import ru.backtesting.port.base.AllocChoiceModelType;
+import ru.backtesting.port.base.AssetAllocation;
 import ru.backtesting.port.base.aa.AssetAllocPerfInf;
 import ru.backtesting.port.base.aa.AssetAllocationChoiceModel;
+import ru.backtesting.port.base.aa.AssetAllocationUtils;
+import ru.backtesting.port.base.ticker.Ticker;
+import ru.backtesting.port.base.ticker.TickerInf;
 import ru.backtesting.port.results.BacktestResultsStorage;
 import ru.backtesting.utils.Logger;
 
@@ -24,12 +28,10 @@ public class DualMomentumAllocModel implements AssetAllocationChoiceModel {
 	private int assetsHoldCount = -1;	
 	
 	// String moneyFundTicker = "shv";
-	// String moneyFundTicker = "tip";
+	// String moneyFundTicker = "tip"; c 2005ого года
 
 	// String moneyFundTicker = "bnd";
-	// String moneyFundTicker = "BIL"; - котировки корявые
-	// String moneyFundTicker = "CASHX";
-
+	// String moneyFundTicker = "BIL"; - котировки корявые, c 2008ого
 	
 	public DualMomentumAllocModel(String absMomAssetTicker, String moneyFundTicker, int monthPerfPeriod,
 			int assetsHoldCount) {
@@ -41,10 +43,8 @@ public class DualMomentumAllocModel implements AssetAllocationChoiceModel {
 	}
 	
 	@Override
-	public List<AssetAllocPerfInf> calculateAllocation(LocalDateTime date, List<String> tickers, 
-			String outOfMarketPosTicker, LocalDateTime launchDate) {
-		// List<String> tickers = Arrays.asList("LQD", "HYG", "QQQ", "SPY", "EFA", "EEM");
-		
+	public List<AssetAllocPerfInf> calculateAllocation(LocalDateTime date, List<? extends AssetAllocation> assetsAllocEtalon, List<TickerInf> tickers, 
+			TickerInf outOfMarketPos, LocalDateTime launchDate) {		
 		double absMomPerfGrowth1 = DualMomUtils.calcPerformanceScoreInPercentsToMonths(date, absMomAssetTicker, monthPerfPeriod);
 		
 		Logger.log().info("По активу [" + absMomAssetTicker + "] на дату " + date + " процент роста за период " + monthPerfPeriod + " месяцев составил: " + 
@@ -60,41 +60,30 @@ public class DualMomentumAllocModel implements AssetAllocationChoiceModel {
 		List<AssetAllocPerfInf> detailedAssAllocInfList = new ArrayList<AssetAllocPerfInf>();
 		
 		// for excel table data
-		detailedAssAllocInfList.addAll(DualMomUtils.getAssetAllocInfListForParams(Arrays.asList(new String[] { absMomAssetTicker, moneyFundTicker }), 
-				date, 2, monthPerfPeriod, false));
-		DualMomUtils.sellAssetsInPort(detailedAssAllocInfList);
-
-		
-		MomAssetAllocPerfInf outOfMarketTickerAssetAllocInf;
-		
-		// риск офф
-		if ( absMomPerfGrowth1 < moneyFundPercGrowth2  ) {
-			Logger.log().info("Включаем risk of: " + moneyFundTicker + " вырос больше " + absMomAssetTicker);
-						
-			// данные для таблицы excel
-			outOfMarketTickerAssetAllocInf = DualMomUtils.getTickerAssetAllocInf(outOfMarketPosTicker, date, 100, monthPerfPeriod);
-			
-			outOfMarketTickerAssetAllocInf.holdAssetInPort();
-			
-			detailedAssAllocInfList.addAll(DualMomUtils.getAssetAllocInfListForParams(tickers, date, 1, monthPerfPeriod, false));
-			
-			DualMomUtils.sellAssetsInPort(detailedAssAllocInfList);
-		// риск он
-		} else {
-			Logger.log().info("Включаем risk on: " + absMomAssetTicker + " вырос больше " + moneyFundTicker);
-			
-			detailedAssAllocInfList.addAll(DualMomUtils.getAssetAllocInfListForParams(tickers, date, assetsHoldCount, monthPerfPeriod, true));
+		detailedAssAllocInfList.addAll(DualMomUtils.getAssetAllocInfListForPerfomance(
+				Ticker.createTickersList(Arrays.asList(new String[] { absMomAssetTicker, moneyFundTicker })), 
+				date, 2, monthPerfPeriod, 100, false));
+		AssetAllocationUtils.sellAssetsInPort(detailedAssAllocInfList);
+				
+		// risk on
+		if ( absMomPerfGrowth1 >= moneyFundPercGrowth2  ) {
+			Logger.log().info("Включаем risk on: " + absMomAssetTicker + " вырос больше " + moneyFundTicker);		
 			
 			riskResult = true;
 			
-			outOfMarketTickerAssetAllocInf = DualMomUtils.getTickerAssetAllocInf(outOfMarketPosTicker, date, 0, monthPerfPeriod);
-			outOfMarketTickerAssetAllocInf.sellAsset();
+			List<AssetAllocPerfInf> riskOnAlloc = DualMomUtils.calcRiskOnAssets(date, assetsAllocEtalon, 
+					tickers, outOfMarketPos, assetsHoldCount, monthPerfPeriod);
+			
+			detailedAssAllocInfList.addAll(riskOnAlloc);
+		// risk off
+		} else {			
+			Logger.log().info("Включаем risk of: " + moneyFundTicker + " вырос больше " + absMomAssetTicker);
+			
+			List<AssetAllocPerfInf> riskOffAlloc = DualMomUtils.calcRiskOffAssets(date, assetsAllocEtalon, tickers, outOfMarketPos, monthPerfPeriod);
+			
+			detailedAssAllocInfList.addAll(riskOffAlloc);
 		}		
-		
-		// for excel table data
-
-		detailedAssAllocInfList.add(outOfMarketTickerAssetAllocInf);
-		
+				
 		// risk on/off table
 		BacktestResultsStorage.getInstance().putRiskOnOffInfForAbsMom(launchDate, date, 
 				riskResult, absMomPerfGrowth1, moneyFundPercGrowth2);

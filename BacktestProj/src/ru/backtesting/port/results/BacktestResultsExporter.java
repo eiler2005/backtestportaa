@@ -27,11 +27,12 @@ import org.apache.poi.xssf.usermodel.XSSFTableStyleInfo;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import ru.backtesting.utils.DateUtils;
+import ru.backtesting.utils.GlobalProperties;
 import ru.backtesting.utils.Logger;
 import tech.tablesaw.api.Table;
 
 public class BacktestResultsExporter {
-	private static final String FILE_NAME_WITH_TABLE = "\\results\\backtest-result-#date#.xlsx";
+	private static final String FILE_NAME_WITH_TABLE = "\\results\\backtest-result-#date#.xlsx";;
 
 	private XSSFWorkbook workbook;
 	private XSSFSheet sheetMain, sheetDetailed;
@@ -41,7 +42,7 @@ public class BacktestResultsExporter {
 
 	
 	private LocalDateTime launchDate;
-
+	
 	public BacktestResultsExporter(LocalDateTime launchDate) {
 		workbook = new XSSFWorkbook();
 		sheetMain = workbook.createSheet("main");
@@ -50,7 +51,7 @@ public class BacktestResultsExporter {
 
 		this.launchDate = launchDate;
 	}
-
+	
 	// First header
 	public void addSheetHeader(String data) {
 		int firstRow = rowNIterator1 + 1;
@@ -151,16 +152,18 @@ public class BacktestResultsExporter {
 		row.createCell(rowNIterator1 + 2);
 		row.createCell(rowNIterator1 + 3);
 
-		XSSFCell cellPAramValue = row.createCell(4);
+		XSSFCell cellParamValue = row.createCell(4);
 
 		addCellValue(cellParamName, paramName);
-		addCellValue(cellPAramValue, data);
+		addCellValue(cellParamValue, data);
+
+		if ( data instanceof String ) {
+			// CellStyle styleC = workbook.createCellStyle();
+			// styleC.setAlignment(HorizontalAlignment.CENTER);
+			
+			cellParamValue.getCellStyle().setAlignment(HorizontalAlignment.CENTER);
+		}
 		
-		CellStyle styleC = workbook.createCellStyle();
-		styleC.setAlignment(HorizontalAlignment.CENTER);
-
-		cellPAramValue.setCellStyle(styleC);
-
 		sheetMain.setColumnWidth(firstCol, 14 * 256);
 		sheetMain.addMergedRegion(new CellRangeAddress(firstRow, lastRow, firstCol, lastCol));
 
@@ -179,7 +182,8 @@ public class BacktestResultsExporter {
 			cellStyle.setDataFormat(workbook.createDataFormat().getFormat(pattern));
 			cellStyle.setAlignment(HorizontalAlignment.CENTER);
 
-			Logger.log().trace("Добавляем в ячейку таблицы данные с форматом double: " + value);
+			if (GlobalProperties.instance().logExcelAdded() )		
+				Logger.log().trace("Добавляем в ячейку таблицы данные с форматом double: " + value);
 
 			cell.setCellValue(((Double) value).doubleValue());
 		} else if (value instanceof Boolean) {
@@ -190,10 +194,16 @@ public class BacktestResultsExporter {
 			else
 				cell.setCellValue("off");
 
+			if (GlobalProperties.instance().logExcelAdded() )		
+				Logger.log().trace("Добавляем в ячейку таблицы данные с форматом Boolean: " + valueB);
+			
 			cellStyle.setAlignment(HorizontalAlignment.CENTER);
 
 		} else if (value instanceof String) {
 			cell.setCellValue(((String) value));
+			
+			if (GlobalProperties.instance().logExcelAdded() )		
+				Logger.log().trace("Добавляем в ячейку таблицы данные с форматом String: " + value);
 		} else if (value instanceof LocalDateTime) {
 			CreationHelper creationHelper = workbook.getCreationHelper();
 			DataFormat dataFormat = creationHelper.createDataFormat();
@@ -204,11 +214,15 @@ public class BacktestResultsExporter {
 
 			cell.setCellValue((((LocalDateTime) value)).toLocalDate());
 
-			Logger.log().trace("Добавляем в ячейку таблицы данные с форматом date: " + value);
+			if (GlobalProperties.instance().logExcelAdded() )		
+				Logger.log().trace("Добавляем в ячейку таблицы данные с форматом date: " + value);
 
 		} else {
 			cellStyle.setAlignment(HorizontalAlignment.CENTER);
-
+			
+			if (GlobalProperties.instance().logExcelAdded() )		
+				Logger.log().trace("Добавляем в ячейку таблицы данные по методу toString(): " + value.toString());
+		
 			cell.setCellValue(value.toString());
 		}
 
@@ -269,7 +283,8 @@ public class BacktestResultsExporter {
 
 			headerCell.setCellStyle(styleC);
 
-			Logger.log().trace("create table header cell with indexes [" + topLeftRowN + ", " + headerColumnN
+			if (GlobalProperties.instance().logExcelAdded() )		
+				Logger.log().trace("create table header cell with indexes [" + topLeftRowN + ", " + headerColumnN
 					+ "] + value = " + tableData.columnNames().get(i));
 		}
 
@@ -299,14 +314,17 @@ public class BacktestResultsExporter {
 
 				sheetMain.autoSizeColumn(columnN, true);
 
-				Logger.log().trace("create cell with indexes [" + rowN + ", " + columnN + "] + value = " + value);
+				if (GlobalProperties.instance().logExcelAdded() )		
+					Logger.log().trace("create cell with indexes [" + rowN + ", " + columnN + "] + value = " + value);
 			}
 		}
 
 		columnNIterator1 = columnN;
 
-		Logger.log().trace("curRowN = " + rowNIterator1);
-		Logger.log().trace("curColumnN = " + columnNIterator1);
+		if (GlobalProperties.instance().logExcelAdded() ) {
+			Logger.log().trace("curRowN = " + rowNIterator1);
+			Logger.log().trace("curColumnN = " + columnNIterator1);
+		}
 
 		createBaseTable(topLeftRowN, topLeftColumnN, bottomRightRowN, bottomRightColumnN, sheetMain);
 	}
@@ -356,7 +374,8 @@ public class BacktestResultsExporter {
 
 			headerCell.setCellStyle(styleC);
 
-			Logger.log().trace("create table header cell with indexes [" + topLeftRowN + ", " + headerColumnN
+			if (GlobalProperties.instance().logExcelAdded() )		
+				Logger.log().trace("create table header cell with indexes [" + topLeftRowN + ", " + headerColumnN
 					+ "] + value = " + tableData.columnNames().get(i));
 		}
 
@@ -386,14 +405,17 @@ public class BacktestResultsExporter {
 
 				sheetDetailed.autoSizeColumn(columnN);
 
-				Logger.log().trace("create cell with indexes [" + rowN + ", " + columnN + "] + value = " + value);
+				if (GlobalProperties.instance().logExcelAdded() )		
+					Logger.log().trace("create cell with indexes [" + rowN + ", " + columnN + "] + value = " + value);
 			}
 		}
 
 		columnNIterator2 = columnN;
 
-		Logger.log().trace("curRowN = " + rowNIterator2);
-		Logger.log().trace("curColumnN = " + columnNIterator2);
+		if (GlobalProperties.instance().logExcelAdded() ) {
+			Logger.log().trace("curRowN = " + rowNIterator2);
+			Logger.log().trace("curColumnN = " + columnNIterator2);
+		}
 
 		createBaseTable(topLeftRowN, topLeftColumnN, bottomRightRowN, bottomRightColumnN, sheetDetailed);
 	}
@@ -489,14 +511,13 @@ public class BacktestResultsExporter {
 	public void writeToFile() throws IOException {
 		Properties props = System.getProperties();
 
-		String curDateStr = new SimpleDateFormat("yyyy-MM-dd_HH_mm").format(DateUtils.asDate(launchDate));
+		String curDateStr = new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss").format(DateUtils.asDate(launchDate));
 
-		String filePath = (props.getProperty("user.dir") + "\\logs" + FILE_NAME_WITH_TABLE).replaceAll("#date#",
+		String filePath = (props.getProperty("user.dir") + "\\logs" + FILE_NAME_WITH_TABLE).replaceAll("#date#", 
 				curDateStr);
-
-		try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
+		
+		FileOutputStream fileOut = new FileOutputStream(filePath);
 			workbook.write(fileOut);
-		}
 	}
 
 	private XSSFTable createBaseTable(int topLeftRowN, int topLeftColumnN, int bottomRightRowN, int bottomRightColumnN,

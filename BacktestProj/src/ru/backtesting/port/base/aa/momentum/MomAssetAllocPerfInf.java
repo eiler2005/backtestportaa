@@ -3,11 +3,13 @@ package ru.backtesting.port.base.aa.momentum;
 import java.time.LocalDateTime;
 
 import ru.backtesting.port.base.AllocChoiceModelType;
+import ru.backtesting.port.base.AllocationType;
 import ru.backtesting.port.base.aa.AssetAllocPerfInf;
 import ru.backtesting.port.base.aa.AssetInThePort;
+import ru.backtesting.port.base.ticker.AbstractTickerInf;
+import ru.backtesting.port.base.ticker.TickerInf;
 
-public class MomAssetAllocPerfInf implements AssetAllocPerfInf {
-	protected String ticker;
+public class MomAssetAllocPerfInf extends AbstractTickerInf implements AssetAllocPerfInf {
 	
 	protected LocalDateTime startDate, endDate;
 	
@@ -19,20 +21,28 @@ public class MomAssetAllocPerfInf implements AssetAllocPerfInf {
 	
 	protected AssetInThePort isHoldInPort = AssetInThePort.Sell;
 	
+	private String code;
+	
 	public MomAssetAllocPerfInf(String ticker, LocalDateTime startDate, LocalDateTime endDate,
 			double stockQuoteStart, double stockQuoteEnd, double percGrowth) {
-		super();
-		this.ticker = ticker;
+		super(ticker);
+		
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.stockQuoteStart = stockQuoteStart;
 		this.stockQuoteEnd = stockQuoteEnd;
 		this.percGrowth = percGrowth;
 	}
-
-	@Override
-	public String getTicker() {
-		return ticker;
+	
+	public MomAssetAllocPerfInf(TickerInf tickerInf, LocalDateTime startDate, LocalDateTime endDate,
+			double stockQuoteStart, double stockQuoteEnd, double percGrowth) {
+		super(tickerInf);
+		
+		this.startDate = startDate;
+		this.endDate = endDate;
+		this.stockQuoteStart = stockQuoteStart;
+		this.stockQuoteEnd = stockQuoteEnd;
+		this.percGrowth = percGrowth;
 	}
 
 	@Override
@@ -58,7 +68,7 @@ public class MomAssetAllocPerfInf implements AssetAllocPerfInf {
 	}
 
 	@Override
-	public AllocChoiceModelType getType() {
+	public AllocChoiceModelType getAllocModelType() {
 		return AllocChoiceModelType.Momentum;
 	}
 
@@ -69,6 +79,9 @@ public class MomAssetAllocPerfInf implements AssetAllocPerfInf {
 
 	@Override
 	public boolean isHoldInPort() {
+		if ( percGrowth == DualMomUtils.NOT_AVAILABLE_QUOTE_PERF )
+			return false;
+					
 		if ( isHoldInPort == AssetInThePort.Hold )
 			return true;
 		else return false;
@@ -93,6 +106,11 @@ public class MomAssetAllocPerfInf implements AssetAllocPerfInf {
 	
 	@Override
 	public String toString() {
-		return "MomAssetAllocPerfInf [ticker=" + ticker + ", allocPercent=" + allocPercent + ", percGrowth = " + percGrowth + ", type = " + getType() + "]";
+		return "MomAssetAllocPerfInf [ticker=" + getTicker() + ", code = " + code + ", allocPercent=" + allocPercent + ", percGrowth = " + percGrowth + ", type = " + getAllocModelType() + "]";
+	}
+
+	@Override
+	public AllocationType getType() {
+		return AllocationType.Satellite;
 	}
 }

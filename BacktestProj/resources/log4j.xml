@@ -2,13 +2,13 @@
 <Configuration status="warn">
 	<Appenders>
 		<RollingFile name="fileLogger"
-			fileName="logs/backtest-info-${date:yyyy-MM-dd_HH_mm}.log"
-			filePattern="logs/backtest-info-%d{yyyy-MM-dd_HH_mm}.log">
+			fileName="logs/log4j/backtest-info-${date:yyyy-MM-dd_HH_mm}.log"
+			filePattern="logs/log4j/backtest-info-%d{yyyy-MM-dd_HH_mm}.log">
 			<PatternLayout>
 				<pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</pattern>
 			</PatternLayout>
 			<Policies>
-				<SizeBasedTriggeringPolicy size="10 MB"/>
+				<SizeBasedTriggeringPolicy size="50 MB"/>
 			</Policies>
 		</RollingFile>
 

@@ -10,5 +10,5 @@ public interface AssetAllocPerfInf extends AssetAllocation {
 
 	public double getStockQuoteStart();
 	
-	public AllocChoiceModelType getType();
+	public AllocChoiceModelType getAllocModelType();
 }

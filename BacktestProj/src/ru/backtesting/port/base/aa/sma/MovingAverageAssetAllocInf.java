@@ -19,13 +19,13 @@ public class MovingAverageAssetAllocInf extends MomAssetAllocPerfInf {
 	}
 
 	@Override
-	public AllocChoiceModelType getType() {
+	public AllocChoiceModelType getAllocModelType() {
 		return AllocChoiceModelType.MovingAveragesForAsset;
 	}
 	
 	@Override
 	public String toString() {
-		return "MovingAverageAssetAllocInf [ticker=" + ticker + ", allocPercent=" + allocPercent + ", smaSignal = " + smaSignal + "]";
+		return "MovingAverageAssetAllocInf [ticker=" + getTickerInf() + ", allocPercent=" + allocPercent + ", smaSignal = " + smaSignal + "]";
 	}
 
 	public MovingAverageIndicatorSignal getSmaSignal() {
@@ -34,16 +34,16 @@ public class MovingAverageAssetAllocInf extends MomAssetAllocPerfInf {
 	
 	@Override
 	public double getStockQuoteStart() {
-		throw new NotImplementedException("Метод не поддерживается для типа " + getType());
+		throw new NotImplementedException("Метод не поддерживается для типа " + getAllocModelType());
 	}
 	
 	@Override
 	public LocalDateTime getStartDate() {
-		throw new NotImplementedException("Метод не поддерживается для типа " + getType());
+		throw new NotImplementedException("Метод не поддерживается для типа " + getAllocModelType());
 	}
 
 	@Override
 	public double getPercGrowth() {
-		throw new NotImplementedException("Метод не поддерживается для типа " + getType());
+		throw new NotImplementedException("Метод не поддерживается для типа " + getAllocModelType());
 	}
 }

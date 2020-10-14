@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import ru.backtesting.port.Portfolio;
-import ru.backtesting.port.PositionInformation;
+import ru.backtesting.port.PositionSet;
 import ru.backtesting.port.base.TimingModel;
 import ru.backtesting.port.base.aa.AssetAllocPerfInf;
 import ru.backtesting.port.base.aa.sma.MovingAverageAssetAllocInf;
@@ -59,13 +59,14 @@ public class BacktestResultsStorage {
 	}
 	
 	public void putBacktestResults(LocalDateTime launchDate, int startYear, int endYear, double cagr,
-			double drawdown, double finalBalance) {
+			double drawdown, double underwaterPeriodLenght, double finalBalance) {
 		
 		Map<String, Object> portParamsMap = new LinkedHashMap<String, Object>();
 		
-		portParamsMap.put("cagr (%) momentum asset", cagr);
-		portParamsMap.put("max drawdown",  drawdown);
-		portParamsMap.put("final balance",  finalBalance);
+		portParamsMap.put("cagr (%) momentum asset", new Double(cagr));
+		portParamsMap.put("max drawdown",  new Double(drawdown));
+		portParamsMap.put("final balance",  new Double(finalBalance));
+		portParamsMap.put("underwater period (days)", underwaterPeriodLenght);
 		
 		BacktestResultsExporter exporter = exporters.get(launchDate);
 				
@@ -73,8 +74,8 @@ public class BacktestResultsStorage {
 				"Market Timing Results (" + startYear + " - " + endYear + ")");
 	}
 	
-	public void putPortBalanceOnDate(LocalDateTime launchDate, LocalDateTime date, double balance) {
-		results.get(launchDate).putPortBalanceOnDate(date, balance);
+	public void putPortBalance(LocalDateTime launchDate, Map<LocalDateTime, Double> portBalance) {
+		results.get(launchDate).putPortBalance(portBalance);
 	}
 	
 	public void putRiskOnOffInfForAbsMom(LocalDateTime launchDate, LocalDateTime date, boolean riskValue, double absMomAssetInf, double cashFundInf) {
@@ -94,7 +95,7 @@ public class BacktestResultsStorage {
 		results.get(launchDate).putDetailedBacktestInformation(assetAllocPerfInf);
 	}
 	
-	public void putStockQuantityInPort(LocalDateTime launchDate, TimingModel timingModel, LinkedHashMap<LocalDateTime, List<PositionInformation>> postionsOnDates) {
+	public void putStockQuantityInPort(LocalDateTime launchDate, TimingModel timingModel, PositionSet postionsOnDates) {
 		results.get(launchDate).putStockQuantityInPort(timingModel, postionsOnDates);
 	}
 	

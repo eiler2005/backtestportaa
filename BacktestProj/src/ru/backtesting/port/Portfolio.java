@@ -2,46 +2,66 @@ package ru.backtesting.port;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.NotImplementedException;
-import org.patriques.output.AlphaVantageException;
-
-import com.google.common.collect.Lists;
 
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
 import ru.backtesting.port.base.AllocChoiceModelType;
-import ru.backtesting.port.base.AssetAllocationBase;
+import ru.backtesting.port.base.AssetAllocation;
 import ru.backtesting.port.base.TimingModel;
+import ru.backtesting.port.base.aa.AssetAllocPerfInf;
+import ru.backtesting.port.base.ticker.Ticker;
+import ru.backtesting.port.base.ticker.TickerInf;
+import ru.backtesting.port.results.BackTestResultsUtils;
 import ru.backtesting.port.results.BacktestResultsStorage;
+import ru.backtesting.port.signals.PositionSignalHandler;
 import ru.backtesting.rebalancing.Frequency;
 import ru.backtesting.rebalancing.TimingModelInf;
 import ru.backtesting.rebalancing.TimingModelType;
 import ru.backtesting.stockquotes.StockQuote;
 import ru.backtesting.stockquotes.StockQuoteHistory;
 import ru.backtesting.stockquotes.TradingTimeFrame;
+import ru.backtesting.utils.DateUtils;
+import ru.backtesting.utils.GlobalProperties;
 import ru.backtesting.utils.Logger;
 import ru.backtesting.utils.PortfolioUtils;
 
 public class Portfolio {
-	public static final String CASH_TICKER = "CASH";
+	public static final boolean RISK_ON_OFF_TICKERS_CLOSE = false;
+	
+	protected String name;
+	protected int startYear;
+	protected int endYear;
+	protected double initialAmount;
+	protected boolean reinvestDividends;
+	protected TimingModelInf timingModelInf;
+	protected TimingModel timingModel;
+	protected String pvzLink;
+	protected LocalDateTime launchDate;
 
-	private String name;
-	private int startYear;
-	private int endYear;
-	private double initialAmount;
-	private LinkedHashMap<LocalDateTime, List<PositionInformation>> postionsOnDates;
-	private boolean reinvestDividends;
-	private TimingModelInf timingModelInf;
-	private TimingModel timingModel;
-	private String pvzLink;
-	private LocalDateTime launchDate;
+	protected PositionSet positionsSet;
+	protected List<LocalDateTime> backtestDates;
+	protected Map<LocalDateTime, Double> balanceOnDate;
+
+	private List<LocalDateTime> allTradingDates;
+
+	protected PositionSignalHandler exitSignalHandler;
+	
+	protected Portfolio() {
+
+	}
 
 	public Portfolio(String name, String pvzLink, int startYear, int endYear, double initialAmount,
-			TimingModel timingModel, TimingModelInf timingModelInf, boolean reinvestDividends) {
+			TimingModel timingModel, TimingModelInf timingModelInf, PositionSignalHandler handler, boolean reinvestDividends) {
 		this.pvzLink = pvzLink;
 
+		this.exitSignalHandler = handler;
+		
 		PortfolioConsctructor(name, pvzLink, startYear, endYear, initialAmount, timingModel, timingModelInf,
 				reinvestDividends);
 	}
@@ -51,54 +71,144 @@ public class Portfolio {
 		PortfolioConsctructor(name, pvzLink, startYear, endYear, initialAmount, timingModel, timingModelInf,
 				reinvestDividends);
 	}
-
-	private void PortfolioConsctructor(String name, String pvzLink, int startYear, int endYear, double initialAmount,
+	
+	protected void PortfolioConsctructor(String name, String pvzLink, int startYear, int endYear, double initialAmount,
 			TimingModel timingModel, TimingModelInf timingModelInf, boolean reinvestDividends) {
 		this.name = name;
 		this.startYear = startYear;
 		this.endYear = endYear;
 		this.initialAmount = initialAmount;
-		this.postionsOnDates = new LinkedHashMap<LocalDateTime, List<PositionInformation>>();
 		this.timingModelInf = timingModelInf;
 		this.timingModel = timingModel;
 
 		this.reinvestDividends = reinvestDividends;
 
+		backtestDates = new ArrayList<LocalDateTime>();
+		positionsSet = new PositionSet();
+
 		Logger.log().info(prinfPortfolioInformation());
 
 		this.launchDate = LocalDateTime.now();
+
+		this.balanceOnDate = new LinkedHashMap<LocalDateTime, Double>();
+
+		allTradingDates = new ArrayList<LocalDateTime>();
 
 		BacktestResultsStorage.getInstance().putBasePortfolioParams(launchDate, this);
 
 		BacktestResultsStorage.getInstance().putMarketTimingModelParams(launchDate, this);
 	}
+	
+	private void fillAllTradingDatesInStore() {
+		String ticker = "eem";
+
+		Logger.log().info("Получаем информацию по доступным датам (когда были торги) на базе тикера " + ticker
+				+ ", т к у него история с начала 2000ых годов");
+
+		StockQuoteHistory.storage().loadQuotesData(ticker, TradingTimeFrame.Daily, reinvestDividends);
+
+		allTradingDates = StockQuoteHistory.storage().getTradingDatesByPeriod(ticker, TradingTimeFrame.Daily);
+	}
 
 	public void fillQuotesData() {
-		String outOfMarketPosTicker = timingModel.getOutOfMarketPosTicker();
+		String outOfMarketPosTicker = timingModel.getOutOfMarketPosTicker().getTicker();
 		TradingTimeFrame timeFrame = timingModel.getTimeFrame();
 
+		List<TickerInf> tickersInf = new ArrayList<TickerInf>();
+		tickersInf.addAll(timingModel.getPortTickers());
+		tickersInf.add(timingModel.getOutOfMarketPosTicker());
+
 		// портфель забивается данными - без расчета цены и т п
-		for (String ticker : timingModel.getPortTickers())
-			fillQuotesData(ticker, timeFrame, timingModelInf.getFrequency(), postionsOnDates);
+		for (TickerInf ticker : tickersInf)
+			fillQuotesData(ticker, timeFrame, timingModelInf.getFrequency());
 
+		// in risk-on off alloc model tickers
 		for (String ticker : timingModel.getAllocChoiceModel().getRiskOnOffTickers())
-			StockQuoteHistory.storage().loadQuotesData(ticker, TradingTimeFrame.Daily, reinvestDividends);
-		
-		if (outOfMarketPosTicker != null && !outOfMarketPosTicker.equals(CASH_TICKER)) {
-			if (StockQuoteHistory.storage().containsDataInStorage(outOfMarketPosTicker, timeFrame))
-				return;
+			StockQuoteHistory.storage().loadQuotesData(ticker, TradingTimeFrame.Daily, RISK_ON_OFF_TICKERS_CLOSE);
 
-			StockQuoteHistory.storage().loadQuotesData(outOfMarketPosTicker, timeFrame, reinvestDividends);
+		if (outOfMarketPosTicker != null && !outOfMarketPosTicker.equals(Ticker.CASH_TICKER))
+			if (!StockQuoteHistory.storage().containsDataInStorage(outOfMarketPosTicker, timeFrame)) {
+				StockQuoteHistory.storage().loadQuotesData(outOfMarketPosTicker, timeFrame, reinvestDividends);
 
-			if (!timeFrame.equals(TradingTimeFrame.Daily))
-				StockQuoteHistory.storage().loadQuotesData(outOfMarketPosTicker, TradingTimeFrame.Daily,
-						reinvestDividends);
+				if (!timeFrame.equals(TradingTimeFrame.Daily))
+					StockQuoteHistory.storage().loadQuotesData(outOfMarketPosTicker, TradingTimeFrame.Daily,
+							reinvestDividends);
+			}
+
+		for (LocalDateTime date : positionsSet.getDates())
+			Logger.log().trace("Заполнили портфель пустыми позициями для перед очисткой [" + date + "]:"
+					+ positionsSet.getPositions(date));
+
+		Logger.log().info(
+				"Выводим всю информацию по датам-тикерам-котировкам, которые есть в базе котировок, даты - positionsSet.getDates()");
+		Logger.log().info(
+				PortPrintngInformationHelper.printStockQuotes(Ticker.getTiskers(tickersInf), positionsSet.getDates()));
+
+		Logger.log().info(
+				"Выводим всю информацию по позициям в портфеле перед прогоном бектеста - positionsSet.getPositions() и перед checkTodayQuotesOnAvailability");
+		Logger.log().info(PortPrintngInformationHelper.printPortPositons(positionsSet));
+
+		checkTodayQuotesOnAvailability(timingModel.getPortTickers());
+
+		for (LocalDateTime date : positionsSet.getDates())
+			Logger.log().trace(
+					"Заполнили портфель пустыми позициями для даты [" + date + "]:" + positionsSet.getPositions(date));
+
+		Logger.log().info(
+				"Выводим всю информацию по позициям в портфеле (после checkTodayQuotesOnAvailability()) - positionsSet.getPositions()");
+		Logger.log().info(PortPrintngInformationHelper.printPortPositons(positionsSet));
+
+		fillAllTradingDatesInStore();
+	}
+
+	private void checkTodayQuotesOnAvailability(List<TickerInf> tickers) {		
+		for (int i = backtestDates.size() - 1; i >= 0; i--) {
+			LocalDateTime date = backtestDates.get(i);
+
+			if ( isQuotesAreAvailable(date, positionsSet.getPositions(date)) ) {
+			
+			// if (positionContainsQuote(tickers, date)) {
+				Logger.log()
+						.trace("Метод checkTodayQuotesOnAvailability: Нашли посл дату в портфеле со всеми котировками ["
+								+ date + "].");
+			} else {
+				Logger.log().trace("Метод checkTodayQuotesOnAvailability: Удаляем из портфеля дату[" + date
+						+ "] без полностью заполненных котировок: " + positionsSet.getPositions(date));
+
+				backtestDates.remove(date);
+				positionsSet.remove(date);
+				balanceOnDate.remove(date);
+			}
 		}
 	}
 
-	private void fillQuotesData(String ticker, TradingTimeFrame timeFrame, Frequency frequency,
-			LinkedHashMap<LocalDateTime, List<PositionInformation>> positions) {
-		if (StockQuoteHistory.storage().containsDataInStorage(ticker, timeFrame))
+	@Deprecated
+	private boolean positionContainsQuote(List<TickerInf> tickers, LocalDateTime date) {
+		for (TickerInf ticker : tickers) {
+			boolean findTickers = false;
+
+			for (PositionInformation pos : positionsSet.getPositions(date)) {
+				if (pos.getTickerInf().equals(ticker))
+					findTickers = true;
+			}
+
+			if (findTickers == false) {
+				findTickers = StockQuoteHistory.storage().containsQuoteValueInStorage(ticker.getTicker(), TradingTimeFrame.Daily,
+						date);
+
+				if (findTickers == false)
+					return false;
+			}
+		}
+
+		return true;
+	}
+
+	private void fillQuotesData(TickerInf tickerInf, TradingTimeFrame timeFrame, Frequency frequency) {
+		String ticker = tickerInf.getTicker();
+
+		if (StockQuoteHistory.storage().containsDataInStorage(ticker, timeFrame)
+				&& positionsSet.containsTicker(tickerInf))
 			return;
 
 		StockQuoteHistory.storage().loadQuotesData(ticker, TradingTimeFrame.Daily, reinvestDividends);
@@ -106,27 +216,40 @@ public class Portfolio {
 		if (!timeFrame.equals(TradingTimeFrame.Daily))
 			StockQuoteHistory.storage().loadQuotesData(ticker, timeFrame, reinvestDividends);
 
-		List<LocalDateTime> dates = StockQuoteHistory.storage().getTradingDatesByFilter(ticker, timeFrame, startYear,
-				endYear, frequency);
+		List<LocalDateTime> dates = null;
 
-		for (LocalDateTime date : dates)
-			if (positions.get(date) == null) {
-				List<PositionInformation> otherPositions = new ArrayList<PositionInformation>();
-				otherPositions.add(new PositionInformation(ticker, date));
+		if (GlobalProperties.instance().isSoftQuotesInPort()) {
+			LocalDateTime firstQuoteAvailabilityDay = StockQuoteHistory.storage().getFirstQuoteAvailabilityDay(ticker,
+					timeFrame);
 
-				positions.put(date, otherPositions);
-			} else {
-				List<PositionInformation> otherPositions = positions.get(date);
-				otherPositions.add(new PositionInformation(ticker, date));
-			}
+			dates = StockQuoteHistory.storage().getTradingDatesByFilter(ticker, timeFrame, firstQuoteAvailabilityDay,
+					startYear, endYear, frequency);
+		} else
+			dates = StockQuoteHistory.storage().getTradingDatesByFilter(ticker, timeFrame, startYear, endYear,
+					frequency);
+
+		Logger.log().trace(
+				"Получили торговые даты для [" + tickerInf + "] и типа ребалансировки [" + frequency + "] :" + dates);
+		Logger.log().trace(PortPrintngInformationHelper.printTradingDays(ticker, frequency, dates));
+
+		Logger.log().trace("Добавляем даты в текущий набор торговых дней :" + backtestDates);
+
+		DateUtils.addDatesWithSort(backtestDates, dates);
+
+		Logger.log().trace("После сортировки : " + backtestDates);
+
+		for (LocalDateTime date : backtestDates)
+			positionsSet.addNewPosition(tickerInf, date);			
 	}
 
 	public void backtestPortfolio() {
 		TimingModelType modelType = timingModelInf.getMethod();
 		TradingTimeFrame timeFrame = timingModel.getTimeFrame();
-		List<AssetAllocationBase> assetAllocList = timingModel.getFixedAllocations();
+		List<? extends AssetAllocation> assetAllocList = timingModel.getFixedAllocations();
 		AllocChoiceModelType allocChoiceType = timingModel.getAllocChoiceModel().getType();
 		List<MarketIndicatorInterface> riskControlSignals = timingModel.getRiskControlSignals();
+
+		Logger.log().info("Портфель будет делать бектест по следующим датам :" + backtestDates);
 
 		// BuyAndHold: купил в начале срока - продал в конце
 		if (modelType.equals(TimingModelType.BuyAndHold)) {
@@ -144,67 +267,128 @@ public class Portfolio {
 			throw new NotImplementedException("Для портфелей с типом " + modelType + " пока нет реализации");
 		} else if (modelType.equals(TimingModelType.AssetAllocationTiming)) {
 			LocalDateTime prevDate = null;
+	
+			double moneyCount = initialAmount;
 
-			// обход по датам
-			for (LocalDateTime date : postionsOnDates.keySet()) {
-				Logger.log().info("|| || Формирование портфеля на дату: " + date + " || ||");
+			List<PositionInformation> portPositions = null;
+			List<AssetAllocPerfInf> curPortAlloc = null;
 
-				Logger.log().info("Начинаем пересчитывать стоимость позиций в портфеле");
+			boolean runBackTest = true;
+			
+			for (LocalDateTime date : allTradingDates) {
 
-				if (!isQuotesAreAvailable(date, postionsOnDates.get(date)))
-					Logger.log().info("На дату [" + date
-							+ "] рассчитаны не все котировки, поэтому не пересчитываем содержимое портфеля");
-				else {
-					double portfolioBalance = prevDate == null ? initialAmount
-							: PortfolioUtils.calculateAllPositionsBalance(postionsOnDates.get(prevDate), timeFrame,
-									date, true);
+				boolean isSignalTriggered = false;
+				
+				if (exitSignalHandler != null && date.getYear() >= startYear && prevDate != null)
+					isSignalTriggered = exitSignalHandler.handleOnDate(prevDate, date, this, false);
 
-					Logger.log()
-							.info("Пересчитали стоимость портфеля на дату [" + date
-									+ "](сколько денег у нас есть для покупки): "
-									+ Logger.log().doubleAsString(portfolioBalance));
+				// обход по датам из портфеля в соответствии с параметрами ребалансиовки
+				if (backtestDates.contains(date) && !isSignalTriggered) {
+					Logger.log().info("|| || ___________________________________________ || ||");
+					Logger.log().info("|| || Формирование портфеля на дату: " + date + " || ||");
 
-					// покупаем или кеш
-					// меняем ли ассет аллок
+					Logger.log().info("Начинаем пересчитывать стоимость позиций в портфеле");
 
-					List<PositionInformation> portPositions = null;
+					if (!isQuotesAreAvailable(date, positionsSet.getPositions(date))) {
+						Logger.log().error("На дату [" + date
+								+ "] рассчитаны не все котировки, поэтому не пересчитываем содержимое портфеля и прекращаем бектест");
+						
+						runBackTest = false;
+						
+						backtestDates.remove(date);
+						positionsSet.remove(date);
+					}
+					else {
+						if (prevDate == null) {
+							Logger.log().info("Начинаем формировать портфель. Начальный баланс: "
+									+ Logger.log().doubleAsString(moneyCount));
 
+							balanceOnDate.put(date, new Double(moneyCount));
+						} else {
+							Logger.log().info("Рассчитывем стоимость портфеля с даты предыдущего прогона " + prevDate);
+
+							// Logger.log().info("Pred positions: ");
+
+							// List<PositionInformation> prevPos = positionsSet.getPositions(date);
+							// PortfolioUtils.printPositions(prevPos);
+
+							double newPortfolioBalance = PortfolioUtils.calculatePortBalanceOnDate(
+									positionsSet.getPositions(prevDate), timeFrame, date, true);
+
+							Logger.log().info("Пересчитали стоимость портфеля: "
+									+ Logger.log().doubleAsString(newPortfolioBalance) + " на дату " + date);
+
+							double growthPerc = ((newPortfolioBalance - moneyCount) / moneyCount) * 100;
+
+							Logger.log().info("Рост с [" + prevDate + "] по [" + date + "] составил (%): "
+									+ Logger.log().doubleAsString(growthPerc));
+
+							moneyCount = newPortfolioBalance;
+						}
+
+						// покупаем или кеш
+						// меняем ли ассет аллок
+
+						if (allocChoiceType == AllocChoiceModelType.FixedAssetAllocation) {
+							// fixed asset alloc
+
+							portPositions = PortfolioUtils.calculatePortPosOnMoneyLimit(date, timeFrame, assetAllocList,
+									timingModel.getOutOfMarketPosTicker(), moneyCount, riskControlSignals);
+
+							throw new IllegalArgumentException(
+									"Необходимо сделать обработку для модели типа:" + allocChoiceType);
+						} else if (allocChoiceType == AllocChoiceModelType.Momentum
+								|| allocChoiceType == AllocChoiceModelType.MovingAveragesForAsset) {
+							curPortAlloc = timingModel.calculateAllocationsBySignals(date, launchDate);
+
+							portPositions = PortfolioUtils.calculatePortPosOnMoneyLimit(date, timeFrame, curPortAlloc,
+									timingModel.getOutOfMarketPosTicker(), moneyCount, riskControlSignals);
+						} else
+							throw new IllegalArgumentException(
+									"Необходимо сделать обработку для модели типа:" + allocChoiceType);
+					}
+				} else if ( exitSignalHandler != null && isSignalTriggered ){
+					Logger.log().info("-- Получили сигнал на исполнение доп. условия на дату, пересчитываем портфель: " + date + " --");
+					
+					portPositions = exitSignalHandler.getPositions();
+					
+					moneyCount = exitSignalHandler.getBalance();
 					
 					if (allocChoiceType == AllocChoiceModelType.FixedAssetAllocation) {
-						// fixed asset alloc
+						throw new IllegalArgumentException(
+								"Необходимо сделать обработку для модели типа:" + allocChoiceType);					
+					} else if (allocChoiceType == AllocChoiceModelType.Momentum
+							|| allocChoiceType == AllocChoiceModelType.MovingAveragesForAsset) {
+						curPortAlloc = timingModel.calculateAllocationsBySignals(date, launchDate);
+					}
+					
+					exitSignalHandler.handleAllocations(curPortAlloc);
+					
+					isSignalTriggered = false;
+					
+					backtestDates.add(date);
+					
+					Collections.sort(backtestDates);
+				}
 
-						portPositions = calculatePortOnDate(date, timeFrame, assetAllocList, portfolioBalance,
-								riskControlSignals);
-					} else if (allocChoiceType == AllocChoiceModelType.Momentum || 
-							allocChoiceType == AllocChoiceModelType.MovingAveragesForAsset) {
-						List<AssetAllocationBase> alloc = timingModel.calculateAllocationsBySignals(date, launchDate);
+				if ( backtestDates.contains(date) && runBackTest ) {
+				
+					balanceOnDate.put(date, new Double(moneyCount));
+					
+					positionsSet.updatePositions(date, portPositions);
 
-						portPositions = calculatePortOnDate(date, timeFrame, alloc, portfolioBalance,
-								riskControlSignals);
-					} else
-						throw new IllegalArgumentException("Необходимо сделать обработку для модели типа:" + allocChoiceType);
+					Logger.log().info("Заполняем портфель по новой аллокации");
 
-					double newPortfolioBalance = PortfolioUtils.calculateAllPositionsBalance(portPositions);
+					printBackTestResult(date, portPositions, curPortAlloc, moneyCount);
 
-					Logger.log().info("Стоимость портфеля на [" + date + "] : "
-							+ Logger.log().doubleAsString(newPortfolioBalance));
+					// put detailed data in excel storage
+					if ( timingModelInf.getFrequency() != Frequency.Daily )
+						putBackTestResultDataInStorage(launchDate, date, curPortAlloc,
+							positionsSet.getSetOfUniquePositions());
 
-					Logger.log()
-							.info("Информация по позициям новой аллокации портфеля[с "
-									+ date.toLocalDate().plusMonths(1).getMonth() + " "
-									+ date.toLocalDate().plusMonths(1).getYear() + " года] ниже:");
-
-					PortfolioUtils.printPositions(portPositions);
-
-					Logger.log().info("-------------");
-
-					postionsOnDates.put(date, portPositions);
-
-					BacktestResultsStorage.getInstance().putPortBalanceOnDate(launchDate, date, newPortfolioBalance);					
 					prevDate = date;
 				}
-				
-			}			
+			}
 		} else if (modelType.equals(TimingModelType.ForSignals)) {
 			// вместо распределения ограничиваем риски макс позицией в том или ином
 			// инструменте - скорее риск-менеджмент, а не распределение
@@ -219,128 +403,62 @@ public class Portfolio {
 
 			throw new NotImplementedException("Для портфелей с типом " + modelType + " пока нет реализации");
 		}
+
+		BacktestResultsStorage.getInstance().putPortBalance(launchDate, balanceOnDate);
+
+		BacktestResultsStorage.getInstance().putStockQuantityInPort(launchDate, timingModel, positionsSet);
+
+	}
+	
+	private void printBackTestResult(LocalDateTime date, List<PositionInformation> positions,
+			List<AssetAllocPerfInf> alloc, double balance) {
+		Logger.log()
+				.info("Информация по позициям новой аллокации портфеля[с " + date.toLocalDate().plusMonths(1).getMonth()
+						+ " " + date.toLocalDate().plusMonths(1).getYear() + " года] ниже:");
+
+		Logger.log().info("Аллокация в портфеле следующая:");
+		Logger.log().info(PortPrintngInformationHelper.printPortAllocations(alloc));
+
+		Logger.log().info(
+				"Будем покупать в портфель следующие позиции на сумму: " + Logger.log().doubleAsString(balance));
 		
-		BacktestResultsStorage.getInstance().putStockQuantityInPort(launchDate, timingModel, postionsOnDates);
+		PortfolioUtils.printPositions(positions);
+
+		Logger.log().info("-------------");
 
 	}
+	
+	public void putBackTestResultDataInStorage(LocalDateTime launchDate, LocalDateTime date,
+			List<AssetAllocPerfInf> allocList, List<PositionInformation> allPositions) {
+		// detailed risk-onoff inf to excel
+		List<String> riskOnOffTickers = timingModel.getAllocChoiceModel().getRiskOnOffTickers();
 
-	public List<PositionInformation> calculatePortOnDate(LocalDateTime date, TradingTimeFrame timeFrame,
-			List<AssetAllocationBase> assetsAllocation, double portfolioBalance, List<MarketIndicatorInterface> signals) {
-		String outOfMarketPosTicker = timingModel.getOutOfMarketPosTicker();
+		List<AssetAllocPerfInf> riskOnOffAlloc = BackTestResultsUtils.filterAssetAllocPerfInfByParams(riskOnOffTickers,
+				allocList);
 
-		List<PositionInformation> positions = postionsOnDates.get(date);
-		positions = new ArrayList<PositionInformation>();
+		Logger.log().info("Помещаем в хранилище результатов Excel данные о аллокациях: (riskOnOff) " + riskOnOffAlloc
+				+ " на дату " + date);
 
-		for (int i = 0; i < assetsAllocation.size(); i++) {
-			String ticker = assetsAllocation.get(i).getTicker();
+		BacktestResultsStorage.getInstance().putDetailedRiskOnOffInformation(launchDate, date, riskOnOffAlloc);
 
-			double allocationPercent = assetsAllocation.get(i).getAllocationPercent();
+		// detailed other inf to excel
 
-			if (allocationPercent != 0) {
+		List<AssetAllocPerfInf> allTickersAlloc = BackTestResultsUtils.generateAssetAllocForPort(allocList,
+				allPositions);
 
-				if (!StockQuoteHistory.storage().containsDataInStorage(ticker, timeFrame)
-						&& !ticker.equals(CASH_TICKER))
-					throw new AlphaVantageException("Не рассчитаны котировки для тикера: " + ticker + " на дату: "
-							+ date + " для периода: " + timeFrame);
+		/*
+		 * if ( 1 == 1 ) { Logger.log().info("Все позиции для вывода в эксель:");
+		 * PortfolioUtils.printPositions(allPositions);
+		 * 
+		 * Logger.log().info("Аллокация для вывода в эксель:");
+		 * Logger.log().trace(PortPrintngInformationHelper.printPortAllocations(
+		 * allTickersAlloc)); }
+		 */
 
-				// надо принять решение покупаем текущую акцию или уходим в outOfMarketTicker
+		Logger.log().info("Помещаем в хранилище результатов Excel данные о аллокациях: (allTickers + outOfMarket) "
+				+ allTickersAlloc + " на дату " + date);
 
-				boolean isHoldInPortfolio = PortfolioUtils.isHoldInPortfolio(signals, ticker, timeFrame, date);
-
-				Logger.log().info("Приняли решение держать в портфеле(true)/продавать(false) [" + ticker + "] : "
-						+ isHoldInPortfolio);
-
-				// для кэша все остается без изменений
-				double quoteValue = 0, quantity = 1;
-
-				if (ticker.equals(CASH_TICKER)) {
-					quoteValue = (double) allocationPercent * portfolioBalance / 100;
-
-					quantity = 1;
-				}
-
-				if (isHoldInPortfolio && !ticker.equals(CASH_TICKER)) {
-					// купить в соответствии с assetAllocation
-					// считаем сколько стоит акция на данный момент времени
-					quoteValue = StockQuoteHistory.storage().getQuoteByDate(ticker, timeFrame, date).getClose();
-
-					// считаем сколько мы можем купить акций по цене на данный момент времени с
-					// учетом текущей стоимости портфеля
-					quantity = PortfolioUtils.calculateQuantityStocks(ticker, quoteValue, portfolioBalance,
-							assetsAllocation.get(i));
-
-					// у нас есть на новые покупки quantity*quote
-
-					Logger.log()
-							.info("Купили в портфель [" + ticker + "] " + Logger.log().doubleAsString(quantity)
-									+ " лотов на сумму " + Logger.log().doubleAsString(quantity * quoteValue)
-									+ ", цена лота: " + Logger.log().doubleAsString(quoteValue));
-
-					PositionInformation position = new PositionInformation(ticker, date);
-
-					position.buy(quantity, quantity * quoteValue);
-
-					positions.add(position);
-				} else { // купить в соответствии с outOfMarketTicket и других аллокаций
-					// перекладываем текущую позицию в outOfMarketPos
-					Logger.log().info("Перекладываемся в hedge-актив " + outOfMarketPosTicker + " вместо " + ticker
-							+ " на дату " + date);
-
-					PositionInformation hegdePos = new PositionInformation(outOfMarketPosTicker, date);
-
-					if (outOfMarketPosTicker.equals(CASH_TICKER)) {
-						hegdePos.buy(1, quoteValue * quantity);
-
-						Logger.log().info("Закрыли позицию и вышли в hedge-актив [" + outOfMarketPosTicker
-								+ "] на сумму " + Logger.log().doubleAsString(quoteValue * quantity));
-					} else {
-						double hedgeQuote = StockQuoteHistory.storage()
-								.getQuoteByDate(outOfMarketPosTicker, timeFrame, date).getClose();
-
-						double hedgeQuantity = (double) allocationPercent * portfolioBalance / hedgeQuote / 100;
-
-						hegdePos.buy(hedgeQuantity, hedgeQuantity * hedgeQuote);
-
-						Logger.log().info("Зашли в hedge-актив [" + outOfMarketPosTicker + "]");
-
-						Logger.log()
-								.info("Купили в портфель [" + outOfMarketPosTicker + "] "
-										+ Logger.log().doubleAsString(hedgeQuantity) + " лотов на сумму "
-										+ Logger.log().doubleAsString(hedgeQuantity * hedgeQuote) + ", цена лота: "
-										+ Logger.log().doubleAsString(hedgeQuote));
-					}
-
-					positions.add(hegdePos);
-				}
-			}
-		}
-
-		// sellAllPositionWhenPortIsFull(positions, assetsAllocation);
-
-		return positions;
-	}
-
-	@Deprecated
-	private void sellAllPositionWhenPortIsFull(List<PositionInformation> positions, List<AssetAllocationBase> assetsAlloc) {
-		int firstFullIndex = -1;
-
-		// ищем первую позиции с 100 процентным уровнем аллокации
-		for (int i = 0; i < assetsAlloc.size(); i++) {
-			double allocationPercent = assetsAlloc.get(i).getAllocationPercent();
-
-			if (allocationPercent == 100) {
-				firstFullIndex = i;
-				break;
-			}
-		}
-
-		// продаем все кроме позиции с 100 процентным уровнем аллокации
-		for (int i = 0; i < assetsAlloc.size(); i++) {
-			PositionInformation position = positions.get(i);
-
-			if (firstFullIndex != -1 && i != firstFullIndex)
-				position.sell();
-		}
+		BacktestResultsStorage.getInstance().putDetailedBacktestInformation(launchDate, allTickersAlloc);
 	}
 
 	public boolean isQuotesAreAvailable(LocalDateTime date, List<PositionInformation> positions) {
@@ -349,7 +467,7 @@ public class Portfolio {
 
 		if (PositionInformation.getTickers(positions) != null)
 			isQuotesAreAvailableCurTickers = StockQuoteHistory.storage().containsDataInStorageOnDate(
-					PositionInformation.getTickers(positions), TradingTimeFrame.Daily, date);
+					Ticker.getTiskers(PositionInformation.getTickers(positions)), TradingTimeFrame.Daily, date);
 
 		return isQuotesAreAvailableCurTickers;
 	}
@@ -357,9 +475,10 @@ public class Portfolio {
 	private String prinfPortfolioInformation() {
 		TimingModelType modelType = timingModelInf.getMethod();
 		TradingTimeFrame timeFrame = timingModel.getTimeFrame();
-		String outOfMarketPosTicker = timingModel.getOutOfMarketPosTicker();
-		List<AssetAllocationBase> alloc = timingModel.getFixedAllocations();
-
+		String outOfMarketPosTicker = timingModel.getOutOfMarketPosTicker().getTicker();
+		List<? extends AssetAllocation> alloc = timingModel.getFixedAllocations();
+		List<TickerInf> tickers = timingModel.getPortTickers();
+		
 		String inf = "";
 
 		inf += "|| prinfPortfolioInformation - Параметры портфеля указаны ниже ||" + "\n";
@@ -368,7 +487,14 @@ public class Portfolio {
 		} else if (modelType == TimingModelType.AssetAllocationTiming) {
 			inf += "Портфель типа TimingPortfolio с ребалансировкой активов по пропорциям, название " + name + "\n";
 			inf += "Частота ребалансировки активов: " + timingModelInf.getFrequency() + "\n";
-			inf += "Распределение активов: " + alloc + "\n";
+			
+			
+			if ( CollectionUtils.isNotEmpty(alloc) )
+				inf += "Распределение активов: " + alloc + "\n";
+			
+			if ( CollectionUtils.isNotEmpty(tickers) )
+				inf += "Распределение активов: " + Ticker.getTiskers(tickers) + "\n";
+			
 			inf += "Инвестирование дивидендов: " + reinvestDividends + "\n";
 
 			if (outOfMarketPosTicker != null)
@@ -404,18 +530,18 @@ public class Portfolio {
 		Logger.log().info("Portfolio: " + name);
 		Logger.log().info("=============");
 
-		for (AssetAllocationBase asset : timingModel.getFixedAllocations()) {
+		for (AssetAllocation asset : timingModel.getFixedAllocations()) {
 			String ticker = asset.getTicker();
 			Logger.log().info("Ticker: " + ticker + ", allocation - " + asset.getAllocationPercent() + " %");
 		}
 
-		for (LocalDateTime date : postionsOnDates.keySet()) {
+		for (LocalDateTime date : positionsSet.getDates()) {
 			Logger.log().info("date: " + date);
 
-			List<PositionInformation> positions = postionsOnDates.get(date);
+			List<PositionInformation> positions = positionsSet.getPositions(date);
 
 			for (PositionInformation position : positions) {
-				StockQuote quote = StockQuoteHistory.storage().getQuoteByDate(position.getTicker(),
+				StockQuote quote = StockQuoteHistory.storage().getQuoteByDate(position.getTickerInf().getTicker(),
 						timingModel.getTimeFrame(), position.getTime());
 
 				Logger.log().info("____quantity:   " + position.getQuantity());
@@ -435,10 +561,6 @@ public class Portfolio {
 		return name;
 	}
 
-	public LinkedHashMap<LocalDateTime, List<PositionInformation>> getPostionsOnDates() {
-		return postionsOnDates;
-	}
-
 	public TimingModelInf getModelInf() {
 		return timingModelInf;
 	}
@@ -452,25 +574,45 @@ public class Portfolio {
 	}
 
 	public double getFinalBalance() {
-		List<LocalDateTime> portDates = Lists.newArrayList(postionsOnDates.keySet());
+		int lastIndex = balanceOnDate.keySet().size() - 1;
 
-		int lastIndex = portDates.size() - 1;
-
-		List<PositionInformation> positions = postionsOnDates.get(portDates.get(lastIndex));
-
-		return PortfolioUtils.calculateAllPositionsBalance(positions);
+		return balanceOnDate.get(balanceOnDate.keySet().toArray()[lastIndex]).doubleValue();
 	}
 
 	public boolean isReinvestDividends() {
 		return reinvestDividends;
 	}
 
-	public void putPortMetrics(double maxDD, double cagr) {
+	public void putPortMetrics(double cagr, double maxDD, double underwaterPeriodLenght) {
 		BacktestResultsStorage.getInstance().putBacktestResults(launchDate, startYear, endYear, cagr, maxDD,
-				getFinalBalance());
+				underwaterPeriodLenght, getFinalBalance());
 	}
 
 	public void writeBackTestResultsToExcel() {
 		BacktestResultsStorage.getInstance().writeToFile(launchDate);
+	}
+
+	public PositionSet getPositionsSet() {
+		return positionsSet;
+	}
+
+	public List<LocalDateTime> getBacktestDates() {
+		return backtestDates;
+	}
+
+	public Map<LocalDateTime, Double> getBalanceOnDate() {
+		return balanceOnDate;
+	}
+
+	public void addPvzLink(String pvzLink) {
+		this.pvzLink = pvzLink;
+	}
+
+	public void addPosSignalHandler(PositionSignalHandler portSignalHandler) {
+		this.exitSignalHandler = portSignalHandler;
+	}
+
+	public PositionSignalHandler getPosSignalHandler() {
+		return exitSignalHandler;
 	}
 }

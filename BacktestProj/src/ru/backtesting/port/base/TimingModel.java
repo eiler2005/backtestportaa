@@ -2,163 +2,109 @@ package ru.backtesting.port.base;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+
+import org.apache.commons.collections4.CollectionUtils;
 
 import ru.backtesting.mktindicators.base.MarketIndicatorInterface;
 import ru.backtesting.port.base.aa.AssetAllocPerfInf;
 import ru.backtesting.port.base.aa.AssetAllocationChoiceModel;
-import ru.backtesting.port.results.BacktestResultsStorage;
+import ru.backtesting.port.base.ticker.Ticker;
+import ru.backtesting.port.base.ticker.TickerInf;
 import ru.backtesting.stockquotes.TradingTimeFrame;
 import ru.backtesting.utils.Logger;
+import ru.backtesting.utils.doubles.TickerDeduplicator;
 
 public class TimingModel {
-	private final List<AssetAllocationBase> assetsAlloc;
-    private List<MarketIndicatorInterface> riskControlSignals;
-	private String outOfMarketPosTicker;
-    private TradingTimeFrame period;
-    private AssetAllocationChoiceModel allocChoiceModel;
-    
-    
-    public TimingModel(List<AssetAllocationBase> assetsAlloc, AssetAllocationChoiceModel allocChoiceModel, TradingTimeFrame timeFrame, 
-    		List<MarketIndicatorInterface> riskControlSignals, String outOfMarketTicker) {
-		super();
-		
-		this.assetsAlloc = assetsAlloc;
+	private List<? extends AssetAllocation> assetsAllocFixed;
 
-		this.riskControlSignals = riskControlSignals;
-		this.period = timeFrame;
-		
-		this.outOfMarketPosTicker = outOfMarketTicker;
-		
-		this.allocChoiceModel = allocChoiceModel;
-	}
-    
-    public TimingModel(List<AssetAllocationBase> assetsAlloc, AssetAllocationChoiceModel allocChoiceModel, TradingTimeFrame timeFrame, 
-    		List<MarketIndicatorInterface> riskControlSignals) {
-		super();
-		
-		this.assetsAlloc = assetsAlloc;
+	private List<TickerInf> assetAllocTickers;
+	private TickerInf outOfMarketPosTicker;
+	
+	private List<MarketIndicatorInterface> riskControlSignals;
+	private TradingTimeFrame period;
+	private AssetAllocationChoiceModel allocChoiceModel;
 
-		this.riskControlSignals = riskControlSignals;
-		this.period = timeFrame;
+	private void checkTickers(List<? extends AssetAllocation> assetsAlloc, List<String> tickers) {
+		if ( CollectionUtils.isNotEmpty(assetsAlloc) && TickerDeduplicator.instance().hasDuplicateAlloc(assetsAlloc) )
+			throw new IllegalArgumentException("В аллокациях типа " + AssetAllocation.class.getSimpleName() + " не может быть одинаковых тикеров. Проверьте настройки - [" + assetsAlloc.toString() + "]!");
+			
+		if ( CollectionUtils.isNotEmpty(tickers) && TickerDeduplicator.instance().hasDuplicate(tickers) )
+			throw new IllegalArgumentException("В аллокациях типа " + AssetAllocation.class.getSimpleName() + " не может быть одинаковых тикеров. Проверьте настройки - [" + tickers + "]!");
+		
+		List<String> allTickers = new ArrayList<>();
+		
+		if ( CollectionUtils.isNotEmpty(assetsAllocFixed) )
+			for (AssetAllocation aa : assetsAllocFixed ) {
+				String aaTicker = aa.getTicker();
+
+				if ( tickers != null && tickers.contains(aaTicker) )
+					aa.generateId();
 				
-		this.allocChoiceModel = allocChoiceModel;
-	}
-    
-    public TimingModel(AssetAllocationChoiceModel allocChoiceModel, TradingTimeFrame timeFrame, 
-    		List<MarketIndicatorInterface> riskControlSignals, String outOfMarketTicker, List<String> tickers) {
-    	if ( allocChoiceModel.getType() != AllocChoiceModelType.Momentum && 
-    			allocChoiceModel.getType() != AllocChoiceModelType.MovingAveragesForAsset ) 
-    		throw new IllegalArgumentException("В конструкторе модели с типом выбора активов " + allocChoiceModel.getType() + 
-    				" нельзя указать тикеры списком[" + tickers  + "], нужно указать конкретные аллокации:");
-    		
-    	this.assetsAlloc = new ArrayList<>();
-		
-		for(String ticker : tickers)
-			assetsAlloc.add(new AssetAllocationBase(ticker, 0));
-		
-		this.riskControlSignals = riskControlSignals;
-		this.period = timeFrame;
-		
-		this.outOfMarketPosTicker = outOfMarketTicker;
-		
-		this.allocChoiceModel = allocChoiceModel;	
-	}
-    
-    private List<AssetAllocPerfInf> filterAssetAllocPerfInfByParams(List<String> tickers, List<AssetAllocPerfInf> allocPerfInfList) {
-    	List<AssetAllocPerfInf> list = new ArrayList<AssetAllocPerfInf>();
-    	
-    	Set<String> doublesTickers = new HashSet<String>();
-    	
-    	for(String ticker : tickers)
-    		for(AssetAllocPerfInf inf : allocPerfInfList)
-    			if (inf.getTicker().equalsIgnoreCase(ticker)) {
-    				
-    				// исключаем дубли - например abs mom perf growth spy и spy в аллокации активов портфеля
-    				if (  !doublesTickers.contains(inf.getTicker().toLowerCase()) )
-    					list.add(inf);
-    				
-    				doublesTickers.add(inf.getTicker().toLowerCase());
-    			}
-    	
-    	return list;
-    }
-    
-    public List<AssetAllocationBase> calculateAllocationsBySignals(LocalDateTime date, LocalDateTime launchDate ) {
-    	List<AssetAllocPerfInf> allocPerfInfList = allocChoiceModel.calculateAllocation(date, getPortTickers(), outOfMarketPosTicker, launchDate);
-    	
-    	// put data in excel storage
-    	putBackTestResultDataInStorage(date, allocPerfInfList, launchDate);
-    	
-    	// asset alloc for portfolio calculation
-    	List<AssetAllocationBase> assetAlloc = new ArrayList<AssetAllocationBase>();
-    	
-    	for(AssetAllocPerfInf allocInf : allocPerfInfList) {
-    		if ( allocInf.isHoldInPort() )
-    			assetAlloc.add(new AssetAllocationBase(allocInf.getTicker(), allocInf.getAllocationPercent()));
-    	}
-    	
-    	return assetAlloc;
-    }
-    
-    public void putBackTestResultDataInStorage(LocalDateTime date, List<AssetAllocPerfInf> allocList, LocalDateTime launchDate) {
-    	// detailed risk-onoff inf to excel
-    	List<String> riskOnOffTickers = allocChoiceModel.getRiskOnOffTickers();
-    	
-    	List<AssetAllocPerfInf> riskOnOffAlloc = filterAssetAllocPerfInfByParams(riskOnOffTickers, allocList);
-    	
-    	Logger.log().info("Помещаем в хранилище результатов Excel данные о аллокациях: (riskOnOff) " + riskOnOffAlloc + " на дату " + date);
-    	
-    	BacktestResultsStorage.getInstance().putDetailedRiskOnOffInformation(launchDate, date, 
-    			riskOnOffAlloc);
-    	
-    	// detailed other inf to excel
-    	List<String> allTickers = getPortTickers();
+				allTickers.add(aaTicker);
+			}
 
-    	// detailed other inf to excel
-    	String outOfMarketPosTicker = getOutOfMarketPosTicker();
-    	
-    	allTickers.add(outOfMarketPosTicker);
-    	
-    	List<AssetAllocPerfInf> allTickersAlloc = filterAssetAllocPerfInfByParams(allTickers, allocList);
-    	
-    	Logger.log().info("Помещаем в хранилище результатов Excel данные о аллокациях: (allTickers + outOfMarket) " + allTickersAlloc + " на дату " + date);
-    	
-    	BacktestResultsStorage.getInstance().putDetailedBacktestInformation(launchDate, allTickersAlloc);
-    }
-    
+		if ( CollectionUtils.isNotEmpty(tickers) ) {
+			assetAllocTickers = new ArrayList<TickerInf>();
+			
+			for(String ticker : tickers) 
+				assetAllocTickers.add(new Ticker(ticker));
+				
+			allTickers.addAll(tickers);
+		}
+
+		if ( allTickers.contains(outOfMarketPosTicker.getTicker()) )
+			outOfMarketPosTicker.generateId();
+							
+		if (allTickers.size() == 0)
+			throw new Error("Переменные assetsAllocFixed и assetAllocTickers не могут быть пустыми. Проверьте код на ошибки");
+	}
+	
+	public List<AssetAllocPerfInf> calculateAllocationsBySignals(LocalDateTime date, LocalDateTime launchDate) {
+		List<AssetAllocPerfInf> allocPerfInfList = allocChoiceModel.calculateAllocation(date, assetsAllocFixed,
+				assetAllocTickers, outOfMarketPosTicker, launchDate);
+
+		Logger.log().info("Держим следующие активы в портфеле: " + allocPerfInfList);
+
+		return allocPerfInfList;
+	}
+
 	public TradingTimeFrame getTimeFrame() {
 		return period;
 	}
-	
-	public List<String> getPortTickers() {
-		List<String> tickers = new ArrayList<String>();
-		
-		for (int i = 0; i < assetsAlloc.size(); i++) {
-    		String ticker = assetsAlloc.get(i).getTicker();
-    		
-    		tickers.add(ticker);
-		}
-		
-		//if ( outOfMarketPosTicker != null && !outOfMarketPosTicker.equals(Portfolio.CASH_TICKER) )
-		//	tickers.add(outOfMarketPosTicker);
-		
-		return tickers;
-	}
-	
 
-	public String getOutOfMarketPosTicker() {
+	public List<TickerInf> getPortTickers() {
+		List<TickerInf> allTickers = new ArrayList<>();
+
+		if (  CollectionUtils.isNotEmpty(assetsAllocFixed) )
+			for (int i = 0; i < assetsAllocFixed.size(); i++) {
+				TickerInf ticker = assetsAllocFixed.get(i);
+
+				allTickers.add(ticker);
+			}
+
+		if ( CollectionUtils.isNotEmpty(assetAllocTickers) )
+			allTickers.addAll(assetAllocTickers);
+
+		allTickers.add(Ticker.cash());
+		
+		if (  allTickers.size() == 0)
+			throw new Error(
+					"Переменные assetsAllocFixed и assetAllocTickers не могут быть пустыми. Проверьте код на ошибки");
+
+		return allTickers;
+	}
+
+	public TickerInf getOutOfMarketPosTicker() {
 		return outOfMarketPosTicker;
 	}
-
-	public List<AssetAllocationBase> getFixedAllocations() {
-		return assetsAlloc;
-	}
 	
+	public List<? extends AssetAllocation> getFixedAllocations() {
+		return assetsAllocFixed;
+	}
+
 	public AssetAllocationChoiceModel getAllocChoiceModel() {
 		return allocChoiceModel;
 	}
@@ -169,27 +115,89 @@ public class TimingModel {
 
 	@Deprecated
 	private boolean haveTimingSignals() {
-		return riskControlSignals != null && riskControlSignals.size() != 0;
+		return CollectionUtils.isNotEmpty(riskControlSignals);
 	}
-	
+
 	public Map<String, Object> getExportModelParams() {
 		Map<String, Object> portParamsMap = new LinkedHashMap<String, Object>();
-		
+
 		portParamsMap.putAll(allocChoiceModel.getExportModelParams());
-		
-		portParamsMap.put("out of market ticker", outOfMarketPosTicker);
-		
+
+		portParamsMap.put("out of market ticker", outOfMarketPosTicker.getTicker());
+
 		return portParamsMap;
 	}
-	
+
 	@Deprecated
 	public Map<String, Object> getRiskControlParams() {
 		Map<String, Object> portParamsMap = new LinkedHashMap<String, Object>();
-		
-		//portParamsMap.putAll(allocChoiceModel.getExportModelParams());
-		
+
+		// portParamsMap.putAll(allocChoiceModel.getExportModelParams());
+
 		portParamsMap.put("risk control signals", "not done yet");
-		
+
 		return portParamsMap;
+	}
+	
+	public static class Builder {
+		private TimingModel model;
+		
+		private List<String> tickers;
+		
+		private Builder() {
+			model = new TimingModel();
+		}
+		
+		public Builder(List<? extends AssetAllocation> assetsAlloc, AssetAllocationChoiceModel allocChoiceModel,
+			TradingTimeFrame timeFrame) {
+			this();
+			
+			model.assetsAllocFixed = assetsAlloc;
+
+			model.period = timeFrame;
+			
+			model.allocChoiceModel = allocChoiceModel;
+		}
+		
+		public Builder(AssetAllocationChoiceModel allocChoiceModel, TradingTimeFrame timeFrame, List<String> tickers) {
+			this();
+			
+			this.tickers = tickers;
+
+			model.period = timeFrame;
+				
+			model.allocChoiceModel = allocChoiceModel;
+		}
+		
+		public Builder(List<? extends AssetAllocation> assetsAlloc, List<String> tickers,
+				AssetAllocationChoiceModel allocChoiceModel, TradingTimeFrame timeFrame) {
+			this();
+			
+			this.tickers = tickers;
+
+			model.assetsAllocFixed = assetsAlloc;
+			
+			model.period = timeFrame;
+				
+			model.allocChoiceModel = allocChoiceModel;
+		}
+		
+		public Builder setRiskControlSignals(List<MarketIndicatorInterface> riskControlSignals) {
+			model.riskControlSignals = riskControlSignals;
+			
+			return this;
+		}
+		
+		public Builder setOutOfMarketPosTicker(String outOfMarketTicker) {
+			model.outOfMarketPosTicker = new Ticker(outOfMarketTicker);
+			
+			return this;
+		}
+		
+		public TimingModel build() {
+			model.checkTickers(model.assetsAllocFixed, tickers);
+			
+			return model;
+		}
 	}
 }

@@ -1,8 +1,8 @@
 package ru.backtesting.port.base;
 
-public interface AssetAllocation {
-	public String getTicker();
-	
+import ru.backtesting.port.base.ticker.TickerInf;
+
+public interface AssetAllocation extends TickerInf {	
 	public double getAllocationPercent();
 	
 	public void setAllocPercent(double allocPercent);
@@ -11,5 +11,9 @@ public interface AssetAllocation {
 	
 	public void holdAssetInPort();
 	
-	public void sellAsset();
+	public void sellAsset();		
+	
+	public TickerInf getTickerInf();
+	
+	public AllocationType getType();
 }
