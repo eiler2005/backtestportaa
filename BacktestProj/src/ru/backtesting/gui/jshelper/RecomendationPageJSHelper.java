@@ -112,9 +112,11 @@ public class RecomendationPageJSHelper {
 	private void addMAGraphicsOnPage(Browser browser, String ticker) {
 		DOMDocument document = browser.getDocument();
 
-		DOMElement tickerMADailyEl = document.findElement(By.id(ticker + "MADailyGraph"));
+		DOMElement tickerMADailyEl = document.findElement(By.id(
+				getIdLabelForUserTickerPage(ticker, "MADailyGraph")));
 
-		DOMElement tickerMAWeeklyEl = document.findElement(By.id(ticker + "MAWeeklyGraph"));
+		DOMElement tickerMAWeeklyEl = document.findElement(By.id(
+				getIdLabelForUserTickerPage(ticker, "MAWeeklyGraph")));
 		
 		Logger.log().info("Строим различные Moving Averages и HilbertTrend для тикера \"" + ticker + "\"");
 
@@ -145,10 +147,12 @@ public class RecomendationPageJSHelper {
 	private void addRSIGraphicsOnPage(Browser browser, String ticker) {
 		DOMDocument document = browser.getDocument();
 
-		DOMElement tickerRSIShortTermGraphEl = document.findElement(By.id(ticker + "RSIShortTermGraph"));
+		DOMElement tickerRSIShortTermGraphEl = document.findElement(By.id(
+				getIdLabelForUserTickerPage(ticker, "RSIShortTermGraph")));
 
-		DOMElement tickerRSILongTermGraphEl = document.findElement(By.id(ticker + "RSILongTermGraph"));
-
+		DOMElement tickerRSILongTermGraphEl = document.findElement(By.id(
+				getIdLabelForUserTickerPage(ticker, "RSILongTermGraph")));
+		
 		Logger.log().info("Строим различные RSI(14- и 100-дневные) для тикера \"" + ticker + "\"");
 		
 		String tickerRSIShortTermGraphElText = createRSIGraphics(ticker, MarketConstants.shortTermPeriod.getStartYear(), 
@@ -221,11 +225,13 @@ public class RecomendationPageJSHelper {
 		
 		DOMDocument document = browser.getDocument();
 
-		DOMElement tickerPriceValueEl = document.findElement(By.id(ticker + "PriceValue"));
+		DOMElement tickerPriceValueEl = document.findElement(By.id(
+				getIdLabelForUserTickerPage(ticker, "PriceValue")));
 		tickerPriceValueEl.setInnerText("Last Price: " + formatter.doubleAsString(quote.getClose()) + " на дату " + 
 				formatter.dateAsString(tradingDay.toLocalDate()));
 		
-		DOMElement indTableBodyEl = document.findElement(By.id(ticker + "RecomIndicatorsTableBody"));
+		DOMElement indTableBodyEl = document.findElement(By.id(
+				getIdLabelForUserTickerPage(ticker, "RecomIndicatorsTableBody")));
 		
 		String tableBodyHTML = fillStockIndicatorsHtmlTable(ticker, quote.getClose(), TradingTimeFrame.Daily, tradingDay);
 		
@@ -233,7 +239,8 @@ public class RecomendationPageJSHelper {
 		
 		indTableBodyEl.setInnerHTML(tableBodyHTML);
 		
-		DOMElement rsiOSCTableBodyEl = document.findElement(By.id(ticker + "RsiOscillatorTableBody"));
+		DOMElement rsiOSCTableBodyEl = document.findElement(By.id(
+				getIdLabelForUserTickerPage(ticker, "RsiOscillatorTableBody")));
 		rsiOSCTableBodyEl.setInnerHTML(fillRSIIndicatorsHtmlTable(ticker, TradingTimeFrame.Daily, tradingDay));
 	}
 	
@@ -437,6 +444,14 @@ public class RecomendationPageJSHelper {
 				Arrays.asList(new MarketIndicatorDataSeries[] { sma50DataSeries, sma200DataSeries, 
 						wma50DataSeries, wma200DataSeries, hilbertTrendDataSeries/*, bb50DataSeries, bb200DataSeries*/}), 
 				ticker + "/moving averages(50-200) chart", "dates", ticker);
+	}
+	
+	public String getIdLabelForUserTickerPage(String ticker, String idName) {
+		if ( !ticker.equalsIgnoreCase(MarketConstants.BASE_USA_STOCK_INDEX_TICKER) )
+			return "userTicker" + idName;
+		else {
+			return MarketConstants.BASE_USA_STOCK_INDEX_TICKER + idName;
+		}		
 	}
 	
 	@SuppressWarnings("unused")

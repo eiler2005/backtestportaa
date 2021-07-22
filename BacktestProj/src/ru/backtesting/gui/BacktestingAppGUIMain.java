@@ -141,6 +141,9 @@ public class BacktestingAppGUIMain {
 				
 				// recomendPageBrowser.reload();
 				recomendPageView.revalidate();
+				
+				Logger.log().info("Загрузили следующую страницу с текстом для recomendPageBrowser: " + recomendPageBrowser.getHTML());
+
 			}
 		});
 		
@@ -212,6 +215,8 @@ public class BacktestingAppGUIMain {
 			marketInfPageView = createMarketInfPageBrowserView(marketInfPageBrowser);
 			
 			frame.getContentPane().add(marketInfPageView, BorderLayout.CENTER);
+			
+			Logger.log().info("Загрузили следующую страницу с текстом для marketInfPageBrowser: " + marketInfPageBrowser.getHTML());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -301,7 +306,7 @@ public class BacktestingAppGUIMain {
 		        return true;
 		    }
 		});
-		
+				
 		return browser;
 	}
 	
@@ -410,7 +415,6 @@ public class BacktestingAppGUIMain {
 
 			Logger.log().info("Получили элемент с id \"" + jsElId + "\"");
 
-			
 			Logger.log().info("Текст элемента с id \"" + jsElId + "\"" + documentJSEl.getTextContent());
 		}
 	}
